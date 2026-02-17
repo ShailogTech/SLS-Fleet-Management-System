@@ -1,0 +1,391 @@
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDropzone } from 'react-dropzone';
+import api from '../../utils/api';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { toast } from 'sonner';
+import {
+  ArrowLeft, ArrowRight, CheckCircle, Upload, FileText, X,
+  User, ClipboardCheck, Eye
+} from 'lucide-react';
+
+const REQUIRED_DOCUMENTS = [
+  { key: 'dl', label: 'Driving License (DL)', required: true },
+  { key: 'hazardous', label: 'Hazardous Certificate', required: true },
+  { key: 'medical', label: 'Medical Fitness Certificate', required: false },
+];
+
+const STEPS = [
+  { id: 1, title: 'Driver Details', icon: User },
+  { id: 2, title: 'Upload Documents', icon: Upload },
+  { id: 3, title: 'Review & Submit', icon: ClipboardCheck },
+];
+
+const DriverForm = () => {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [createdDriverId, setCreatedDriverId] = useState(null);
+
+  const [formData, setFormData] = useState({
+    name: '', emp_id: '', phone: '', dl_no: '',
+    dl_expiry: '', hazardous_cert_expiry: '', plant: '',
+  });
+
+  const [docFiles, setDocFiles] = useState({});
+  const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [uploadedDocs, setUploadedDocs] = useState({});
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDocFileSelect = (docKey, file) => {
+    setDocFiles(prev => ({ ...prev, [docKey]: { ...prev[docKey], file } }));
+  };
+
+  const handleDocExpiryChange = (docKey, expiry) => {
+    setDocFiles(prev => ({ ...prev, [docKey]: { ...prev[docKey], expiry } }));
+    if (docKey === 'dl') handleChange('dl_expiry', expiry);
+    if (docKey === 'hazardous') handleChange('hazardous_cert_expiry', expiry);
+  };
+
+  const removeDocFile = (docKey) => {
+    setDocFiles(prev => {
+      const updated = { ...prev };
+      if (updated[docKey]) updated[docKey] = { ...updated[docKey], file: null };
+      return updated;
+    });
+  };
+
+  const isStep1Valid = formData.name && formData.emp_id && formData.phone && formData.dl_no;
+
+  const handleSaveDriver = async () => {
+    setLoading(true);
+    try {
+      const cleanedData = { ...formData };
+      ['dl_expiry', 'hazardous_cert_expiry', 'plant'].forEach(field => {
+        if (cleanedData[field] === '') cleanedData[field] = null;
+      });
+
+      const response = await api.post('/drivers', cleanedData);
+      const driverId = response.data.id;
+      setCreatedDriverId(driverId);
+      toast.success('Driver details saved!');
+      return driverId;
+    } catch (error) {
+      const errorDetail = error.response?.data?.detail;
+      if (Array.isArray(errorDetail)) {
+        toast.error(errorDetail.map(e => e.msg || 'Validation error').join(', '));
+      } else if (typeof errorDetail === 'string') {
+        toast.error(errorDetail);
+      } else {
+        toast.error('Failed to save driver');
+      }
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadDocuments = async (driverId) => {
+    const dId = driverId || createdDriverId;
+    if (!dId) return;
+
+    for (const doc of REQUIRED_DOCUMENTS) {
+      const docData = docFiles[doc.key];
+      if (!docData?.file && !docData?.expiry) continue;
+
+      setUploadingDoc(doc.key);
+      try {
+        const fd = new FormData();
+        fd.append('entity_type', 'driver');
+        fd.append('entity_id', dId);
+        fd.append('document_type', doc.key);
+        if (docData.expiry) fd.append('expiry_date', docData.expiry);
+
+        const fileName = `${formData.emp_id}_${doc.key}`;
+
+        if (docData.file) {
+          const ext = docData.file.name.split('.').pop();
+          const renamedFile = new File([docData.file], `${fileName}.${ext}`, { type: docData.file.type });
+          fd.append('file', renamedFile);
+          await api.post('/documents/upload', fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } else {
+          await api.post('/documents/metadata', fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        }
+        setUploadedDocs(prev => ({ ...prev, [doc.key]: true }));
+      } catch (error) {
+        toast.error(`Failed to upload ${doc.label}`);
+      }
+      setUploadingDoc(null);
+    }
+  };
+
+  const handleGoToStep2 = async () => {
+    if (!isStep1Valid) {
+      toast.error('Please fill all required driver details');
+      return;
+    }
+    const driverId = await handleSaveDriver();
+    if (driverId) setCurrentStep(2);
+  };
+
+  const handleGoToStep3 = async () => {
+    await handleUploadDocuments();
+    setCurrentStep(3);
+  };
+
+  const handleFinalSubmit = () => {
+    toast.success('Driver submitted for approval! Track status in My Submissions.');
+    navigate('/my-submissions');
+  };
+
+  return (
+    <div className="space-y-6" data-testid="driver-form-page">
+      <div className="flex items-center space-x-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/drivers')} data-testid="back-btn">
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back
+        </Button>
+        <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          Add New Driver
+        </h1>
+      </div>
+
+      {/* Step Progress */}
+      <div className="flex items-center justify-center space-x-4">
+        {STEPS.map((step, idx) => {
+          const StepIcon = step.icon;
+          const isActive = currentStep === step.id;
+          const isCompleted = currentStep > step.id;
+          return (
+            <React.Fragment key={step.id}>
+              {idx > 0 && <div className={`h-0.5 w-16 ${isCompleted ? 'bg-emerald-500' : 'bg-slate-200'}`} />}
+              <div className="flex flex-col items-center" data-testid={`step-${step.id}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                  isCompleted ? 'bg-emerald-100 text-emerald-600' :
+                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'
+                }`}>
+                  {isCompleted ? <CheckCircle className="h-5 w-5" /> : <StepIcon className="h-5 w-5" />}
+                </div>
+                <p className={`text-xs mt-1 font-medium ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
+                  {step.title}
+                </p>
+              </div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Step 1 */}
+      {currentStep === 1 && (
+        <Card className="border-slate-200">
+          <CardHeader><CardTitle>Driver Information</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <Label>Full Name *</Label>
+                <Input value={formData.name} onChange={e => handleChange('name', e.target.value)} data-testid="driver-name-input" />
+              </div>
+              <div>
+                <Label>Employee ID *</Label>
+                <Input value={formData.emp_id} onChange={e => handleChange('emp_id', e.target.value)} data-testid="driver-empid-input" />
+              </div>
+              <div>
+                <Label>Phone *</Label>
+                <Input value={formData.phone} onChange={e => handleChange('phone', e.target.value)} data-testid="driver-phone-input" />
+              </div>
+              <div>
+                <Label>DL Number *</Label>
+                <Input value={formData.dl_no} onChange={e => handleChange('dl_no', e.target.value)} placeholder="e.g., KA0120180000000" data-testid="driver-dlno-input" />
+              </div>
+              <div>
+                <Label>Plant</Label>
+                <Input value={formData.plant} onChange={e => handleChange('plant', e.target.value)} placeholder="e.g., MRPL HPCL" data-testid="driver-plant-input" />
+              </div>
+            </div>
+            <div className="flex justify-end mt-6 pt-4 border-t border-slate-200">
+              <Button onClick={handleGoToStep2} disabled={loading || !isStep1Valid} className="bg-slate-900 hover:bg-slate-800" data-testid="next-step-btn">
+                {loading ? 'Saving...' : 'Save & Upload Documents'}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 2 */}
+      {currentStep === 2 && (
+        <div className="space-y-4">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center"><Upload className="h-5 w-5 mr-2" /> Upload Driver Documents</CardTitle>
+              <p className="text-sm text-slate-500 mt-1">
+                Upload documents for {formData.name} ({formData.emp_id}). Files will be named as {formData.emp_id}_documenttype.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {REQUIRED_DOCUMENTS.map(doc => (
+                <DocumentRow
+                  key={doc.key}
+                  doc={doc}
+                  entityRef={formData.emp_id}
+                  fileData={docFiles[doc.key]}
+                  isUploaded={!!uploadedDocs[doc.key]}
+                  isUploading={uploadingDoc === doc.key}
+                  onFileSelect={(file) => handleDocFileSelect(doc.key, file)}
+                  onExpiryChange={(expiry) => handleDocExpiryChange(doc.key, expiry)}
+                  onRemoveFile={() => removeDocFile(doc.key)}
+                />
+              ))}
+            </CardContent>
+          </Card>
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setCurrentStep(1)} data-testid="prev-step-btn">
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back
+            </Button>
+            <Button onClick={handleGoToStep3} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
+              Upload & Review <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3 */}
+      {currentStep === 3 && (
+        <div className="space-y-4">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center"><Eye className="h-5 w-5 mr-2" /> Review Submission</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-3">Driver Details</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    ['Name', formData.name],
+                    ['Employee ID', formData.emp_id],
+                    ['Phone', formData.phone],
+                    ['DL Number', formData.dl_no],
+                    ['Plant', formData.plant || 'N/A'],
+                  ].map(([label, val]) => (
+                    <div key={label} className="p-3 bg-slate-50 rounded-lg">
+                      <p className="text-xs text-slate-500">{label}</p>
+                      <p className="font-medium text-slate-900">{val}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-3">Uploaded Documents</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {REQUIRED_DOCUMENTS.map(doc => {
+                    const isUp = uploadedDocs[doc.key];
+                    const hasExpiry = docFiles[doc.key]?.expiry;
+                    const hasFile = docFiles[doc.key]?.file;
+                    return (
+                      <div key={doc.key} className={`flex items-center justify-between p-3 rounded-lg border ${isUp ? 'bg-emerald-50 border-emerald-200' : hasExpiry ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="flex items-center space-x-2">
+                          {isUp ? <CheckCircle className="h-4 w-4 text-emerald-600" /> : <FileText className="h-4 w-4 text-slate-400" />}
+                          <span className="text-sm font-medium text-slate-700">{doc.label}</span>
+                        </div>
+                        <span className={`text-xs font-medium ${isUp ? 'text-emerald-600' : hasFile ? 'text-amber-600' : hasExpiry ? 'text-amber-600' : 'text-slate-400'}`}>
+                          {isUp ? 'Uploaded' : hasFile ? 'Pending' : hasExpiry ? 'Metadata Only' : 'Not Added'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-emerald-200 bg-emerald-50">
+            <CardContent className="p-4">
+              <p className="text-sm text-emerald-800">
+                Driver has been saved and documents uploaded. The application is now in the approval queue.
+                A Checker will review it first, then an Approver will give final approval.
+              </p>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setCurrentStep(2)} data-testid="prev-step-btn">
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to Documents
+            </Button>
+            <Button onClick={handleFinalSubmit} className="bg-emerald-600 hover:bg-emerald-700" data-testid="final-submit-btn">
+              <CheckCircle className="h-4 w-4 mr-2" /> Done - Track in My Submissions
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+const DocumentRow = ({ doc, entityRef, fileData, isUploaded, isUploading, onFileSelect, onExpiryChange, onRemoveFile }) => {
+  const onDrop = useCallback((accepted) => {
+    if (accepted.length > 0) onFileSelect(accepted[0]);
+  }, [onFileSelect]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'application/pdf': ['.pdf'], 'image/*': ['.jpg', '.jpeg', '.png'] },
+    maxSize: 26214400,
+    multiple: false
+  });
+
+  const fileName = fileData?.file ? fileData.file.name : null;
+
+  return (
+    <div className={`p-4 rounded-lg border transition-colors ${isUploaded ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'}`} data-testid={`doc-row-${doc.key}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          {isUploaded ? <CheckCircle className="h-4 w-4 text-emerald-600" /> : <FileText className="h-4 w-4 text-slate-400" />}
+          <span className="text-sm font-semibold text-slate-800">{doc.label}</span>
+          {doc.required && <span className="text-xs text-red-500">*</span>}
+        </div>
+        {isUploading && (
+          <span className="text-xs text-blue-600 flex items-center">
+            <span className="animate-spin h-3 w-3 border-2 border-blue-300 border-t-blue-600 rounded-full mr-1" />
+            Uploading...
+          </span>
+        )}
+        {isUploaded && <span className="text-xs text-emerald-600 font-medium">Uploaded</span>}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs">Expiry Date {doc.required && '*'}</Label>
+          <Input type="date" value={fileData?.expiry || ''} onChange={e => onExpiryChange(e.target.value)} className="mt-1" data-testid={`doc-expiry-${doc.key}`} />
+        </div>
+        <div>
+          <Label className="text-xs">File ({entityRef}_{doc.key})</Label>
+          {!fileName ? (
+            <div {...getRootProps()} className={`mt-1 border border-dashed rounded-md p-3 text-center cursor-pointer text-xs ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-slate-300 hover:border-slate-400'}`} data-testid={`doc-dropzone-${doc.key}`}>
+              <input {...getInputProps()} />
+              <Upload className="h-4 w-4 mx-auto text-slate-400 mb-1" />
+              <span className="text-slate-500">Drop file or click (PDF, JPG, PNG, max 25MB)</span>
+            </div>
+          ) : (
+            <div className="mt-1 flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200">
+              <span className="text-xs text-slate-700 truncate flex-1">{fileName}</span>
+              <button type="button" onClick={onRemoveFile} className="ml-2 text-red-500 hover:text-red-700" data-testid={`doc-remove-${doc.key}`}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DriverForm;

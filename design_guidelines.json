@@ -1,0 +1,164 @@
+{
+  "project_name": "SLS - Fleet Management",
+  "design_philosophy": {
+    "theme_name": "Corporate Command",
+    "emotional_tone": "Authoritative, Precise, Reliable, Industrial",
+    "visual_style": "High-Density Data, Swiss-Style Grid, Cool Corporate Tones",
+    "light_dark_mode": "light_preferred_with_dark_toggle"
+  },
+  "typography": {
+    "font_family_heading": "Chivo, sans-serif",
+    "font_family_body": "Inter, sans-serif",
+    "font_cdn_links": [
+      "https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=Inter:wght@300;400;500;600&display=swap"
+    ],
+    "scaling": {
+      "h1": "text-4xl font-black tracking-tight text-slate-900 dark:text-white",
+      "h2": "text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100",
+      "h3": "text-xl font-bold text-slate-800 dark:text-slate-200",
+      "body": "text-sm font-normal text-slate-600 dark:text-slate-400 leading-relaxed",
+      "caption": "text-xs font-medium text-slate-500 uppercase tracking-wider",
+      "data_cell": "text-sm font-medium text-slate-700 dark:text-slate-300 tabular-nums"
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#0F172A",
+        "foreground": "#F8FAFC",
+        "50": "#F8FAFC",
+        "100": "#F1F5F9",
+        "500": "#64748B",
+        "900": "#0F172A"
+      },
+      "secondary": {
+        "DEFAULT": "#F1F5F9",
+        "foreground": "#0F172A"
+      },
+      "accent": {
+        "DEFAULT": "#3B82F6",
+        "foreground": "#FFFFFF",
+        "hover": "#2563EB"
+      },
+      "destructive": {
+        "DEFAULT": "#EF4444",
+        "foreground": "#FFFFFF"
+      },
+      "success": {
+        "DEFAULT": "#10B981",
+        "foreground": "#FFFFFF",
+        "bg_subtle": "#ECFDF5",
+        "text_subtle": "#047857"
+      },
+      "warning": {
+        "DEFAULT": "#F59E0B",
+        "foreground": "#FFFFFF",
+        "bg_subtle": "#FFFBEB",
+        "text_subtle": "#B45309"
+      },
+      "background": "#FFFFFF",
+      "surface": "#F8FAFC",
+      "border": "#E2E8F0"
+    },
+    "gradients": {
+      "primary_action": "bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700",
+      "subtle_shimmer": "bg-gradient-to-r from-transparent via-white/20 to-transparent"
+    }
+  },
+  "spacing_and_layout": {
+    "container_max_width": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-12 gap-6",
+    "card_padding": "p-6",
+    "section_spacing": "py-8",
+    "density": "compact"
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 rounded-md shadow-sm text-sm font-medium transition-all duration-200",
+      "secondary": "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-md shadow-sm text-sm font-medium",
+      "danger": "bg-red-600 text-white hover:bg-red-700 rounded-md shadow-sm text-sm font-medium",
+      "ghost": "hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-md"
+    },
+    "inputs": {
+      "default": "border-slate-300 focus:ring-slate-500 focus:border-slate-500 rounded-md shadow-sm text-sm"
+    },
+    "cards": {
+      "dashboard_metric": "bg-white rounded-lg border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow duration-200",
+      "data_container": "bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden"
+    },
+    "tables": {
+      "header": "bg-slate-50 text-xs uppercase tracking-wider font-semibold text-slate-500 border-b border-slate-200",
+      "row": "hover:bg-slate-50 transition-colors duration-150 border-b border-slate-100 last:border-0",
+      "cell": "px-6 py-4 whitespace-nowrap text-sm text-slate-700"
+    },
+    "status_badges": {
+      "active": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800",
+      "pending": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800",
+      "expired": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800",
+      "inactive": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800"
+    }
+  },
+  "image_assets": {
+    "login_background": {
+      "url": "https://images.unsplash.com/photo-1770715897376-22215c26e2a7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHw0fHxsb2dpc3RpY3MlMjB0cnVjayUyMGZsZWV0JTIwaW5kdXN0cmlhbHxlbnwwfHx8fDE3NzExNTM4MTN8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Industrial logistics truck fleet",
+      "usage": "Full screen background with overlay for login page"
+    },
+    "dashboard_placeholders": {
+      "vehicle_thumbnail": "https://images.unsplash.com/photo-1766561994067-dbd575e1cff2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwzfHxsb2dpc3RpY3MlMjB0cnVjayUyMGZsZWV0JTIwaW5kdXN0cmlhbHxlbnwwfHx8fDE3NzExNTM4MTN8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Fleet vehicle on highway"
+    }
+  },
+  "visual_enhancements": {
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width: 1.5px; size: 18px",
+      "usage": "Use consistent stroke width. Use muted colors for decorative icons, primary colors for action icons."
+    },
+    "charts": {
+      "library": "recharts",
+      "colors": ["#0F172A", "#3B82F6", "#10B981", "#F59E0B", "#EF4444"],
+      "style": "Clean, minimal grid lines, tooltip with custom styling"
+    },
+    "maps": {
+      "library": "react-map-gl (optional) or static placeholder for MVP",
+      "style": "mapbox://styles/mapbox/light-v11"
+    }
+  },
+  "component_registry": {
+    "Login Page": "/app/frontend/src/pages/auth/LoginPage.js",
+    "Dashboard Layout": "/app/frontend/src/layouts/DashboardLayout.js",
+    "Sidebar Navigation": "/app/frontend/src/components/navigation/Sidebar.js",
+    "Top Header": "/app/frontend/src/components/navigation/Header.js",
+    "Vehicle List": "/app/frontend/src/pages/vehicles/VehicleList.js",
+    "Vehicle Detail": "/app/frontend/src/pages/vehicles/VehicleDetail.js",
+    "Driver List": "/app/frontend/src/pages/drivers/DriverList.js",
+    "Approval Queue": "/app/frontend/src/pages/approvals/ApprovalQueue.js",
+    "Document Alert Widget": "/app/frontend/src/components/dashboard/DocumentAlerts.js",
+    "Reports View": "/app/frontend/src/pages/reports/ReportsDashboard.js"
+  },
+  "accessibility_checklist": [
+    "Ensure 4.5:1 contrast ratio for all text.",
+    "Interactive elements must have :focus-visible states.",
+    "Form inputs must have associated labels.",
+    "Use semantic HTML (main, nav, aside, section)."
+  ],
+  "universal_guidelines": {
+    "file_extension": "Use .js for all components.",
+    "state_management": "Use React Context for auth/global state. Use local state for form inputs.",
+    "api_calls": "Use centralized axios instance with interceptors for JWT.",
+    "data_fetching": "Use useEffect with proper cleanup or a lightweight fetch wrapper.",
+    "testing": "Add data-testid to all buttons, inputs, and major containers."
+  },
+  "instructions_to_main_agent": [
+    "1. Setup the specific folder structure first (pages/auth, pages/vehicles, components/ui, layouts).",
+    "2. Implement the Authentication Context (AuthProvider) to handle JWT tokens and role-based protection.",
+    "3. Create the Dashboard Layout with a collapsible sidebar and sticky header.",
+    "4. Build the core 'Data Table' component as it will be reused for Vehicles, Drivers, and Tenders.",
+    "5. Use 'recharts' for the dashboard analytics widgets.",
+    "6. Ensure all forms have client-side validation using Zod + React Hook Form before sending to API.",
+    "7. Mock the GPS map using a static image or basic placeholder if mapbox token is not available.",
+    "8. Stick to the 'Slate' color palette for a professional look. Avoid using pure black (#000000).",
+    "9. For file uploads, create a dedicated 'DocumentUpload' component that shows progress and preview."
+  ]
+}

@@ -1,0 +1,124 @@
+import React, { useState, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Toaster } from './components/ui/sonner';
+import ProtectedRoute from './components/ProtectedRoute';
+import DashboardLayout from './layouts/DashboardLayout';
+import SplashScreen from './components/SplashScreen';
+
+
+import LoginPage from './pages/auth/LoginPage';
+import SignupPage from './pages/auth/SignupPage';
+import Dashboard from './pages/dashboard/Dashboard';
+import VehicleList from './pages/vehicles/VehicleList';
+import VehicleForm from './pages/vehicles/VehicleForm';
+import DriverList from './pages/drivers/DriverList';
+import DriverForm from './pages/drivers/DriverForm';
+import DriverPortal from './pages/drivers/DriverPortal';
+import ApprovalQueue from './pages/approvals/ApprovalQueue';
+import MySubmissions from './pages/approvals/MySubmissions';
+import PlantList from './pages/plants/PlantList';
+import StoppageList from './pages/stoppages/StoppageList';
+import TenderManagement from './pages/tenders/TenderManagement';
+import UserManagement from './pages/users/UserManagement';
+import UserProfile from './pages/users/UserProfile';
+import AlertCenter from './pages/alerts/AlertCenter';
+import Reports from './pages/reports/Reports';
+import SignupRequests from './pages/admin/SignupRequests';
+
+import './App.css';
+
+// Component to handle role-based default routing
+const RoleBasedRedirect = () => {
+  const { user } = useAuth();
+
+  if (user?.role === 'driver') {
+    return <Navigate to="/driver-portal" replace />;
+  }
+  return <Dashboard />;
+};
+
+function App() {
+  const [showSplash, setShowSplash] = useState(true);
+  const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  return (
+    <AuthProvider>
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+
+          {/* Driver-specific portal (full page, no sidebar) */}
+          <Route
+            path="/driver-portal"
+            element={
+              <ProtectedRoute allowedRoles={['driver']}>
+                <DriverPortal />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<RoleBasedRedirect />} />
+            <Route path="vehicles" element={<VehicleList />} />
+            <Route path="vehicles/new" element={<VehicleForm />} />
+            <Route path="drivers" element={<DriverList />} />
+            <Route path="drivers/new" element={<DriverForm />} />
+            <Route path="profile" element={<UserProfile />} />
+            <Route path="plants" element={<PlantList />} />
+            <Route path="stoppages" element={<StoppageList />} />
+            <Route path="tenders" element={<TenderManagement />} />
+            <Route path="alerts" element={<AlertCenter />} />
+            <Route path="reports" element={<Reports />} />
+            <Route
+              path="approvals"
+              element={
+                <ProtectedRoute allowedRoles={['checker', 'approver', 'admin', 'superuser']}>
+                  <ApprovalQueue />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="my-submissions"
+              element={
+                <ProtectedRoute allowedRoles={['maker', 'admin', 'superuser', 'office_incharge', 'records_incharge']}>
+                  <MySubmissions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'superuser']}>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="signup-requests"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'superuser', 'approver']}>
+                  <SignupRequests />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+        <Toaster position="top-right" />
+
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;
