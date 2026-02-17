@@ -5,7 +5,7 @@ import Header from '../components/navigation/Header';
 
 const DashboardLayout = () => {
   return (
-    <div className="min-h-screen bg-slate-50" data-testid="dashboard-layout">
+    <div className="min-h-screen bg-transparent" data-testid="dashboard-layout">
       <Sidebar />
       <div className="lg:pl-64">
         <Header />
