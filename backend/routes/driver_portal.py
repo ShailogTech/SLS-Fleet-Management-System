@@ -18,9 +18,21 @@ async def get_my_vehicle(current_user: dict = Depends(get_current_user)):
     if not user_info or user_info.get("role") != "driver":
         raise HTTPException(status_code=403, detail="Only drivers can access this endpoint")
     
-    driver_info = await db.drivers.find_one({"emp_id": user_info.get("emp_id")}, {"_id": 0})
+    driver_info = await db.drivers.find_one({"emp_id": user_info.get("emp_id")}, {"_id": 0}) if user_info.get("emp_id") else None
     if not driver_info:
-        raise HTTPException(status_code=404, detail="Driver profile not found")
+        # Return basic info from user record if no driver profile exists
+        return {
+            "driver": {
+                "name": user_info.get("name"),
+                "emp_id": user_info.get("emp_id", "N/A"),
+                "phone": user_info.get("phone"),
+                "dl_no": None,
+                "dl_expiry": None,
+                "hazardous_cert_expiry": None,
+            },
+            "vehicle": None,
+            "documents": []
+        }
     
     allocated_vehicle_no = driver_info.get("allocated_vehicle")
     if not allocated_vehicle_no:

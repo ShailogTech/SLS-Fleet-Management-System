@@ -1,11 +1,12 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, Bell, UserCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
   return (
@@ -22,6 +23,7 @@ const Header = () => {
             variant="ghost"
             size="sm"
             className="relative"
+            onClick={() => navigate('/alerts')}
             data-testid="notifications-btn"
           >
             <Bell className="h-5 w-5" />

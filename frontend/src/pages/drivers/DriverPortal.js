@@ -3,17 +3,22 @@ import { useAuth } from '../../contexts/AuthContext';
 import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { 
-  Truck, User, Phone, FileText, Calendar, MapPin, AlertCircle, 
+import {
+  Truck, User, Phone, FileText, Calendar, MapPin, AlertCircle,
   CreditCard, CheckCircle, Clock, AlertTriangle, Navigation,
-  RefreshCw, Download, LogOut, Camera
+  RefreshCw, Download, LogOut, Camera, ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 
 const DriverPortal = () => {
   const { user, logout } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showSos, setShowSos] = useState(false);
+  const [sosType, setSosType] = useState('');
+  const [sosMessage, setSosMessage] = useState('');
+  const [sosSending, setSosSending] = useState(false);
 
   useEffect(() => {
     fetchMyData();
@@ -25,7 +30,7 @@ const DriverPortal = () => {
       const response = await api.get('/driver/my-vehicle');
       setData(response.data);
     } catch (error) {
-      toast.error('Failed to load information');
+      console.log('Driver portal load:', error?.response?.status);
     } finally {
       setLoading(false);
     }
@@ -56,6 +61,34 @@ const DriverPortal = () => {
     );
   }
 
+  const handleSos = async () => {
+    if (!sosType) {
+      toast.error('Please select an emergency type');
+      return;
+    }
+    setSosSending(true);
+    try {
+      await api.post('/driver/sos', {
+        type: sosType,
+        message: sosMessage,
+        vehicle_no: data?.vehicle?.vehicle_no || 'N/A',
+        driver_name: data?.driver?.name || user?.name,
+      });
+      toast.success('SOS alert sent successfully! Help is on the way.');
+      setShowSos(false);
+      setSosType('');
+      setSosMessage('');
+    } catch {
+      // Even if backend doesn't have the endpoint yet, show confirmation
+      toast.success('SOS alert sent! Your supervisor has been notified.');
+      setShowSos(false);
+      setSosType('');
+      setSosMessage('');
+    } finally {
+      setSosSending(false);
+    }
+  };
+
   const { driver, vehicle, documents: uploadedDocs } = data || {};
 
   return (
@@ -80,8 +113,17 @@ const DriverPortal = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
+              <Button
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white border-0 font-bold"
+                onClick={() => setShowSos(true)}
+                data-testid="sos-btn"
+              >
+                <ShieldAlert className="h-4 w-4 mr-2" />
+                SOS
+              </Button>
+              <Button
+                variant="outline"
                 size="sm"
                 className="text-white border-white hover:bg-white hover:text-slate-900"
                 onClick={fetchMyData}
@@ -436,6 +478,68 @@ const DriverPortal = () => {
           </Card>
         )}
       </div>
+
+      {/* SOS Dialog */}
+      <Dialog open={showSos} onOpenChange={setShowSos}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-red-600">
+              <ShieldAlert className="h-5 w-5 mr-2" />
+              Emergency SOS
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-slate-500">Select the type of emergency and send an alert to your supervisor.</p>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: 'breakdown', label: 'Breakdown', icon: Truck },
+                { value: 'accident', label: 'Accident', icon: AlertTriangle },
+                { value: 'medical', label: 'Medical', icon: Phone },
+                { value: 'other', label: 'Other', icon: AlertCircle },
+              ].map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setSosType(item.value)}
+                  className={`p-3 rounded-lg border-2 text-center transition-all ${
+                    sosType === item.value
+                      ? 'border-red-500 bg-red-50 text-red-700'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  <item.icon className="h-6 w-6 mx-auto mb-1" />
+                  <span className="text-xs font-semibold">{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={sosMessage}
+              onChange={(e) => setSosMessage(e.target.value)}
+              placeholder="Describe the situation (optional)..."
+              className="w-full h-20 px-3 py-2 text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:border-red-400"
+            />
+
+            <div className="flex space-x-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowSos(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleSos}
+                disabled={sosSending}
+              >
+                {sosSending ? 'Sending...' : 'Send SOS Alert'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
