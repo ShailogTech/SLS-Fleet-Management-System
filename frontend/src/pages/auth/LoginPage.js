@@ -66,9 +66,6 @@ const LoginPage = () => {
           <path d="M0 500 Q400 300 700 450 T1200 400" className="login-route-path login-route-2" />
           <path d="M0 600 Q350 400 650 500 T1200 500" className="login-route-path login-route-3" />
         </svg>
-        {/* Floating dots (vehicles on map) */}
-        <div className="login-dot login-dot-1" />
-        <div className="login-dot login-dot-3" />
       </div>
 
       {/* Main content */}

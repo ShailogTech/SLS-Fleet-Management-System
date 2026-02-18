@@ -52,7 +52,7 @@ const DriverPortal = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
+      <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
           <p className="mt-4 text-slate-600">Loading your dashboard...</p>
@@ -92,7 +92,7 @@ const DriverPortal = () => {
   const { driver, vehicle, documents: uploadedDocs } = data || {};
 
   return (
-    <div className="min-h-screen bg-slate-50" data-testid="driver-portal">
+    <div className="min-h-screen" data-testid="driver-portal">
       {/* Header */}
       <div className="bg-slate-900 text-white py-6 px-6">
         <div className="max-w-4xl mx-auto">
@@ -150,7 +150,7 @@ const DriverPortal = () => {
         {/* Quick Stats */}
         {vehicle && (
           <div className="grid grid-cols-2 gap-4">
-            <Card className="bg-white border-slate-200">
+            <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-4 flex items-center space-x-3">
                 <div className="bg-blue-100 p-3 rounded-lg">
                   <Truck className="h-6 w-6 text-blue-600" />
@@ -161,7 +161,7 @@ const DriverPortal = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white border-slate-200">
+            <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-4 flex items-center space-x-3">
                 <div className="bg-emerald-100 p-3 rounded-lg">
                   <MapPin className="h-6 w-6 text-emerald-600" />
@@ -177,7 +177,7 @@ const DriverPortal = () => {
 
         {/* Plant Route / Assignment Info */}
         {vehicle && vehicle.plant && (
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0">
+          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-shadow duration-200">
             <CardContent className="p-6">
               <div className="flex items-start space-x-4">
                 <div className="bg-white/20 p-3 rounded-lg">
@@ -207,7 +207,7 @@ const DriverPortal = () => {
         )}
 
         {/* My Profile */}
-        <Card className="bg-white border-slate-200">
+        <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-lg">
               <User className="h-5 w-5 mr-2 text-slate-600" />
@@ -296,7 +296,7 @@ const DriverPortal = () => {
 
         {/* Allocated Vehicle Details */}
         {vehicle ? (
-          <Card className="bg-white border-slate-200">
+          <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center text-lg">
                 <Truck className="h-5 w-5 mr-2 text-slate-600" />
@@ -333,7 +333,7 @@ const DriverPortal = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-white border-slate-200">
+          <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
             <CardContent className="py-12 text-center">
               <AlertCircle className="h-12 w-12 mx-auto mb-3 text-slate-300" />
               <h3 className="font-semibold text-slate-900 mb-1">No Vehicle Assigned</h3>
@@ -344,7 +344,7 @@ const DriverPortal = () => {
 
         {/* Vehicle Documents */}
         {vehicle && vehicle.documents && Object.keys(vehicle.documents).length > 0 && (
-          <Card className="bg-white border-slate-200">
+          <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center text-lg">
                 <FileText className="h-5 w-5 mr-2 text-slate-600" />
@@ -416,7 +416,7 @@ const DriverPortal = () => {
 
         {/* No Documents Message */}
         {vehicle && (!vehicle.documents || Object.keys(vehicle.documents).length === 0) && (
-          <Card className="bg-white border-slate-200">
+          <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
             <CardContent className="py-8 text-center">
               <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300" />
               <p className="text-slate-500 text-sm">No documents uploaded for this vehicle yet</p>
@@ -426,7 +426,7 @@ const DriverPortal = () => {
 
         {/* Uploaded Document Files */}
         {uploadedDocs && uploadedDocs.length > 0 && (
-          <Card className="bg-white border-slate-200">
+          <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center text-lg">
                 <Download className="h-5 w-5 mr-2 text-slate-600" />

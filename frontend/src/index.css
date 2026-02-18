@@ -284,28 +284,6 @@ h1, h2, h3, h4, h5, h6 {
   100% { stroke-dashoffset: -200; }
 }
 
-/* Floating dots */
-.login-dot {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  animation: loginDotFloat linear infinite;
-}
-.login-dot::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px solid;
-  opacity: 0.3;
-  animation: loginDotPulse 2s ease-in-out infinite;
-}
-
-.login-dot-1 { background: #dc2626; top: 20%; left: 10%; animation-duration: 25s; }
-.login-dot-1::after { border-color: #ef4444; }
-.login-dot-3 { background: #ef4444; top: 35%; left: 70%; animation-duration: 22s; animation-delay: -10s; }
-.login-dot-3::after { border-color: #ef4444; }
 
 @keyframes loginDotFloat {
   0%, 100% { transform: translate(0, 0); }
