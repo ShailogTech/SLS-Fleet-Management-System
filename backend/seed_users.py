@@ -24,6 +24,8 @@ users_data = [
     {"email": "office@sls.com", "name": "Office Incharge", "phone": "9876543213", "role": "office_incharge", "password": "office123"},
     {"email": "records@sls.com", "name": "Monisha Records", "phone": "9876543214", "role": "records_incharge", "password": "records123"},
     {"email": "plant@sls.com", "name": "Plant Manager", "phone": "9876543215", "role": "plant_incharge", "password": "plant123", "plant": "MYSORE HP"},
+    {"email": "opsmanager@sls.com", "name": "Ops Manager", "phone": "9876543216", "role": "operational_manager", "password": "ops123"},
+    {"email": "acmanager@sls.com", "name": "Accounts Manager", "phone": "9876543217", "role": "accounts_manager", "password": "accounts123"},
 ]
 
 async def seed_users():
@@ -37,9 +39,9 @@ async def seed_users():
         user_doc["password_hash"] = get_password_hash(password)
         user_doc["created_at"] = user_doc["created_at"].isoformat()
         await db.users.insert_one(user_doc)
-        print(f"✓ Created user: {user_data['email']} ({user_data['role']})")
+        print(f"  Created user: {user_data['email']} ({user_data['role']})")
     
-    print(f"\n✅ Successfully created {len(users_data)} users")
+    print(f"\nSuccessfully created {len(users_data)} users")
     client.close()
 
 if __name__ == "__main__":

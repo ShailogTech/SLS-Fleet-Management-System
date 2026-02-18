@@ -30,7 +30,7 @@ async def seed_plants():
     
     existing_count = await db.plants.count_documents({})
     if existing_count > 0:
-        print(f"⚠️  {existing_count} plants already exist. Skipping seed.")
+        print(f"[WARN]  {existing_count} plants already exist. Skipping seed.")
         return
     
     for plant_data in plants_data:
@@ -39,9 +39,9 @@ async def seed_plants():
         plant_doc["created_at"] = plant_doc["created_at"].isoformat()
         plant_doc["updated_at"] = plant_doc["updated_at"].isoformat()
         await db.plants.insert_one(plant_doc)
-        print(f"✓ Created plant: {plant_data['plant_name']}")
+        print(f" Created plant: {plant_data['plant_name']}")
     
-    print(f"\n✅ Successfully created {len(plants_data)} plants")
+    print(f"\n[OK] Successfully created {len(plants_data)} plants")
     client.close()
 
 if __name__ == "__main__":

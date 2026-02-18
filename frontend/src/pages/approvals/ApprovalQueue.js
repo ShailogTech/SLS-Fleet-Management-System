@@ -25,9 +25,11 @@ const ApprovalQueue = () => {
     setLoading(true);
     try {
       const response = await api.get('/approvals/queue');
-      setApprovals(response.data);
+      setApprovals(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      toast.error('Failed to load approvals');
+      console.error('Failed to load approvals:', error);
+      toast.error(error.response?.data?.detail || 'Failed to load approvals');
+      setApprovals([]);
     } finally {
       setLoading(false);
     }
@@ -37,7 +39,7 @@ const ApprovalQueue = () => {
     setProcessing(approvalId);
     try {
       await api.post(`/approvals/${approvalId}/check`, { action, comment });
-      toast.success(action === 'approve' ? 'Checked and forwarded to Approver' : 'Rejected and returned to Maker');
+      toast.success(action === 'approve' ? 'Reviewed and forwarded to Approver' : 'Rejected and returned to Maker');
       fetchApprovals();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Action failed');
@@ -81,6 +83,8 @@ const ApprovalQueue = () => {
 
   const isAdmin = ['admin', 'superuser'].includes(user?.role);
   const isChecker = user?.role === 'checker';
+  const isOperationalManager = user?.role === 'operational_manager';
+  const isReviewer = isChecker || isOperationalManager;
   const isApprover = user?.role === 'approver';
 
   // Stats
@@ -108,6 +112,7 @@ const ApprovalQueue = () => {
           <p className="text-slate-600 mt-1">
             {isAdmin && 'Monitoring approval workflow (read-only)'}
             {isChecker && 'Review and verify submitted applications'}
+            {isOperationalManager && 'Review and verify submitted applications'}
             {isApprover && 'Review checked applications for final approval'}
           </p>
         </div>
@@ -122,7 +127,7 @@ const ApprovalQueue = () => {
           <CardContent className="p-4 flex items-center space-x-3">
             <Eye className="h-5 w-5 text-blue-600" />
             <p className="text-sm text-blue-800">
-              As Admin, you can monitor all approvals and add comments/queries to Checkers and Approvers, but cannot take approval actions directly.
+              As Admin, you can monitor all approvals and add comments/queries to reviewers and Approvers, but cannot take approval actions directly.
             </p>
           </CardContent>
         </Card>
@@ -132,7 +137,7 @@ const ApprovalQueue = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-slate-200">
           <CardContent className="p-4">
-            <p className="text-sm text-slate-500">Pending Check</p>
+            <p className="text-sm text-slate-500">Pending Review</p>
             <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
           </CardContent>
         </Card>
@@ -231,10 +236,10 @@ const ApprovalQueue = () => {
                   </div>
                 )}
 
-                {/* Checker info */}
+                {/* Reviewer info */}
                 {approval.checker_id && (
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
-                    <span className="text-blue-700 font-medium">Checked</span>
+                    <span className="text-blue-700 font-medium">Reviewed</span>
                     <span className="text-blue-600 ml-2">on {new Date(approval.checker_action_at).toLocaleString()}</span>
                     {approval.checker_comment && (
                       <p className="text-blue-600 mt-1 text-xs">Comment: {approval.checker_comment}</p>
@@ -273,8 +278,8 @@ const ApprovalQueue = () => {
                   </div>
                 )}
 
-                {/* Checker Actions */}
-                {approval.status === 'pending' && isChecker && (
+                {/* Reviewer Actions (Checker / Operational Manager) */}
+                {approval.status === 'pending' && isReviewer && (
                   <div className="pt-4 border-t border-slate-200 space-y-3">
                     <Textarea
                       placeholder="Add review comment (optional)..."
@@ -345,7 +350,7 @@ const ApprovalQueue = () => {
                     {showCommentFor === approval.id ? (
                       <div className="space-y-2">
                         <Textarea
-                          placeholder="Add query or comment for checker/approver..."
+                          placeholder="Add query or comment for reviewer/approver..."
                           value={commentText[approval.id] || ''}
                           onChange={e => setCommentText(prev => ({ ...prev, [approval.id]: e.target.value }))}
                           className="text-sm"
@@ -394,7 +399,7 @@ const ApprovalQueue = () => {
               <CheckCircle className="h-12 w-12 mx-auto mb-3 text-slate-300" />
               <p className="font-medium">No pending approvals</p>
               <p className="text-sm mt-1">
-                {isChecker && 'No items waiting for your review'}
+                {isReviewer && 'No items waiting for your review'}
                 {isApprover && 'No items waiting for your approval'}
                 {isAdmin && 'All items have been processed'}
               </p>

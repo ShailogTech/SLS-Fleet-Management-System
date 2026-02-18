@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 const ROLES = [
   { value: 'driver', label: 'Driver' },
   { value: 'maker', label: 'Maker' },
+  { value: 'operational_manager', label: 'Operational Manager' },
+  { value: 'accounts_manager', label: 'Accounts Manager' },
   { value: 'checker', label: 'Checker' },
   { value: 'approver', label: 'Approver' },
   { value: 'admin', label: 'Admin' },

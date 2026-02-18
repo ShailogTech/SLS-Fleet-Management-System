@@ -119,7 +119,7 @@ async def serve_photo(filename: str):
 
 @router.get("/profile-edits")
 async def get_profile_edits(current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ["admin", "superuser", "checker", "approver"]:
+    if current_user["role"] not in ["admin", "superuser", "checker", "operational_manager", "approver"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     edits = await get_db().profile_edits.find(
@@ -130,7 +130,7 @@ async def get_profile_edits(current_user: dict = Depends(get_current_user)):
 
 @router.post("/profile-edits/{edit_id}/approve")
 async def approve_profile_edit(edit_id: str, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ["checker", "approver"]:
+    if current_user["role"] not in ["checker", "operational_manager", "approver"]:
         raise HTTPException(status_code=403, detail="Only checkers/approvers can approve profile edits")
     
     db = get_db()
@@ -155,7 +155,7 @@ async def approve_profile_edit(edit_id: str, current_user: dict = Depends(get_cu
 
 @router.post("/profile-edits/{edit_id}/reject")
 async def reject_profile_edit(edit_id: str, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ["checker", "approver"]:
+    if current_user["role"] not in ["checker", "operational_manager", "approver"]:
         raise HTTPException(status_code=403, detail="Only checkers/approvers can reject profile edits")
     
     db = get_db()

@@ -25,18 +25,18 @@ const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['superuser', 'admin', 'maker', 'checker', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
-    { name: 'My Profile', href: '/profile', icon: UserCircle, roles: ['superuser', 'admin', 'maker', 'checker', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer', 'driver'] },
-    { name: 'Vehicles', href: '/vehicles', icon: Truck, roles: ['superuser', 'admin', 'maker', 'checker', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
-    { name: 'Drivers', href: '/drivers', icon: Users, roles: ['superuser', 'admin', 'maker', 'checker', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
+    { name: 'My Profile', href: '/profile', icon: UserCircle, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer', 'driver'] },
+    { name: 'Vehicles', href: '/vehicles', icon: Truck, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
+    { name: 'Drivers', href: '/drivers', icon: Users, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
     { name: 'Plants', href: '/plants', icon: MapPin, roles: ['superuser', 'admin', 'office_incharge', 'viewer'] },
     { name: 'Stoppages', href: '/stoppages', icon: AlertTriangle, roles: ['superuser', 'admin', 'office_incharge', 'plant_incharge'] },
-    { name: 'Tenders', href: '/tenders', icon: FileText, roles: ['superuser', 'admin', 'maker', 'checker', 'approver', 'office_incharge', 'viewer'] },
+    { name: 'Tenders', href: '/tenders', icon: FileText, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'viewer'] },
     {
       name: 'Approvals',
       href: '/approvals',
       icon: CheckSquare,
-      roles: ['checker', 'approver', 'admin', 'superuser']
+      roles: ['checker', 'operational_manager', 'approver', 'admin', 'superuser']
     },
     {
       name: 'My Submissions',

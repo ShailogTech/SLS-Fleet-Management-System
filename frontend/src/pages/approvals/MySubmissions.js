@@ -18,7 +18,7 @@ const STATUS_CONFIG = {
     color: 'bg-amber-100 text-amber-800 border-amber-200',
     icon: Clock,
     iconColor: 'text-amber-600',
-    description: 'Waiting for checker review'
+    description: 'Waiting for reviewer'
   },
   checked: {
     label: 'Awaiting Approval',

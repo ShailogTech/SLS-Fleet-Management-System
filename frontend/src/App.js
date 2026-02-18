@@ -76,7 +76,7 @@ function App() {
             <Route
               path="approvals"
               element={
-                <ProtectedRoute allowedRoles={['checker', 'approver', 'admin', 'superuser']}>
+                <ProtectedRoute allowedRoles={['checker', 'operational_manager', 'approver', 'admin', 'superuser']}>
                   <ApprovalQueue />
                 </ProtectedRoute>
               }

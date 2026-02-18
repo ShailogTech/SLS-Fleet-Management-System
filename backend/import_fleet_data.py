@@ -30,7 +30,7 @@ def parse_date(date_str):
 async def import_vehicles():
     print("Importing vehicles from Fleet Master Data...")
     
-    csv_path = '/app/backend/fleet_data.csv'
+    csv_path = str(ROOT_DIR / 'fleet_data.csv')
     if not os.path.exists(csv_path):
         print(f"CSV file not found: {csv_path}")
         return
@@ -83,7 +83,7 @@ async def import_vehicles():
             except Exception as e:
                 print(f"Error importing vehicle {row.get('VEHICLE NO', 'UNKNOWN')}: {str(e)}")
     
-    print(f"\n✅ Successfully imported {count} vehicles")
+    print(f"\n[OK] Successfully imported {count} vehicles")
 
 async def import_drivers():
     print("\nImporting drivers from vehicle data...")
@@ -116,7 +116,7 @@ async def import_drivers():
     for driver_doc in driver_map.values():
         await db.drivers.insert_one(driver_doc)
     
-    print(f"✅ Successfully imported {len(driver_map)} drivers")
+    print(f"[OK] Successfully imported {len(driver_map)} drivers")
 
 async def main():
     await import_vehicles()

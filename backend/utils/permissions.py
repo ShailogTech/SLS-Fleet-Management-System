@@ -9,6 +9,8 @@ ROLE_HIERARCHY = {
     "admin": 9,
     "approver": 8,
     "checker": 7,
+    "operational_manager": 6.5,
+    "accounts_manager": 6.5,
     "maker": 6,
     "records_incharge": 5,
     "office_incharge": 5,

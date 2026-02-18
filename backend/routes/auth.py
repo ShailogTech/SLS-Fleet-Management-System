@@ -83,7 +83,7 @@ async def approve_signup_request(request_id: str, role: str, current_user: dict 
     if signup_req["status"] != "pending":
         raise HTTPException(status_code=400, detail="Request has already been processed")
     
-    valid_roles = ["driver", "maker", "checker", "approver", "admin", "office_incharge", "plant_incharge", "records_incharge", "viewer"]
+    valid_roles = ["driver", "maker", "checker", "operational_manager", "accounts_manager", "approver", "admin", "office_incharge", "plant_incharge", "records_incharge", "viewer"]
     if role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}")
     

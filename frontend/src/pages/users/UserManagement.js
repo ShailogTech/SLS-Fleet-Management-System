@@ -15,6 +15,8 @@ const ROLES = [
   { value: 'admin', label: 'Admin' },
   { value: 'approver', label: 'Approver' },
   { value: 'checker', label: 'Checker' },
+  { value: 'operational_manager', label: 'Operational Manager' },
+  { value: 'accounts_manager', label: 'Accounts Manager' },
   { value: 'maker', label: 'Maker' },
   { value: 'office_incharge', label: 'Office Incharge' },
   { value: 'plant_incharge', label: 'Plant Incharge' },
