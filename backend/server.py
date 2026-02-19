@@ -17,6 +17,16 @@ db = client[os.environ['DB_NAME']]
 
 app = FastAPI(title="SLS Fleet Management API", version="1.0.0")
 
+# CORS middleware MUST be added before routes for preflight to work on Vercel
+cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True if cors_origins != ['*'] else False,
+    allow_origins=cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_router = APIRouter(prefix="/api")
 
 api_router.include_router(auth.router)
@@ -37,14 +47,6 @@ async def health_check():
     return {"status": "healthy", "service": "SLS Fleet Management API"}
 
 app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 logging.basicConfig(
     level=logging.INFO,
