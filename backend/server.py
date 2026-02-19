@@ -62,11 +62,12 @@ app = FastAPI(title="SLS Fleet Management API", version="1.0.0", lifespan=lifesp
 # CORS middleware
 raw_origins = os.environ.get('CORS_ORIGINS', '*')
 cors_origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
-logger.info(f"CORS allowed origins: {cors_origins}")
+is_wildcard = cors_origins == ['*']
+logger.info(f"CORS allowed origins: {cors_origins}, credentials: {not is_wildcard}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True,
+    allow_credentials=not is_wildcard,
     allow_methods=["*"],
     allow_headers=["*"],
 )
