@@ -14,7 +14,7 @@ import uuid
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
-PHOTO_DIR = Path("/app/backend/uploads/photos")
+PHOTO_DIR = Path(__file__).parent.parent / "uploads" / "photos"
 PHOTO_DIR.mkdir(parents=True, exist_ok=True)
 
 
