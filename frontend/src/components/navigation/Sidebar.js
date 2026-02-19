@@ -15,7 +15,8 @@ import {
   UserPlus,
   MapPin,
   ClipboardList,
-  UserCircle
+  UserCircle,
+  CalendarDays
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -45,6 +46,7 @@ const Sidebar = () => {
       roles: ['maker', 'admin', 'superuser', 'office_incharge', 'records_incharge']
     },
     { name: 'Alerts', href: '/alerts', icon: AlertTriangle, roles: ['superuser', 'admin', 'records_incharge', 'office_incharge'] },
+    { name: 'Expiry Calendar', href: '/expiry-calendar', icon: CalendarDays, roles: ['superuser', 'admin', 'approver'] },
     { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['superuser', 'admin', 'office_incharge'] },
     {
       name: 'Signup Requests',

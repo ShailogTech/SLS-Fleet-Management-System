@@ -23,6 +23,7 @@ import UserProfile from './pages/users/UserProfile';
 import AlertCenter from './pages/alerts/AlertCenter';
 import Reports from './pages/reports/Reports';
 import SignupRequests from './pages/admin/SignupRequests';
+import ExpiryCalendar from './pages/calendar/ExpiryCalendar';
 
 import './App.css';
 
@@ -72,6 +73,14 @@ function App() {
             <Route path="stoppages" element={<StoppageList />} />
             <Route path="tenders" element={<TenderManagement />} />
             <Route path="alerts" element={<AlertCenter />} />
+            <Route
+              path="expiry-calendar"
+              element={
+                <ProtectedRoute allowedRoles={['superuser', 'admin', 'approver']}>
+                  <ExpiryCalendar />
+                </ProtectedRoute>
+              }
+            />
             <Route path="reports" element={<Reports />} />
             <Route
               path="approvals"
