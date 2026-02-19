@@ -22,6 +22,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 mongo_url = os.environ['MONGO_URL']
+# Append TLS params if not already present (needed for Atlas on some hosts)
+if 'mongodb+srv' in mongo_url and 'tls' not in mongo_url:
+    separator = '&' if '?' in mongo_url else '?'
+    mongo_url = f"{mongo_url}{separator}tls=true&tlsAllowInvalidCertificates=true"
+logger.info(f"Connecting to MongoDB (host masked)")
 client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
 db = client[os.environ['DB_NAME']]
 
