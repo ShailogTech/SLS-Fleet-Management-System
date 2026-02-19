@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from './components/ui/sonner';
@@ -24,6 +24,7 @@ import AlertCenter from './pages/alerts/AlertCenter';
 import Reports from './pages/reports/Reports';
 import SignupRequests from './pages/admin/SignupRequests';
 import ExpiryCalendar from './pages/calendar/ExpiryCalendar';
+import SplashScreen from './components/SplashScreen';
 
 import './App.css';
 
@@ -38,8 +39,12 @@ const RoleBasedRedirect = () => {
 };
 
 function App() {
+  const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem('splashShown'));
+  const handleSplashFinish = useCallback(() => { sessionStorage.setItem('splashShown', '1'); setShowSplash(false); }, []);
+
   return (
     <AuthProvider>
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />

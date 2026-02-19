@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
-import { Truck, Lock, Mail, Eye, EyeOff, ArrowRight, Shield, MapPin, Clock } from 'lucide-react';
+import { Truck, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -83,42 +83,14 @@ const LoginPage = () => {
             <h1 className="login-headline">
               Smart Fleet<br />Management
             </h1>
-            <p className="login-tagline">
-              Track, manage and optimize your entire fleet operations from one powerful dashboard.
-            </p>
 
-            {/* Feature pills */}
-            <div className="login-features">
-              <div className="login-feature-pill">
-                <MapPin size={14} />
-                <span>Live Tracking</span>
-              </div>
-              <div className="login-feature-pill">
-                <Shield size={14} />
-                <span>Secure Access</span>
-              </div>
-              <div className="login-feature-pill">
-                <Clock size={14} />
-                <span>Real-time Alerts</span>
-              </div>
-            </div>
-
-            {/* Stats row */}
-            <div className="login-stats">
-              <div className="login-stat">
-                <span className="login-stat-num">500+</span>
-                <span className="login-stat-label">Vehicles</span>
-              </div>
-              <div className="login-stat-divider" />
-              <div className="login-stat">
-                <span className="login-stat-num">50+</span>
-                <span className="login-stat-label">Plants</span>
-              </div>
-              <div className="login-stat-divider" />
-              <div className="login-stat">
-                <span className="login-stat-num">99.9%</span>
-                <span className="login-stat-label">Uptime</span>
-              </div>
+            {/* Truck Lottie animation */}
+            <div className="login-truck-animation">
+              <iframe
+                src="https://lottie.host/embed/59477641-666d-4ae9-adab-8a19fdc291ef/ArasHyX9m9.lottie"
+                style={{ width: '100%', height: '100%', border: 'none', background: 'transparent' }}
+                title="Truck animation"
+              />
             </div>
           </div>
         </div>

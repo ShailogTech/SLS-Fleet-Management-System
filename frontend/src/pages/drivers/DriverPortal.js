@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import GPSTracker from '../../components/GPSTracker';
 
 const DriverPortal = () => {
   const { user, logout } = useAuth();
@@ -205,6 +206,22 @@ const DriverPortal = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* GPS Location Map */}
+        <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-lg">
+              <MapPin className="h-5 w-5 mr-2 text-slate-600" />
+              My Location
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <GPSTracker
+              driverName={driver?.name}
+              vehicleNo={vehicle?.vehicle_no}
+            />
+          </CardContent>
+        </Card>
 
         {/* My Profile */}
         <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
