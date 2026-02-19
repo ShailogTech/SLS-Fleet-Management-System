@@ -13,7 +13,7 @@ from datetime import datetime
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
 
 
-@router.get("", response_model=List[Vehicle])
+@router.get("")
 async def get_vehicles(
     status: Optional[str] = Query(None),
     plant: Optional[str] = Query(None),
@@ -34,7 +34,7 @@ async def get_vehicles(
     vehicles = await get_db().vehicles.find(query, {"_id": 0}).to_list(1000)
     return vehicles
 
-@router.get("/{vehicle_id}", response_model=Vehicle)
+@router.get("/{vehicle_id}")
 async def get_vehicle(vehicle_id: str, current_user: dict = Depends(get_current_user)):
     vehicle = await get_db().vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:

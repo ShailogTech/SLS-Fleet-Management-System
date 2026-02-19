@@ -31,9 +31,12 @@ dist/
 dist
 
 # Environment files (comprehensive coverage)
-
+.env
+.env.*
+!.env.example
 *token.json*
 *credentials.json*
+db_credentials.txt
 
 # Logs and debug files
 npm-debug.log*

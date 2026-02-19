@@ -55,6 +55,19 @@ async def create_document_metadata(
     await get_db().documents.insert_one(document_record)
     del document_record["_id"]
 
+    # Sync expiry date back to driver record
+    if entity_type == "driver" and expiry_date:
+        driver_update = {}
+        if document_type == "dl":
+            driver_update["dl_expiry"] = expiry_date
+        elif document_type == "hazardous":
+            driver_update["hazardous_cert_expiry"] = expiry_date
+        if driver_update:
+            await get_db().drivers.update_one(
+                {"id": entity_id},
+                {"$set": driver_update}
+            )
+
     return {
         "message": "Document metadata saved. You can now upload the file.",
         "document": document_record
@@ -139,6 +152,19 @@ async def upload_document(
 
     await get_db().documents.insert_one(document_record)
     del document_record["_id"]
+
+    # Sync expiry date back to driver record
+    if entity_type == "driver" and expiry_date:
+        driver_update = {}
+        if document_type == "dl":
+            driver_update["dl_expiry"] = expiry_date
+        elif document_type == "hazardous":
+            driver_update["hazardous_cert_expiry"] = expiry_date
+        if driver_update:
+            await get_db().drivers.update_one(
+                {"id": entity_id},
+                {"$set": driver_update}
+            )
 
     return {
         "message": "Document uploaded successfully",

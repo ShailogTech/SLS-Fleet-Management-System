@@ -13,7 +13,7 @@ from datetime import datetime
 router = APIRouter(prefix="/drivers", tags=["Drivers"])
 
 
-@router.get("", response_model=List[Driver])
+@router.get("")
 async def get_drivers(
     status: Optional[str] = Query(None),
     plant: Optional[str] = Query(None),
@@ -33,14 +33,50 @@ async def get_drivers(
             query["emp_id"] = user_info["emp_id"]
     
     drivers = await db.drivers.find(query, {"_id": 0}).to_list(1000)
-    return drivers
+
+    # Enrich with document expiry dates for drivers missing them
+    driver_ids_needing_dates = [
+        d["id"] for d in drivers
+        if not d.get("dl_expiry") or not d.get("hazardous_cert_expiry")
+    ]
+    if driver_ids_needing_dates:
+        docs = await db.documents.find(
+            {"entity_type": "driver", "entity_id": {"$in": driver_ids_needing_dates},
+             "document_type": {"$in": ["dl", "hazardous"]}},
+            {"_id": 0, "entity_id": 1, "document_type": 1, "expiry_date": 1}
+        ).to_list(5000)
+        doc_map = {}
+        for doc in docs:
+            key = (doc["entity_id"], doc["document_type"])
+            if doc.get("expiry_date"):
+                doc_map[key] = doc["expiry_date"]
+        for driver in drivers:
+            if not driver.get("dl_expiry"):
+                driver["dl_expiry"] = doc_map.get((driver["id"], "dl"))
+            if not driver.get("hazardous_cert_expiry"):
+                driver["hazardous_cert_expiry"] = doc_map.get((driver["id"], "hazardous"))
+
     return drivers
 
-@router.get("/{driver_id}", response_model=Driver)
+@router.get("/{driver_id}")
 async def get_driver(driver_id: str, current_user: dict = Depends(get_current_user)):
-    driver = await get_db().drivers.find_one({"id": driver_id}, {"_id": 0})
+    db = get_db()
+    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
+
+    # Enrich with document expiry dates if missing from driver record
+    if not driver.get("dl_expiry") or not driver.get("hazardous_cert_expiry"):
+        docs = await db.documents.find(
+            {"entity_type": "driver", "entity_id": driver_id},
+            {"_id": 0, "document_type": 1, "expiry_date": 1}
+        ).to_list(50)
+        for doc in docs:
+            if doc.get("document_type") == "dl" and doc.get("expiry_date") and not driver.get("dl_expiry"):
+                driver["dl_expiry"] = doc["expiry_date"]
+            if doc.get("document_type") == "hazardous" and doc.get("expiry_date") and not driver.get("hazardous_cert_expiry"):
+                driver["hazardous_cert_expiry"] = doc["expiry_date"]
+
     return driver
 
 @router.post("", response_model=Driver)
