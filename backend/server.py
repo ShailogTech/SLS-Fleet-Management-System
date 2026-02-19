@@ -11,8 +11,9 @@ from routes import auth, vehicles, drivers, tenders, approvals, dashboard, users
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env', override=False)
 
+import certifi
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
 db = client[os.environ['DB_NAME']]
 
 app = FastAPI(title="SLS Fleet Management API", version="1.0.0")
