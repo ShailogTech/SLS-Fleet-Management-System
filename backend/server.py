@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -59,18 +60,48 @@ async def lifespan(app):
 
 app = FastAPI(title="SLS Fleet Management API", version="1.0.0", lifespan=lifespan)
 
-# CORS middleware
+# ---------------------------------------------------------------------------
+# CORS configuration
+# ---------------------------------------------------------------------------
+# CORS_ORIGINS should be a comma-separated list of allowed origins, e.g.
+#   https://fleet-management-eight-gilt.vercel.app,https://other-domain.com
+# A wildcard "*" is supported for quick local dev but credentials will still
+# work because we explicitly list it. For production always list exact origins.
+# ---------------------------------------------------------------------------
 raw_origins = os.environ.get('CORS_ORIGINS', '*')
 cors_origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
-is_wildcard = cors_origins == ['*']
-logger.info(f"CORS allowed origins: {cors_origins}, credentials: {not is_wildcard}")
+logger.info(f"CORS allowed origins: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=not is_wildcard,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+
+# ---------------------------------------------------------------------------
+# Global exception handler — ensures CORS headers are present even on 500s
+# Without this, a 500 error response may lack the Access-Control-Allow-Origin
+# header, causing the browser to report a CORS error instead of the real error.
+# ---------------------------------------------------------------------------
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {type(exc).__name__}: {exc}")
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin and (origin in cors_origins or "*" in cors_origins):
+        headers["Access-Control-Allow-Origin"] = origin if "*" not in cors_origins else "*"
+        headers["Access-Control-Allow-Credentials"] = "true"
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {type(exc).__name__}: {str(exc)}"},
+        headers=headers,
+    )
+
 
 api_router = APIRouter(prefix="/api")
 
