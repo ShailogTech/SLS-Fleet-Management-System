@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
@@ -41,15 +41,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
 
   const canEdit = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
 
-  useEffect(() => {
-    if (isOpen && vehicleId) {
-      fetchVehicleDetails();
-      fetchDrivers();
-      fetchPlants();
-    }
-  }, [isOpen, vehicleId]);
-
-  const fetchVehicleDetails = async () => {
+  const fetchVehicleDetails = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get(`/vehicles/${vehicleId}`);
@@ -61,7 +53,15 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [vehicleId, onClose]);
+
+  useEffect(() => {
+    if (isOpen && vehicleId) {
+      fetchVehicleDetails();
+      fetchDrivers();
+      fetchPlants();
+    }
+  }, [isOpen, vehicleId, fetchVehicleDetails]);
 
   const fetchDrivers = async () => {
     try {

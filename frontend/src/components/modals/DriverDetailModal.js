@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
@@ -33,14 +33,7 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
 
   const canEdit = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
 
-  useEffect(() => {
-    if (isOpen && driverId) {
-      fetchDriverDetails();
-      fetchVehicles();
-    }
-  }, [isOpen, driverId]);
-
-  const fetchDriverDetails = async () => {
+  const fetchDriverDetails = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get(`/drivers/${driverId}`);
@@ -52,7 +45,14 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [driverId, onClose]);
+
+  useEffect(() => {
+    if (isOpen && driverId) {
+      fetchDriverDetails();
+      fetchVehicles();
+    }
+  }, [isOpen, driverId, fetchDriverDetails]);
 
   const fetchVehicles = async () => {
     try {

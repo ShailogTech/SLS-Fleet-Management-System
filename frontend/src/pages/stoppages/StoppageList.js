@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
@@ -16,12 +16,7 @@ const StoppageList = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  useEffect(() => {
-    fetchStoppages();
-    fetchAnalytics();
-  }, [filter]);
-
-  const fetchStoppages = async () => {
+  const fetchStoppages = useCallback(async () => {
     try {
       const params = filter === 'all' ? {} : { status: filter };
       const response = await api.get('/stoppages', { params });
@@ -31,7 +26,12 @@ const StoppageList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchStoppages();
+    fetchAnalytics();
+  }, [fetchStoppages]);
 
   const fetchAnalytics = async () => {
     try {
