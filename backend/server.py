@@ -60,11 +60,13 @@ async def lifespan(app):
 app = FastAPI(title="SLS Fleet Management API", version="1.0.0", lifespan=lifespan)
 
 # CORS middleware
-cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
+raw_origins = os.environ.get('CORS_ORIGINS', '*')
+cors_origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
+logger.info(f"CORS allowed origins: {cors_origins}")
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True if cors_origins != ['*'] else False,
     allow_origins=cors_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
