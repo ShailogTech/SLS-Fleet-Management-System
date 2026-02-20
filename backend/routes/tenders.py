@@ -13,12 +13,12 @@ from datetime import datetime
 router = APIRouter(prefix="/tenders", tags=["Tenders"])
 
 
-@router.get("", response_model=List[Tender])
+@router.get("")
 async def get_tenders(current_user: dict = Depends(get_current_user)):
     tenders = await get_db().tenders.find({}, {"_id": 0}).to_list(1000)
     return tenders
 
-@router.get("/{tender_id}", response_model=Tender)
+@router.get("/{tender_id}")
 async def get_tender(tender_id: str, current_user: dict = Depends(get_current_user)):
     tender = await get_db().tenders.find_one({"id": tender_id}, {"_id": 0})
     if not tender:

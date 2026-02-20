@@ -12,13 +12,13 @@ def get_db():
     from server import db
     return db
 
-@router.get("", response_model=List[Plant])
+@router.get("")
 async def get_plants(current_user: dict = Depends(get_current_user)):
     db = get_db()
     plants = await db.plants.find({"is_active": True}, {"_id": 0}).to_list(1000)
     return plants
 
-@router.get("/{plant_id}", response_model=Plant)
+@router.get("/{plant_id}")
 async def get_plant(plant_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
     plant = await db.plants.find_one({"id": plant_id}, {"_id": 0})
