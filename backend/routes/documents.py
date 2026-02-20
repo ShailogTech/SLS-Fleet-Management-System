@@ -68,6 +68,24 @@ async def create_document_metadata(
                 {"$set": driver_update}
             )
 
+    # Sync expiry date back to vehicle documents
+    if entity_type == "vehicle" and expiry_date:
+        doc_type_map = {
+            "rc": "rc_expiry", "registration": "rc_expiry",
+            "insurance": "insurance_expiry",
+            "fitness": "fitness_expiry", "fc": "fitness_expiry",
+            "tax": "tax_expiry",
+            "puc": "puc_expiry", "pollution": "puc_expiry",
+            "permit": "permit_expiry",
+            "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
+        }
+        doc_key = doc_type_map.get(document_type.lower())
+        if doc_key:
+            await get_db().vehicles.update_one(
+                {"id": entity_id},
+                {"$set": {f"documents.{doc_key}": expiry_date}}
+            )
+
     return {
         "message": "Document metadata saved. You can now upload the file.",
         "document": document_record
@@ -164,6 +182,24 @@ async def upload_document(
             await get_db().drivers.update_one(
                 {"id": entity_id},
                 {"$set": driver_update}
+            )
+
+    # Sync expiry date back to vehicle documents
+    if entity_type == "vehicle" and expiry_date:
+        doc_type_map = {
+            "rc": "rc_expiry", "registration": "rc_expiry",
+            "insurance": "insurance_expiry",
+            "fitness": "fitness_expiry", "fc": "fitness_expiry",
+            "tax": "tax_expiry",
+            "puc": "puc_expiry", "pollution": "puc_expiry",
+            "permit": "permit_expiry",
+            "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
+        }
+        doc_key = doc_type_map.get(document_type.lower())
+        if doc_key:
+            await get_db().vehicles.update_one(
+                {"id": entity_id},
+                {"$set": {f"documents.{doc_key}": expiry_date}}
             )
 
     return {

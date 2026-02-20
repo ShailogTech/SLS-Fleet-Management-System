@@ -41,7 +41,7 @@ async def get_vehicle(vehicle_id: str, current_user: dict = Depends(get_current_
         raise HTTPException(status_code=404, detail="Vehicle not found")
     return vehicle
 
-@router.post("", response_model=Vehicle)
+@router.post("")
 async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
     if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
@@ -76,7 +76,7 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depen
     
     return vehicle
 
-@router.put("/{vehicle_id}", response_model=Vehicle)
+@router.put("/{vehicle_id}")
 async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
     if user_role not in ["maker", "admin", "superuser", "office_incharge"]:

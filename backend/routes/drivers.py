@@ -84,7 +84,7 @@ async def get_driver(driver_id: str, current_user: dict = Depends(get_current_us
 
     return driver
 
-@router.post("", response_model=Driver)
+@router.post("")
 async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
     if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
@@ -143,7 +143,7 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
 
     return driver
 
-@router.put("/{driver_id}", response_model=Driver)
+@router.put("/{driver_id}")
 async def update_driver(driver_id: str, driver_data: DriverCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
     if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
