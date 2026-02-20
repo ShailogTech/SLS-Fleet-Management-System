@@ -6,9 +6,14 @@ def get_db():
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.driver import Driver, DriverCreate
 from utils.permissions import get_current_user
+from utils.jwt import get_password_hash
 from typing import List, Optional
 import os
+import uuid
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/drivers", tags=["Drivers"])
 
@@ -102,14 +107,40 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
         driver_doc["hazardous_cert_expiry"] = driver_doc["hazardous_cert_expiry"].isoformat()
     
     await get_db().drivers.insert_one(driver_doc)
-    
+
+    # Auto-create user account for the driver
+    try:
+        name_raw = driver_data.name.strip()
+        name_key = name_raw.lower().replace(" ", "")
+        email = f"{name_key}@sls.com"
+        counter = 1
+        while await get_db().users.find_one({"email": email}):
+            email = f"{name_key}{counter}@sls.com"
+            counter += 1
+        password = f"{name_key}123"
+        user_doc = {
+            "id": str(uuid.uuid4()),
+            "email": email,
+            "password_hash": get_password_hash(password),
+            "name": name_raw,
+            "role": "driver",
+            "emp_id": driver_data.emp_id,
+            "phone": driver_data.phone,
+            "status": "active",
+            "created_at": datetime.now().isoformat(),
+        }
+        await get_db().users.insert_one(user_doc)
+        logger.info(f"Auto-created user {email} / {password} for driver {name_raw}")
+    except Exception as e:
+        logger.error(f"Failed to auto-create user for driver {driver_data.name}: {e}")
+
     from models.approval import Approval
     approval = Approval(entity_type="driver", entity_id=driver.id, submitted_by=current_user["sub"])
     approval_doc = approval.model_dump()
     approval_doc["created_at"] = approval_doc["created_at"].isoformat()
     approval_doc["updated_at"] = approval_doc["updated_at"].isoformat()
     await get_db().approvals.insert_one(approval_doc)
-    
+
     return driver
 
 @router.put("/{driver_id}", response_model=Driver)

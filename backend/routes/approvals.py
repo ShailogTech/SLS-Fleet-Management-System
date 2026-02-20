@@ -185,39 +185,17 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
                 {"id": approval["entity_id"]},
                 {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
             )
-            # Auto-create user account when a driver is approved
+            # Activate the driver's user account (created when driver was added)
             if approval["entity_type"] == "driver":
                 try:
                     driver_doc = await get_db().drivers.find_one({"id": approval["entity_id"]}, {"_id": 0})
                     if driver_doc:
-                        # Use full name (lowercase, no spaces) for email
-                        name_raw = driver_doc.get("name", "driver").strip()
-                        name_key = name_raw.lower().replace(" ", "")
-                        base_email = f"{name_key}@sls.com"
-                        email = base_email
-                        counter = 1
-                        while await get_db().users.find_one({"email": email}):
-                            email = f"{name_key}{counter}@sls.com"
-                            counter += 1
-                        password = f"{name_key}123"
-                        user_doc = {
-                            "id": str(uuid.uuid4()),
-                            "email": email,
-                            "password_hash": get_password_hash(password),
-                            "name": name_raw,
-                            "role": "driver",
-                            "emp_id": driver_doc.get("emp_id", ""),
-                            "phone": driver_doc.get("phone", ""),
-                            "status": "active",
-                            "created_at": datetime.now().isoformat(),
-                            "updated_at": datetime.now().isoformat()
-                        }
-                        await get_db().users.insert_one(user_doc)
-                        logger.info(f"Auto-created user account {email} / {password} for driver {name_raw}")
-                    else:
-                        logger.error(f"Driver doc not found for entity_id={approval['entity_id']}, skipping user creation")
+                        await get_db().users.update_one(
+                            {"emp_id": driver_doc.get("emp_id")},
+                            {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
+                        )
                 except Exception as e:
-                    logger.error(f"Failed to auto-create user for driver {approval.get('entity_id')}: {str(e)}")
+                    logger.error(f"Failed to activate user for driver {approval.get('entity_id')}: {str(e)}")
         else:
             await get_db().profile_edits.update_one(
                 {"id": approval["entity_id"]},
