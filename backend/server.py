@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 mongo_url = os.environ['MONGO_URL']
 logger.info(f"Connecting to MongoDB (host masked)")
 client = AsyncIOMotorClient(mongo_url, tlsAllowInvalidCertificates=True)
-db = client[os.environ.get('DB_NAME', 'sls_fleet_data')]
+db = client[os.environ.get('DB_NAME', 'sls_fleet_db')]
 
 
 async def seed_admin():
