@@ -83,9 +83,7 @@ const DocumentUpload = ({ entityType, entityId, entityName, onUploadComplete }) 
       if (expiryDate) formData.append('expiry_date', expiryDate);
       if (issuingAuthority) formData.append('issuing_authority', issuingAuthority);
 
-      await api.post('/documents/metadata', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await api.post('/documents/metadata', formData);
       toast.success('Document details saved! You can upload the file later.');
       resetForm();
       if (onUploadComplete) onUploadComplete();
@@ -118,9 +116,7 @@ const DocumentUpload = ({ entityType, entityId, entityName, onUploadComplete }) 
       if (expiryDate) formData.append('expiry_date', expiryDate);
       if (issuingAuthority) formData.append('issuing_authority', issuingAuthority);
 
-      await api.post('/documents/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await api.post('/documents/upload', formData);
       toast.success('Document uploaded successfully!');
       resetForm();
       if (onUploadComplete) onUploadComplete();

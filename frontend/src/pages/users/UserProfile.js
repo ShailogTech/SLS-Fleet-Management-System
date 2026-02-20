@@ -63,9 +63,7 @@ const UserProfile = () => {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await api.post('/users/profile/photo', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post('/users/profile/photo', fd);
       toast.success('Profile photo updated!');
       setProfile(prev => ({ ...prev, photo_url: res.data.photo_url }));
     } catch (error) {

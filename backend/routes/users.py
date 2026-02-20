@@ -235,3 +235,19 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
     
     updated_user = await get_db().users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
     return updated_user
+
+@router.delete("/{user_id}")
+async def delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    user_role = current_user.get("role")
+    if user_role not in ["admin", "superuser"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    # Prevent deleting yourself
+    if user_id == current_user["sub"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+
+    result = await get_db().users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {"message": "User deleted successfully"}

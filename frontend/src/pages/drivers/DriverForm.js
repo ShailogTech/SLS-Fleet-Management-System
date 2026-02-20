@@ -113,13 +113,9 @@ const DriverForm = () => {
           const ext = docData.file.name.split('.').pop();
           const renamedFile = new File([docData.file], `${fileName}.${ext}`, { type: docData.file.type });
           fd.append('file', renamedFile);
-          await api.post('/documents/upload', fd, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
+          await api.post('/documents/upload', fd);
         } else {
-          await api.post('/documents/metadata', fd, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
+          await api.post('/documents/metadata', fd);
         }
         setUploadedDocs(prev => ({ ...prev, [doc.key]: true }));
       } catch (error) {
