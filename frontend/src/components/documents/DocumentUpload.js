@@ -74,17 +74,16 @@ const DocumentUpload = ({ entityType, entityId, entityName, onUploadComplete }) 
     }
     setSavingMetadata(true);
     try {
-      const payload = {
-        entity_type: entityType,
-        entity_id: entityId,
-        document_type: documentType,
-      };
-      if (documentNumber) payload.document_number = documentNumber;
-      if (issueDate) payload.issue_date = issueDate;
-      if (expiryDate) payload.expiry_date = expiryDate;
-      if (issuingAuthority) payload.issuing_authority = issuingAuthority;
+      const formData = new FormData();
+      formData.append('entity_type', entityType);
+      formData.append('entity_id', entityId);
+      formData.append('document_type', documentType);
+      if (documentNumber) formData.append('document_number', documentNumber);
+      if (issueDate) formData.append('issue_date', issueDate);
+      if (expiryDate) formData.append('expiry_date', expiryDate);
+      if (issuingAuthority) formData.append('issuing_authority', issuingAuthority);
 
-      await api.post('/documents/save-metadata', payload);
+      await api.post('/documents/metadata', formData);
       toast.success('Document details saved! You can upload the file later.');
       resetForm();
       if (onUploadComplete) onUploadComplete();

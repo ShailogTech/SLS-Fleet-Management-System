@@ -101,47 +101,28 @@ const DriverForm = () => {
 
       setUploadingDoc(doc.key);
       try {
-        // Step 1: Always save metadata first (JSON request - reliable)
-        const metaPayload = {
-          entity_type: 'driver',
-          entity_id: dId,
-          document_type: doc.key,
-        };
-        if (docData.expiry) metaPayload.expiry_date = docData.expiry;
+        const fd = new FormData();
+        fd.append('entity_type', 'driver');
+        fd.append('entity_id', dId);
+        fd.append('document_type', doc.key);
+        if (docData.expiry) fd.append('expiry_date', docData.expiry);
 
-        const metaRes = await api.post('/documents/save-metadata', metaPayload);
-        const docId = metaRes.data?.document?.id;
+        const fileName = `${formData.emp_id}_${doc.key}`;
 
-        // Step 2: If file present, attach it separately
-        if (docData.file && docId) {
-          const fileName = `${formData.emp_id}_${doc.key}`;
+        if (docData.file) {
           const ext = docData.file.name.split('.').pop();
           const renamedFile = new File([docData.file], `${fileName}.${ext}`, { type: docData.file.type });
-          const fileFd = new FormData();
-          fileFd.append('file', renamedFile);
-          try {
-            await api.post(`/documents/${docId}/attach`, fileFd);
-          } catch (fileErr) {
-            console.error(`File attach failed for ${doc.label}, metadata saved:`, fileErr);
-          }
+          fd.append('file', renamedFile);
+          await api.post('/documents/upload', fd);
+        } else {
+          await api.post('/documents/metadata', fd);
         }
-
         setUploadedDocs(prev => ({ ...prev, [doc.key]: true }));
       } catch (error) {
-        console.error(`Upload error for ${doc.label}:`, error);
+        toast.error(`Failed to upload ${doc.label}`);
       }
       setUploadingDoc(null);
     }
-
-    // Verify saved documents from backend
-    try {
-      const res = await api.get(`/documents/driver/${dId}`);
-      if (res.data?.length > 0) {
-        const verified = {};
-        res.data.forEach(d => { if (d.document_type) verified[d.document_type] = true; });
-        setUploadedDocs(prev => ({ ...prev, ...verified }));
-      }
-    } catch (e) { /* ignore */ }
   };
 
   const handleGoToStep2 = async () => {
