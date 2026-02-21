@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
-import { Truck, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Truck, Lock, Mail, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mounted, setMounted] = useState(false);
@@ -26,6 +27,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
 
     const result = await login(email, password);
@@ -38,7 +40,7 @@ const LoginPage = () => {
         navigate('/');
       }
     } else {
-      toast.error(result.error || 'Login failed');
+      setError(result.error || 'The email or password you entered is incorrect. Please try again.');
     }
 
     setLoading(false);
@@ -111,6 +113,24 @@ const LoginPage = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="login-form">
+              {/* Error Alert */}
+              {error && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  marginBottom: '4px',
+                  animation: 'shake 0.4s ease-in-out'
+                }}>
+                  <AlertCircle size={18} style={{ color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
+                  <span style={{ color: '#dc2626', fontSize: '14px', lineHeight: '1.4' }}>{error}</span>
+                </div>
+              )}
+
               {/* Email */}
               <div className={`login-field-group ${focusedField === 'email' ? 'login-field-focused' : ''} ${email ? 'login-field-filled' : ''}`}>
                 <label className="login-label" htmlFor="email">Email Address</label>
@@ -120,7 +140,7 @@ const LoginPage = () => {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField(null)}
                     required
@@ -141,7 +161,7 @@ const LoginPage = () => {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
                     required

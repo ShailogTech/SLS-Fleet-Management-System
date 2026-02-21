@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
-import { Truck, User, Mail, Phone, Lock, CheckCircle } from 'lucide-react';
+import { Truck, User, Mail, Phone, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -17,23 +17,63 @@ const SignupPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'name':
+        if (value && /[^a-zA-Z\s]/.test(value)) return 'Name should only contain letters and spaces. No numbers or special characters allowed.';
+        if (value && value.trim().length < 2) return 'Name must be at least 2 characters.';
+        return '';
+      case 'email':
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email address (e.g. name@company.com).';
+        return '';
+      case 'phone':
+        if (value && /[a-zA-Z]/.test(value)) return 'Phone number should not contain letters. Only numbers are allowed.';
+        if (value && /[^0-9+\-() ]/.test(value)) return 'Phone number contains invalid characters. Only digits, +, -, () are allowed.';
+        if (value && value.replace(/[^0-9]/g, '').length < 10) return 'Phone number must be at least 10 digits.';
+        return '';
+      case 'password':
+        if (value && value.length < 6) return 'Password must be at least 6 characters.';
+        return '';
+      case 'confirmPassword':
+        if (value && value !== formData.password) return 'Passwords do not match.';
+        return '';
+      default:
+        return '';
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate all fields before submitting
+    const newErrors = {};
+    Object.keys(formData).forEach(key => {
+      const error = validateField(key, formData[key]);
+      if (error) newErrors[key] = error;
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match.' }));
       return;
     }
 
     if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      setErrors(prev => ({ ...prev, password: 'Password must be at least 6 characters.' }));
       return;
     }
 
@@ -87,12 +127,16 @@ const SignupPage = () => {
 
   return (
     <div className="min-h-screen flex" data-testid="signup-page">
-      <div
-        className="hidden lg:block lg:w-1/2 relative bg-cover bg-center"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1770715897376-22215c26e2a7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHw0fHxsb2dpc3RpY3MlMjB0cnVjayUyMGZsZWV0JTIwaW5kdXN0cmlhbHxlbnwwfHx8fDE3NzExNTM4MTN8MA&ixlib=rb-4.1.0&q=85)'
-        }}
-      >
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="https://assets.mixkit.co/videos/28787/28787-720.mp4" type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-slate-900 bg-opacity-60"></div>
         <div className="relative z-10 flex flex-col justify-center h-full px-12 text-white">
           <div className="flex items-center mb-6">
@@ -123,7 +167,14 @@ const SignupPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
+      <div
+        className="flex-1 flex items-center justify-center p-8"
+        style={{
+          backgroundColor: '#f8fafc',
+          backgroundImage: 'linear-gradient(rgba(148,163,184,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.2) 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }}
+      >
         <div className="w-full max-w-md">
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8">
             <div className="text-center mb-8">
@@ -153,10 +204,16 @@ const SignupPage = () => {
                     onChange={handleChange}
                     required
                     placeholder="Enter your full name"
-                    className="pl-10"
+                    className={`pl-10 ${errors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-name-input"
                   />
                 </div>
+                {errors.name && (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-red-600 text-xs" style={{ animation: 'shake 0.4s ease-in-out' }}>
+                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{errors.name}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -171,10 +228,16 @@ const SignupPage = () => {
                     onChange={handleChange}
                     required
                     placeholder="Enter your email"
-                    className="pl-10"
+                    className={`pl-10 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-email-input"
                   />
                 </div>
+                {errors.email && (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-red-600 text-xs" style={{ animation: 'shake 0.4s ease-in-out' }}>
+                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{errors.email}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -189,10 +252,16 @@ const SignupPage = () => {
                     onChange={handleChange}
                     required
                     placeholder="Enter your phone number"
-                    className="pl-10"
+                    className={`pl-10 ${errors.phone ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-phone-input"
                   />
                 </div>
+                {errors.phone && (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-red-600 text-xs" style={{ animation: 'shake 0.4s ease-in-out' }}>
+                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{errors.phone}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -207,10 +276,16 @@ const SignupPage = () => {
                     onChange={handleChange}
                     required
                     placeholder="Create a password"
-                    className="pl-10"
+                    className={`pl-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-password-input"
                   />
                 </div>
+                {errors.password && (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-red-600 text-xs" style={{ animation: 'shake 0.4s ease-in-out' }}>
+                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{errors.password}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -225,10 +300,16 @@ const SignupPage = () => {
                     onChange={handleChange}
                     required
                     placeholder="Confirm your password"
-                    className="pl-10"
+                    className={`pl-10 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-confirm-password-input"
                   />
                 </div>
+                {errors.confirmPassword && (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-red-600 text-xs" style={{ animation: 'shake 0.4s ease-in-out' }}>
+                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{errors.confirmPassword}</span>
+                  </div>
+                )}
               </div>
 
               <Button
