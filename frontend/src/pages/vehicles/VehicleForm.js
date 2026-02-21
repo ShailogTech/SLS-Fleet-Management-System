@@ -169,24 +169,9 @@ const VehicleForm = () => {
 
         setUploadedDocs(prev => ({ ...prev, [doc.key]: true }));
       } catch (error) {
-        console.error(`Upload issue for ${doc.label}:`, error);
+        toast.error(`Failed to upload ${doc.label}`);
       }
       setUploadingDoc(null);
-    }
-
-    // Verify what was actually saved in the database
-    try {
-      const response = await api.get(`/documents/vehicle/${vehId}`);
-      const savedDocs = response.data;
-      if (savedDocs && savedDocs.length > 0) {
-        const verified = {};
-        for (const doc of savedDocs) {
-          if (doc.document_type) verified[doc.document_type] = true;
-        }
-        setUploadedDocs(prev => ({ ...prev, ...verified }));
-      }
-    } catch (e) {
-      // verification fetch failed, rely on individual results
     }
   };
 
