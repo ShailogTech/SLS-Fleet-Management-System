@@ -119,10 +119,20 @@ const DriverForm = () => {
         }
         setUploadedDocs(prev => ({ ...prev, [doc.key]: true }));
       } catch (error) {
-        toast.error(`Failed to upload ${doc.label}`);
+        console.error(`Upload error for ${doc.label}:`, error);
       }
       setUploadingDoc(null);
     }
+
+    // Verify saved documents from backend
+    try {
+      const res = await api.get(`/documents/driver/${dId}`);
+      if (res.data?.length > 0) {
+        const verified = {};
+        res.data.forEach(d => { if (d.document_type) verified[d.document_type] = true; });
+        setUploadedDocs(prev => ({ ...prev, ...verified }));
+      }
+    } catch (e) { /* ignore */ }
   };
 
   const handleGoToStep2 = async () => {
