@@ -90,16 +90,14 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {type(exc).__name__}: {exc}")
-    origin = request.headers.get("origin", "")
-    headers = {}
-    if origin and (origin in cors_origins or "*" in cors_origins):
-        headers["Access-Control-Allow-Origin"] = origin if "*" not in cors_origins else "*"
-        headers["Access-Control-Allow-Credentials"] = "true"
-
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal Server Error: {type(exc).__name__}: {str(exc)}"},
-        headers=headers,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        },
     )
 
 

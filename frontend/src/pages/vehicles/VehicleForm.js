@@ -147,14 +147,15 @@ const VehicleForm = () => {
 
       setUploadingDoc(doc.key);
       try {
-        // Step 1: Always save metadata first (small reliable request)
-        const metaFd = new FormData();
-        metaFd.append('entity_type', 'vehicle');
-        metaFd.append('entity_id', vehId);
-        metaFd.append('document_type', doc.key);
-        if (docData.expiry) metaFd.append('expiry_date', docData.expiry);
+        // Step 1: Always save metadata first (JSON request - reliable)
+        const metaPayload = {
+          entity_type: 'vehicle',
+          entity_id: vehId,
+          document_type: doc.key,
+        };
+        if (docData.expiry) metaPayload.expiry_date = docData.expiry;
 
-        const metaRes = await api.post('/documents/metadata', metaFd);
+        const metaRes = await api.post('/documents/save-metadata', metaPayload);
         const docId = metaRes.data?.document?.id;
 
         // Step 2: If file present, attach it separately
