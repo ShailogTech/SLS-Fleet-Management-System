@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
-from fastapi.responses import FileResponse
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
+from pydantic import BaseModel
 from utils.permissions import get_current_user
 from typing import Optional
 from datetime import datetime
@@ -12,6 +12,16 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
+
+
+class DocumentMetadataBody(BaseModel):
+    entity_type: str
+    entity_id: str
+    document_type: str
+    document_number: Optional[str] = None
+    issue_date: Optional[str] = None
+    expiry_date: Optional[str] = None
+    issuing_authority: Optional[str] = None
 
 def get_db():
     from server import db
@@ -95,6 +105,74 @@ async def create_document_metadata(
         "message": "Document metadata saved. You can now upload the file.",
         "document": document_record
     }
+
+
+@router.post("/save-metadata")
+async def save_document_metadata_json(
+    body: DocumentMetadataBody,
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        user_role = current_user.get("role")
+        if user_role not in ["maker", "admin", "superuser", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+        doc_id = str(uuid.uuid4())
+        document_record = {
+            "id": doc_id,
+            "entity_type": body.entity_type,
+            "entity_id": body.entity_id,
+            "document_type": body.document_type,
+            "document_number": body.document_number,
+            "issue_date": body.issue_date,
+            "expiry_date": body.expiry_date,
+            "issuing_authority": body.issuing_authority,
+            "filename": None,
+            "file_path": None,
+            "file_url": None,
+            "uploaded_by": current_user["sub"],
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat(),
+            "status": "pending_upload"
+        }
+
+        await get_db().documents.insert_one(document_record)
+        del document_record["_id"]
+
+        if body.entity_type == "driver" and body.expiry_date:
+            driver_update = {}
+            if body.document_type == "dl":
+                driver_update["dl_expiry"] = body.expiry_date
+            elif body.document_type == "hazardous":
+                driver_update["hazardous_cert_expiry"] = body.expiry_date
+            if driver_update:
+                await get_db().drivers.update_one(
+                    {"id": body.entity_id}, {"$set": driver_update}
+                )
+
+        if body.entity_type == "vehicle" and body.expiry_date:
+            doc_type_map = {
+                "rc": "rc_expiry", "registration": "rc_expiry",
+                "insurance": "insurance_expiry",
+                "fitness": "fitness_expiry", "fc": "fitness_expiry",
+                "tax": "tax_expiry",
+                "puc": "puc_expiry", "pollution": "puc_expiry",
+                "permit": "permit_expiry",
+                "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
+            }
+            doc_key = doc_type_map.get(body.document_type.lower())
+            if doc_key:
+                await get_db().vehicles.update_one(
+                    {"id": body.entity_id},
+                    {"$set": {f"documents.{doc_key}": body.expiry_date}}
+                )
+
+        return {"message": "Document metadata saved.", "document": document_record}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Save metadata error: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 
 @router.post("/{doc_id}/attach")

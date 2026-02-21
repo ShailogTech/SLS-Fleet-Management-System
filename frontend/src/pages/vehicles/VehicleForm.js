@@ -147,24 +147,24 @@ const VehicleForm = () => {
 
       setUploadingDoc(doc.key);
       try {
-        const fd = new FormData();
-        fd.append('entity_type', 'vehicle');
-        fd.append('entity_id', vehId);
-        fd.append('document_type', doc.key);
-        if (docData.expiry) fd.append('expiry_date', docData.expiry);
+        // Step 1: Save metadata as JSON (avoids multipart issues)
+        const meta = { entity_type: 'vehicle', entity_id: vehId, document_type: doc.key };
+        if (docData.expiry) meta.expiry_date = docData.expiry;
+        const metaRes = await api.post('/documents/save-metadata', meta);
+        const docId = metaRes.data?.document?.id;
 
-        // Generate filename as vehicleno_doctype
-        const fileName = `${formData.vehicle_no}_${doc.key}`;
-
-        if (docData.file) {
-          // Rename file
+        // Step 2: If file present, attach it separately
+        if (docData.file && docId) {
+          const fileName = `${formData.vehicle_no}_${doc.key}`;
           const ext = docData.file.name.split('.').pop();
           const renamedFile = new File([docData.file], `${fileName}.${ext}`, { type: docData.file.type });
-          fd.append('file', renamedFile);
-          await api.post('/documents/upload', fd);
-        } else {
-          // Save metadata only
-          await api.post('/documents/metadata', fd);
+          const fileFd = new FormData();
+          fileFd.append('file', renamedFile);
+          try {
+            await api.post(`/documents/${docId}/attach`, fileFd);
+          } catch (fileErr) {
+            console.error(`File attach failed for ${doc.label}, metadata saved:`, fileErr);
+          }
         }
 
         setUploadedDocs(prev => ({ ...prev, [doc.key]: true }));
