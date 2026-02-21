@@ -5,9 +5,6 @@ const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 api.interceptors.request.use(
@@ -15,11 +12,6 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-    // When sending FormData, delete Content-Type so axios auto-sets
-    // multipart/form-data with the correct boundary
-    if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
     }
     return config;
   },

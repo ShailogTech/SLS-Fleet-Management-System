@@ -19,7 +19,11 @@ const ApprovalQueue = () => {
   const [commentText, setCommentText] = useState({});
   const [showCommentFor, setShowCommentFor] = useState(null);
 
-  useEffect(() => { fetchApprovals(); }, []);
+  useEffect(() => {
+    fetchApprovals();
+    const interval = setInterval(fetchApprovals, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchApprovals = async () => {
     setLoading(true);

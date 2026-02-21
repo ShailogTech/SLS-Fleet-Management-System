@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   User, Truck, FileText, Calendar, Phone, CreditCard, Edit2, Save, X,
-  AlertTriangle, CheckCircle, Clock, MapPin, Trash2
+  AlertTriangle, CheckCircle, Clock, MapPin
 } from 'lucide-react';
 
 const DRIVER_STATUS = [
@@ -32,7 +32,6 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
 
   const canEdit = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
-  const canDelete = ['admin', 'superuser'].includes(user?.role);
 
   const fetchDriverDetails = useCallback(async () => {
     setLoading(true);
@@ -93,20 +92,6 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
       if (onUpdate) onUpdate();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to assign vehicle');
-    }
-  };
-
-  const handleDeleteDriver = async () => {
-    if (!window.confirm(`Are you sure you want to delete driver "${driver.name}"? This action cannot be undone.`)) {
-      return;
-    }
-    try {
-      await api.delete(`/drivers/${driverId}`);
-      toast.success('Driver deleted successfully');
-      onClose();
-      if (onUpdate) onUpdate();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to delete driver');
     }
   };
 
@@ -450,20 +435,7 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-between pt-4 border-t border-slate-200 mt-4">
-          <div>
-            {canDelete && (
-              <Button
-                variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                onClick={handleDeleteDriver}
-                data-testid="delete-driver-btn"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Remove Driver
-              </Button>
-            )}
-          </div>
+        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 mt-4">
           <Button variant="outline" onClick={onClose} data-testid="close-modal-btn">
             Close
           </Button>

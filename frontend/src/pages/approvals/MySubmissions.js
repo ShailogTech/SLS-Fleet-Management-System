@@ -58,6 +58,8 @@ const MySubmissions = () => {
 
   useEffect(() => {
     fetchMySubmissions();
+    const interval = setInterval(fetchMySubmissions, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
