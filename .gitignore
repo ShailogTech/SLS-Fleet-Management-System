@@ -84,3 +84,16 @@ backend/mongodb_data/
 android-sdk/ frontend/node_modules/.cache/default-development/0.pack
 frontend/node_modules/.cache/default-development/0.pack
 -e
+
+# Claude Code session logs
+2026-*.txt
+**/2026-*.txt
+
+# Plan files
+plan.md
+
+# Test case spreadsheets
+SLS_Fleet_Test_Cases.xlsx
+
+# Claude memory
+.claude/
