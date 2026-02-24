@@ -22,6 +22,9 @@ class SignupRequest(BaseModel):
 @router.post("/signup-request")
 async def signup_request(data: SignupRequest):
     """Submit a signup request that goes to admin/approver for role assignment"""
+    if len(data.password) < 6 or len(data.password) > 20:
+        raise HTTPException(status_code=400, detail="Password must be between 6 and 20 characters")
+    
     db = get_db()
     
     # Check if email already exists

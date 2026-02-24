@@ -36,6 +36,7 @@ const SignupPage = () => {
         return '';
       case 'password':
         if (value && value.length < 6) return 'Password must be at least 6 characters.';
+        if (value && value.length > 20) return 'Password must not exceed 20 characters.';
         return '';
       case 'confirmPassword':
         if (value && value !== formData.password) return 'Passwords do not match.';
@@ -72,8 +73,8 @@ const SignupPage = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setErrors(prev => ({ ...prev, password: 'Password must be at least 6 characters.' }));
+    if (formData.password.length < 6 || formData.password.length > 20) {
+      setErrors(prev => ({ ...prev, password: 'Password must be between 6 and 20 characters.' }));
       return;
     }
 
@@ -275,7 +276,8 @@ const SignupPage = () => {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    placeholder="Create a password"
+                    placeholder="Create a password (6-20 chars)"
+                    maxLength={20}
                     className={`pl-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-password-input"
                   />

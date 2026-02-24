@@ -13,7 +13,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     name: str
     phone: str
-    password: str
+    password: str = Field(..., min_length=6, max_length=20)
     role: str = "viewer"
 
 class UserLogin(BaseModel):
