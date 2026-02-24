@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -23,6 +24,7 @@ const ALERT_STYLES = {
 };
 
 const AlertCenter = () => {
+  const { registerRefresh } = useRefresh();
   const [alerts, setAlerts] = useState([]);
   const [filteredAlerts, setFilteredAlerts] = useState([]);
   const [severityFilter, setSeverityFilter] = useState('all');
@@ -40,6 +42,8 @@ const AlertCenter = () => {
   useEffect(() => {
     fetchAlerts();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchAlerts); }, []);
 
   useEffect(() => {
     let filtered = alerts;

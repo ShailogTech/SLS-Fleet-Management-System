@@ -10,9 +10,11 @@ import {
   MessageSquare, FileText, Eye, Download, Send
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 
 const ApprovalQueue = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [approvals, setApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
@@ -24,6 +26,8 @@ const ApprovalQueue = () => {
     const interval = setInterval(fetchApprovals, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => { registerRefresh(fetchApprovals); }, []);
 
   const fetchApprovals = async () => {
     setLoading(true);

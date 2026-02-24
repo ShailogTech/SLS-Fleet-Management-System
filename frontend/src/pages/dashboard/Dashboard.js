@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Truck, Users, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
@@ -7,6 +8,7 @@ import { toast } from 'sonner';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [stats, setStats] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +18,8 @@ const Dashboard = () => {
     const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => { registerRefresh(fetchDashboardData); }, []);
 
   const fetchDashboardData = async () => {
     try {

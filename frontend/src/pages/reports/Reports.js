@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -7,6 +8,7 @@ import { BarChart3, FileText, Download, TrendingUp, Truck, Users, Calendar, Aler
 import { toast } from 'sonner';
 
 const Reports = () => {
+  const { registerRefresh } = useRefresh();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reportType, setReportType] = useState('summary');
@@ -14,6 +16,8 @@ const Reports = () => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchStats); }, []);
 
   const fetchStats = async () => {
     try {

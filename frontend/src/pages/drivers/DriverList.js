@@ -10,17 +10,20 @@ import DriverDetailModal from '../../components/modals/DriverDetailModal';
 import { Plus, Search, Eye, Filter, User, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 import { useNavigate } from 'react-router-dom';
 
 const DriverList = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const navigate = useNavigate();
   const [drivers, setDrivers] = useState([]);
   const [filteredDrivers, setFilteredDrivers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
-  
+  const [refreshing, setRefreshing] = useState(false);
+
   // Modal states
   const [selectedDriverId, setSelectedDriverId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -40,6 +43,8 @@ const DriverList = () => {
   useEffect(() => {
     fetchDrivers();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchDrivers); }, []);
 
   useEffect(() => {
     let filtered = drivers;
@@ -67,11 +72,20 @@ const DriverList = () => {
       const response = await api.get('/drivers');
       setDrivers(response.data);
       setFilteredDrivers(response.data);
+      return true;
     } catch (error) {
       toast.error('Failed to load drivers');
+      return false;
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    const success = await fetchDrivers();
+    setRefreshing(false);
+    if (success) toast.success('Drivers refreshed');
   };
 
   const handleViewDriver = (driverId) => {
@@ -140,8 +154,8 @@ const DriverList = () => {
           <p className="text-slate-600 mt-1">Manage your fleet drivers</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={fetchDrivers} data-testid="refresh-btn">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing} data-testid="refresh-btn">
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           {canCreate && (

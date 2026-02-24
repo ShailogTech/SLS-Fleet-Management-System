@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Plus, MapPin, Building, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 
 const PlantList = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [plants, setPlants] = useState([]);
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,8 @@ const PlantList = () => {
     fetchPlants();
     fetchStats();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchPlants); }, []);
 
   const fetchPlants = async () => {
     try {

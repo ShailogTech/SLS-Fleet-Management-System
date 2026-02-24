@@ -8,9 +8,11 @@ import { Plus, AlertTriangle, Calendar, CheckCircle } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 
 const StoppageList = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [stoppages, setStoppages] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,8 @@ const StoppageList = () => {
     fetchStoppages();
     fetchAnalytics();
   }, [fetchStoppages]);
+
+  useEffect(() => { registerRefresh(fetchStoppages); }, []);
 
   const fetchAnalytics = async () => {
     try {

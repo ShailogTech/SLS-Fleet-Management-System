@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -24,6 +24,9 @@ const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  useEffect(() => { setImgLoaded(false); }, [user?.photo_url]);
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
@@ -123,7 +126,16 @@ const Sidebar = () => {
             <Link to="/profile" className="flex items-center space-x-3 hover:bg-slate-50 rounded-lg p-2 -m-2 transition-colors" data-testid="sidebar-profile-link">
               <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
                 {user?.photo_url ? (
-                  <img src={`${process.env.REACT_APP_BACKEND_URL}${user.photo_url}`} alt="" className="w-full h-full object-cover" />
+                  <>
+                    {!imgLoaded && <div className="w-full h-full animate-pulse bg-slate-300" />}
+                    <img
+                      src={`${process.env.REACT_APP_BACKEND_URL}${user.photo_url}`}
+                      alt=""
+                      className={`w-full h-full object-cover ${imgLoaded ? '' : 'hidden'}`}
+                      onLoad={() => setImgLoaded(true)}
+                      onError={() => setImgLoaded(true)}
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"><UserCircle className="h-5 w-5 text-slate-400" /></div>
                 )}

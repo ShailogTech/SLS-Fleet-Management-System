@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -37,6 +38,7 @@ const STATUS_CONFIG = {
 };
 
 const ExpiryCalendar = () => {
+  const { registerRefresh } = useRefresh();
   const [calendarData, setCalendarData] = useState({});
   const [summary, setSummary] = useState({ total: 0, total_expired: 0, total_expiring_soon: 0, total_valid: 0 });
   const [selectedDay, setSelectedDay] = useState(null);
@@ -46,6 +48,8 @@ const ExpiryCalendar = () => {
   useEffect(() => {
     fetchCalendarData();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchCalendarData); }, []);
 
   const fetchCalendarData = async () => {
     setLoading(true);

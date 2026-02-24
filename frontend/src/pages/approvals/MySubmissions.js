@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
 import DriverDetailModal from '../../components/modals/DriverDetailModal';
 
@@ -45,6 +46,7 @@ const STATUS_CONFIG = {
 
 const MySubmissions = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [submissions, setSubmissions] = useState([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -55,6 +57,8 @@ const MySubmissions = () => {
   const [selectedDriverId, setSelectedDriverId] = useState(null);
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
+
+  useEffect(() => { registerRefresh(fetchMySubmissions); }, []);
 
   useEffect(() => {
     fetchMySubmissions();

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -26,6 +27,7 @@ const ROLES = [
 ];
 
 const SignupRequests = () => {
+  const { registerRefresh } = useRefresh();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -36,6 +38,8 @@ const SignupRequests = () => {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchRequests); }, []);
 
   const fetchRequests = async () => {
     setLoading(true);

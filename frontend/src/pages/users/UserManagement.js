@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -26,6 +27,7 @@ const ROLES = [
 ];
 
 const UserManagement = () => {
+  const { registerRefresh } = useRefresh();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +46,8 @@ const UserManagement = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchUsers); }, []);
 
   useEffect(() => {
     if (searchTerm) {

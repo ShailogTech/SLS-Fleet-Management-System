@@ -9,9 +9,11 @@ import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
 import { Plus, Search, Eye, Filter, Truck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 
 const VehicleList = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +30,8 @@ const VehicleList = () => {
     fetchVehicles();
     fetchPlants();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchVehicles); }, []);
 
   useEffect(() => {
     let filtered = vehicles;

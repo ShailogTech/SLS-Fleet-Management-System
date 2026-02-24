@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -12,13 +13,15 @@ import {
 } from 'lucide-react';
 
 const UserProfile = () => {
-  const { user: authUser } = useAuth();
+  const { user: authUser, updateUser } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [profile, setProfile] = useState(null);
   const [pendingEdit, setPendingEdit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const fileInputRef = useRef(null);
 
   const [editForm, setEditForm] = useState({
@@ -26,6 +29,10 @@ const UserProfile = () => {
   });
 
   useEffect(() => { fetchProfile(); }, []);
+
+  useEffect(() => { registerRefresh(fetchProfile); }, []);
+
+  useEffect(() => { setImgLoaded(false); }, [profile?.photo_url]);
 
   const fetchProfile = async () => {
     try {
@@ -66,6 +73,7 @@ const UserProfile = () => {
       const res = await api.post('/users/profile/photo', fd);
       toast.success('Profile photo updated!');
       setProfile(prev => ({ ...prev, photo_url: res.data.photo_url }));
+      updateUser({ photo_url: res.data.photo_url });
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to upload photo');
     } finally {
@@ -113,12 +121,19 @@ const UserProfile = () => {
             <div className="relative" data-testid="profile-photo-section">
               <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow-lg">
                 {profile.photo_url ? (
-                  <img
-                    src={`${backendUrl}${profile.photo_url}`}
-                    alt={profile.name}
-                    className="w-full h-full object-cover"
-                    data-testid="profile-photo-img"
-                  />
+                  <>
+                    {!imgLoaded && (
+                      <div className="w-full h-full animate-pulse bg-slate-300" />
+                    )}
+                    <img
+                      src={`${backendUrl}${profile.photo_url}`}
+                      alt={profile.name}
+                      className={`w-full h-full object-cover ${imgLoaded ? '' : 'hidden'}`}
+                      onLoad={() => setImgLoaded(true)}
+                      onError={() => setImgLoaded(true)}
+                      data-testid="profile-photo-img"
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-slate-300">
                     <User className="h-10 w-10 text-slate-500" />

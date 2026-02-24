@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { RefreshProvider } from './contexts/RefreshContext';
 import { Toaster } from './components/ui/sonner';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -44,6 +45,7 @@ function App() {
 
   return (
     <AuthProvider>
+      <RefreshProvider>
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <BrowserRouter>
         <Routes>
@@ -125,6 +127,7 @@ function App() {
         <Toaster position="top-right" />
 
       </BrowserRouter>
+      </RefreshProvider>
     </AuthProvider>
   );
 }

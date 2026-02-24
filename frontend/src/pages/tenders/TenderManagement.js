@@ -11,9 +11,11 @@ import { Plus, Edit2, Calendar, FileText, Building, Truck, Eye, Search, RefreshC
 import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRefresh } from '../../contexts/RefreshContext';
 
 const TenderManagement = () => {
   const { user } = useAuth();
+  const { registerRefresh } = useRefresh();
   const [tenders, setTenders] = useState([]);
   const [filteredTenders, setFilteredTenders] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -48,6 +50,8 @@ const TenderManagement = () => {
     fetchTenders();
     fetchVehicles();
   }, []);
+
+  useEffect(() => { registerRefresh(fetchTenders); }, []);
 
   useEffect(() => {
     let filtered = tenders;
