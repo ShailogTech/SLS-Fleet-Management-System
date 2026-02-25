@@ -79,7 +79,7 @@ const LoginPage = () => {
               <div className="login-logo-box">
                 <Truck className="login-logo-icon" strokeWidth={2} />
               </div>
-              <span className="login-logo-text">SLS Fleet</span>
+              <span className="login-logo-text">SLTS Fleet</span>
             </div>
 
             <h1 className="login-headline">

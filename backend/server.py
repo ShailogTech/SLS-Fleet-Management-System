@@ -59,7 +59,7 @@ async def lifespan(app):
     logger.info("Shutdown — MongoDB connection closed")
 
 
-app = FastAPI(title="SLS Fleet Management API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="SLTS Fleet Management API", version="1.0.0", lifespan=lifespan)
 
 # ---------------------------------------------------------------------------
 # CORS configuration
@@ -118,7 +118,7 @@ api_router.include_router(chatbot.router)
 
 @api_router.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "SLS Fleet Management API"}
+    return {"status": "healthy", "service": "SLTS Fleet Management API"}
 
 app.include_router(api_router)
 

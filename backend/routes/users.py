@@ -109,6 +109,32 @@ async def upload_profile_photo(
     return {"message": "Photo uploaded", "photo_url": photo_url}
 
 
+@router.delete("/profile/photo")
+async def remove_profile_photo(current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    user = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    photo_url = user.get("photo_url")
+    if not photo_url:
+        raise HTTPException(status_code=400, detail="No profile photo to remove")
+
+    # Delete the file from disk
+    filename = photo_url.split("/")[-1]
+    filepath = PHOTO_DIR / filename
+    if filepath.exists():
+        filepath.unlink()
+
+    # Clear photo_url in DB
+    await db.users.update_one(
+        {"id": current_user["sub"]},
+        {"$set": {"photo_url": None}}
+    )
+
+    return {"message": "Profile photo removed"}
+
+
 @router.get("/photo/{filename}")
 async def serve_photo(filename: str):
     filepath = PHOTO_DIR / filename

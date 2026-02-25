@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite"]
 
-SYSTEM_PROMPT = """You are SLS Fleet Assistant, an AI chatbot for the SLS Fleet Management System.
+SYSTEM_PROMPT = """You are SLTS Fleet Assistant, an AI chatbot for the SLTS Fleet Management System.
 You help users with questions about:
 - Vehicle management (registration, documents, maintenance)
 - Driver management (assignments, licenses, documents)
@@ -86,7 +86,7 @@ async def chat(request: ChatRequest):
 
     # Add system instruction via first user/model exchange
     contents.append({"role": "user", "parts": [{"text": SYSTEM_PROMPT}]})
-    contents.append({"role": "model", "parts": [{"text": "Understood. I am SLS Fleet Assistant, ready to help with fleet management questions."}]})
+    contents.append({"role": "model", "parts": [{"text": "Understood. I am SLTS Fleet Assistant, ready to help with fleet management questions."}]})
 
     # Add conversation history
     for msg in request.history[-10:]:

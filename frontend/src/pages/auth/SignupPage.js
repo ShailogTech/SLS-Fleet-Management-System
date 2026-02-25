@@ -149,7 +149,7 @@ const SignupPage = () => {
             Join Our Fleet
           </h1>
           <p className="text-xl text-slate-200" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Create an account to get started with SLS Fleet Management
+            Create an account to get started with SLTS Fleet Management
           </p>
           <div className="mt-8 space-y-4">
             <div className="flex items-center space-x-3">

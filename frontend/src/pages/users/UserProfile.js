@@ -9,7 +9,7 @@ import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 import {
   User, Camera, Save, Edit3, X, Shield, Mail, Phone,
-  Building, AlertCircle, CheckCircle, Clock
+  Building, AlertCircle, CheckCircle, Clock, Trash2, Upload, ImageOff
 } from 'lucide-react';
 
 const UserProfile = () => {
@@ -20,8 +20,10 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
   const fileInputRef = useRef(null);
 
   const [editForm, setEditForm] = useState({
@@ -81,6 +83,21 @@ const UserProfile = () => {
     }
   };
 
+  const handleRemovePhoto = async () => {
+    setRemoving(true);
+    try {
+      await api.delete('/users/profile/photo');
+      toast.success('Profile photo removed!');
+      setProfile(prev => ({ ...prev, photo_url: null }));
+      updateUser({ photo_url: null });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to remove photo');
+    } finally {
+      setRemoving(false);
+      setShowRemoveModal(false);
+    }
+  };
+
   const handleSubmitEdit = async () => {
     setSaving(true);
     try {
@@ -115,11 +132,12 @@ const UserProfile = () => {
 
       {/* Photo + Name Card */}
       <Card className="border-slate-200 overflow-hidden">
-        <div className="h-24 bg-gradient-to-r from-slate-800 to-slate-600" />
-        <CardContent className="relative -mt-12 pb-6">
+        <div className="h-28 bg-gradient-to-r from-slate-800 to-slate-600" />
+        <CardContent className="relative -mt-14 pb-6">
           <div className="flex items-end space-x-5">
-            <div className="relative" data-testid="profile-photo-section">
-              <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow-lg">
+            {/* Profile photo with hover overlay */}
+            <div className="relative group" data-testid="profile-photo-section">
+              <div className="w-28 h-28 rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow-lg">
                 {profile.photo_url ? (
                   <>
                     {!imgLoaded && (
@@ -136,22 +154,37 @@ const UserProfile = () => {
                   </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-slate-300">
-                    <User className="h-10 w-10 text-slate-500" />
+                    <User className="h-12 w-12 text-slate-500" />
                   </div>
                 )}
+                {/* Hover overlay with actions */}
+                <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading || removing}
+                    className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+                    title="Upload photo"
+                    data-testid="upload-photo-btn"
+                  >
+                    {uploading ? (
+                      <span className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
+                  </button>
+                  {profile.photo_url && (
+                    <button
+                      onClick={() => setShowRemoveModal(true)}
+                      disabled={removing || uploading}
+                      className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-red-500/60 transition-colors"
+                      title="Remove photo"
+                      data-testid="remove-photo-btn"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute bottom-0 right-0 w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-white hover:bg-slate-700 transition-colors shadow-md"
-                data-testid="upload-photo-btn"
-              >
-                {uploading ? (
-                  <span className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
-                ) : (
-                  <Camera className="h-4 w-4" />
-                )}
-              </button>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -161,9 +194,9 @@ const UserProfile = () => {
                 data-testid="photo-file-input"
               />
             </div>
-            <div className="pb-1">
+            <div className="pb-2">
               <h2 className="text-xl font-bold text-slate-900">{profile.name}</h2>
-              <p className="text-sm text-slate-500 flex items-center">
+              <p className="text-sm text-slate-500 flex items-center mt-0.5">
                 <Shield className="h-3 w-3 mr-1" />
                 <span className="capitalize">{profile.role?.replace('_', ' ')}</span>
                 <span className="mx-2">|</span>
@@ -175,6 +208,67 @@ const UserProfile = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Remove Photo Confirmation Modal */}
+      {showRemoveModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ animation: 'profileModalFadeIn 0.2s ease-out' }}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => !removing && setShowRemoveModal(false)}
+            style={{ animation: 'profileModalFadeIn 0.2s ease-out' }}
+          />
+          {/* Modal */}
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+            style={{ animation: 'profileModalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
+          >
+            {/* Red accent bar */}
+            <div className="h-1 bg-gradient-to-r from-red-500 to-red-600" />
+            <div className="p-6 text-center">
+              {/* Icon */}
+              <div className="mx-auto w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                <ImageOff className="h-7 w-7 text-red-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900">Remove Profile Photo</h3>
+              <p className="text-sm text-slate-500 mt-2">
+                Are you sure you want to remove your profile photo? This action cannot be undone.
+              </p>
+            </div>
+            {/* Actions */}
+            <div className="flex border-t border-slate-100">
+              <button
+                onClick={() => setShowRemoveModal(false)}
+                disabled={removing}
+                className="flex-1 py-3.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors border-r border-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRemovePhoto}
+                disabled={removing}
+                className="flex-1 py-3.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                data-testid="confirm-remove-photo-btn"
+              >
+                {removing ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 border-2 border-red-200 border-t-red-600 rounded-full" />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pending Edit Notice */}
       {pendingEdit && (

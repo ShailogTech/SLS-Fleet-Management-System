@@ -23,7 +23,7 @@ const SplashScreen = ({ onFinish }) => {
       <div className="splash-content">
         {/* Brand name with stagger animation */}
         <h1 className="splash-title">
-          {'SLS Fleet'.split('').map((char, i) => (
+          {'SLTS Fleet'.split('').map((char, i) => (
             <span key={i} className="splash-letter" style={{ animationDelay: `${0.3 + i * 0.08}s` }}>
               {char === ' ' ? '\u00A0' : char}
             </span>

@@ -110,7 +110,7 @@ const Sidebar = () => {
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-center h-16 px-4 border-b border-slate-200">
             <h1 className="text-2xl font-black text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
-              SLS Fleet
+              SLTS Fleet
             </h1>
           </div>
 

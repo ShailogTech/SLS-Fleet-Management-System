@@ -9,7 +9,7 @@ const Chatbot = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hi! I\'m SLS Fleet Assistant. How can I help you today?' }
+    { role: 'assistant', content: 'Hi! I\'m SLTS Fleet Assistant. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -88,7 +88,7 @@ const Chatbot = () => {
                 <Bot className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold">SLS Fleet Assistant</h3>
+                <h3 className="text-sm font-semibold">SLTS Fleet Assistant</h3>
                 <p className="text-xs text-slate-400">Powered by Gemini AI</p>
               </div>
             </div>
