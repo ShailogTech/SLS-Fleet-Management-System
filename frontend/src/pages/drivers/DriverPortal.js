@@ -183,40 +183,39 @@ const DriverPortal = () => {
       <div className="lg:pl-64">
         {/* White Header - matching admin portal */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center">
+          <div className="flex items-center justify-between h-16 pl-14 pr-4 sm:pr-6 lg:pl-8 lg:pr-8">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0 hidden sm:flex">
                 {user?.photo_url ? (
                   <img src={`${process.env.REACT_APP_BACKEND_URL}${user.photo_url}`} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <User className="h-5 w-5 text-slate-500" />
                 )}
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-lg font-bold text-slate-900 truncate" style={{ fontFamily: 'Chivo, sans-serif' }}>
                   Welcome, {driver?.name || 'Driver'}
                 </h2>
-                <p className="text-xs text-slate-500">Employee ID: {driver?.emp_id}</p>
+                <p className="text-xs text-slate-500 truncate">Employee ID: {driver?.emp_id}</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
               <Button
                 size="sm"
                 className="bg-red-600 hover:bg-red-700 text-white border-0 font-bold"
                 onClick={() => setShowSos(true)}
                 data-testid="sos-btn"
               >
-                <ShieldAlert className="h-4 w-4 mr-2" />
-                SOS
+                <ShieldAlert className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">SOS</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={fetchMyData}
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+                <RefreshCw className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -224,8 +223,7 @@ const DriverPortal = () => {
                 onClick={logout}
                 data-testid="driver-logout-btn"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -267,7 +265,7 @@ const DriverPortal = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="p-3 bg-slate-50 rounded-lg">
                         <p className="text-xs text-slate-500 uppercase mb-1">Full Name</p>
                         <p className="font-medium text-slate-900">{driver?.name}</p>
@@ -375,7 +373,7 @@ const DriverPortal = () => {
                     </Card>
 
                     {/* Vehicle Stats */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
                         <CardContent className="p-4 flex items-center space-x-3">
                           <div className="bg-blue-100 p-3 rounded-lg">
@@ -409,7 +407,7 @@ const DriverPortal = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="p-3 bg-slate-50 rounded-lg">
                             <p className="text-xs text-slate-500 uppercase mb-1">Vehicle Number</p>
                             <p className="text-lg font-bold text-slate-900">{vehicle.vehicle_no}</p>
@@ -575,14 +573,14 @@ const DriverPortal = () => {
                     <CardContent>
                       <div className="space-y-3">
                         {uploadedDocs.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200" data-testid={`uploaded-doc-${doc.id}`}>
-                            <div className="flex items-center space-x-3">
-                              <div className="bg-blue-100 p-2 rounded-lg">
+                          <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 gap-2" data-testid={`uploaded-doc-${doc.id}`}>
+                            <div className="flex items-center space-x-3 min-w-0">
+                              <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
                                 <FileText className="h-5 w-5 text-blue-600" />
                               </div>
-                              <div>
-                                <p className="text-sm font-medium text-slate-900 capitalize">{doc.document_type?.replace(/_/g, ' ')}</p>
-                                <div className="flex items-center space-x-3 text-xs text-slate-500">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-slate-900 capitalize truncate">{doc.document_type?.replace(/_/g, ' ')}</p>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                                   {doc.document_number && <span>#{doc.document_number}</span>}
                                   {doc.expiry_date && (
                                     <span className="flex items-center">
@@ -594,7 +592,7 @@ const DriverPortal = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 flex-shrink-0 pl-11 sm:pl-0">
                               {doc.status === 'uploaded' && doc.file_url ? (
                                 <a
                                   href={`${process.env.REACT_APP_BACKEND_URL}${doc.file_url}`}
@@ -635,7 +633,7 @@ const DriverPortal = () => {
           <div className="space-y-4 pt-2">
             <p className="text-sm text-slate-500">Select the type of emergency and send an alert to your supervisor.</p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {[
                 { value: 'breakdown', label: 'Breakdown', icon: Truck },
                 { value: 'accident', label: 'Accident', icon: AlertTriangle },

@@ -23,14 +23,14 @@ const Header = () => {
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-10" data-testid="header">
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-        <div className="flex-1">
-          <h2 className="text-xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+      <div className="flex items-center justify-between h-16 pl-14 pr-4 sm:pr-6 lg:pl-8 lg:pr-8">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base sm:text-xl font-bold text-slate-900 truncate" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Fleet Management System
           </h2>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-1 sm:space-x-4 flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"
@@ -54,7 +54,7 @@ const Header = () => {
           </Button>
 
           <Link to="/profile" className="flex items-center space-x-2 hover:bg-slate-50 rounded-lg px-2 py-1 transition-colors" data-testid="header-profile-link">
-            <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
               {user?.photo_url ? (
                 <>
                   {!imgLoaded && <div className="w-full h-full animate-pulse bg-slate-300" />}
@@ -78,9 +78,19 @@ const Header = () => {
             variant="ghost"
             size="sm"
             data-testid="logout-btn"
+            className="hidden sm:flex"
           >
-            <LogOut className="h-5 w-5 mr-2" />
-            Logout
+            <LogOut className="h-5 w-5 sm:mr-2" />
+            <span className="hidden sm:inline">Logout</span>
+          </Button>
+          <Button
+            onClick={logout}
+            variant="ghost"
+            size="sm"
+            data-testid="logout-btn-mobile"
+            className="sm:hidden"
+          >
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </div>
