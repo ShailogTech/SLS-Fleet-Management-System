@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from utils.permissions import get_current_user
 from typing import Optional
@@ -27,10 +27,42 @@ def get_db():
     from server import db
     return db
 
-UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
-
 ALLOWED_EXTENSIONS = {'.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'}
+
+
+async def _sync_vehicle_expiry(db, entity_id: str, document_type: str, expiry_date: str):
+    """Sync expiry date back to vehicle documents sub-object, handling null documents."""
+    doc_type_map = {
+        "rc": "rc_expiry", "registration": "rc_expiry",
+        "insurance": "insurance_expiry",
+        "fitness": "fitness_expiry", "fc": "fitness_expiry",
+        "tax": "tax_expiry",
+        "puc": "puc_expiry", "pollution": "puc_expiry",
+        "permit": "permit_expiry",
+        "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
+    }
+    doc_key = doc_type_map.get(document_type.lower())
+    if doc_key:
+        # Initialize documents to {} if it's null — MongoDB can't use dot notation on null
+        await db.vehicles.update_one(
+            {"id": entity_id, "documents": None},
+            {"$set": {"documents": {}}}
+        )
+        await db.vehicles.update_one(
+            {"id": entity_id},
+            {"$set": {f"documents.{doc_key}": expiry_date}}
+        )
+
+
+async def _sync_driver_expiry(db, entity_id: str, document_type: str, expiry_date: str):
+    """Sync expiry date back to driver record."""
+    driver_update = {}
+    if document_type == "dl":
+        driver_update["dl_expiry"] = expiry_date
+    elif document_type == "hazardous":
+        driver_update["hazardous_cert_expiry"] = expiry_date
+    if driver_update:
+        await db.drivers.update_one({"id": entity_id}, {"$set": driver_update})
 
 
 @router.post("/metadata")
@@ -45,7 +77,7 @@ async def create_document_metadata(
     current_user: dict = Depends(get_current_user)
 ):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge", "records_incharge"]:
+    if user_role not in ["maker", "admin", "superuser", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     doc_id = str(uuid.uuid4())
@@ -67,44 +99,16 @@ async def create_document_metadata(
         "status": "pending_upload"
     }
 
-    await get_db().documents.insert_one(document_record)
+    db = get_db()
+    await db.documents.insert_one(document_record)
     del document_record["_id"]
 
-    # Sync expiry date back to driver record
     if entity_type == "driver" and expiry_date:
-        driver_update = {}
-        if document_type == "dl":
-            driver_update["dl_expiry"] = expiry_date
-        elif document_type == "hazardous":
-            driver_update["hazardous_cert_expiry"] = expiry_date
-        if driver_update:
-            await get_db().drivers.update_one(
-                {"id": entity_id},
-                {"$set": driver_update}
-            )
-
-    # Sync expiry date back to vehicle documents
+        await _sync_driver_expiry(db, entity_id, document_type, expiry_date)
     if entity_type == "vehicle" and expiry_date:
-        doc_type_map = {
-            "rc": "rc_expiry", "registration": "rc_expiry",
-            "insurance": "insurance_expiry",
-            "fitness": "fitness_expiry", "fc": "fitness_expiry",
-            "tax": "tax_expiry",
-            "puc": "puc_expiry", "pollution": "puc_expiry",
-            "permit": "permit_expiry",
-            "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
-        }
-        doc_key = doc_type_map.get(document_type.lower())
-        if doc_key:
-            await get_db().vehicles.update_one(
-                {"id": entity_id},
-                {"$set": {f"documents.{doc_key}": expiry_date}}
-            )
+        await _sync_vehicle_expiry(db, entity_id, document_type, expiry_date)
 
-    return {
-        "message": "Document metadata saved. You can now upload the file.",
-        "document": document_record
-    }
+    return {"message": "Document metadata saved.", "document": document_record}
 
 
 @router.post("/save-metadata")
@@ -136,36 +140,14 @@ async def save_document_metadata_json(
             "status": "pending_upload"
         }
 
-        await get_db().documents.insert_one(document_record)
+        db = get_db()
+        await db.documents.insert_one(document_record)
         del document_record["_id"]
 
         if body.entity_type == "driver" and body.expiry_date:
-            driver_update = {}
-            if body.document_type == "dl":
-                driver_update["dl_expiry"] = body.expiry_date
-            elif body.document_type == "hazardous":
-                driver_update["hazardous_cert_expiry"] = body.expiry_date
-            if driver_update:
-                await get_db().drivers.update_one(
-                    {"id": body.entity_id}, {"$set": driver_update}
-                )
-
+            await _sync_driver_expiry(db, body.entity_id, body.document_type, body.expiry_date)
         if body.entity_type == "vehicle" and body.expiry_date:
-            doc_type_map = {
-                "rc": "rc_expiry", "registration": "rc_expiry",
-                "insurance": "insurance_expiry",
-                "fitness": "fitness_expiry", "fc": "fitness_expiry",
-                "tax": "tax_expiry",
-                "puc": "puc_expiry", "pollution": "puc_expiry",
-                "permit": "permit_expiry",
-                "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
-            }
-            doc_key = doc_type_map.get(body.document_type.lower())
-            if doc_key:
-                await get_db().vehicles.update_one(
-                    {"id": body.entity_id},
-                    {"$set": {f"documents.{doc_key}": body.expiry_date}}
-                )
+            await _sync_vehicle_expiry(db, body.entity_id, body.document_type, body.expiry_date)
 
         return {"message": "Document metadata saved.", "document": document_record}
     except HTTPException:
@@ -190,22 +172,18 @@ async def attach_file_to_document(
     if file_ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="File type not allowed. Use PDF, JPG, or PNG.")
 
-    filename = f"{doc_id}{file_ext}"
-    file_path = UPLOAD_DIR / filename
-
     content = await file.read()
-    with open(file_path, "wb") as buffer:
-        buffer.write(content)
 
     await db.documents.update_one({"id": doc_id}, {"$set": {
         "filename": file.filename,
-        "file_path": str(file_path),
         "file_url": f"/api/documents/file/{doc_id}{file_ext}",
+        "file_content_b64": base64.b64encode(content).decode('utf-8'),
+        "file_content_type": file.content_type or "application/octet-stream",
         "status": "uploaded",
         "updated_at": datetime.now().isoformat()
     }})
 
-    updated = await db.documents.find_one({"id": doc_id}, {"_id": 0})
+    updated = await db.documents.find_one({"id": doc_id}, {"_id": 0, "file_content_b64": 0})
     return {"message": "File attached successfully", "document": updated}
 
 
@@ -227,18 +205,7 @@ async def upload_document(
             raise HTTPException(status_code=400, detail="File type not allowed")
 
         file_id = str(uuid.uuid4())
-        filename = f"{file_id}{file_ext}"
         content = await file.read()
-
-        # Try filesystem first, fall back to MongoDB storage
-        file_path_str = None
-        try:
-            file_path = UPLOAD_DIR / filename
-            with open(file_path, "wb") as buffer:
-                buffer.write(content)
-            file_path_str = str(file_path)
-        except Exception as fs_err:
-            logger.warning(f"Filesystem write failed, storing in MongoDB: {fs_err}")
 
         document_record = {
             "id": file_id,
@@ -250,53 +217,24 @@ async def upload_document(
             "expiry_date": expiry_date,
             "issuing_authority": issuing_authority,
             "filename": file.filename,
-            "file_path": file_path_str,
             "file_url": f"/api/documents/file/{file_id}{file_ext}",
+            "file_content_b64": base64.b64encode(content).decode('utf-8'),
+            "file_content_type": file.content_type or "application/octet-stream",
             "uploaded_by": current_user["sub"],
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
             "status": "uploaded"
         }
 
-        # If filesystem failed, store in MongoDB as base64
-        if file_path_str is None:
-            document_record["file_content_b64"] = base64.b64encode(content).decode('utf-8')
-            document_record["file_content_type"] = file.content_type or "application/octet-stream"
-
-        await get_db().documents.insert_one(document_record)
+        db = get_db()
+        await db.documents.insert_one(document_record)
         del document_record["_id"]
         document_record.pop("file_content_b64", None)
 
-        # Sync expiry date back to driver record
         if entity_type == "driver" and expiry_date:
-            driver_update = {}
-            if document_type == "dl":
-                driver_update["dl_expiry"] = expiry_date
-            elif document_type == "hazardous":
-                driver_update["hazardous_cert_expiry"] = expiry_date
-            if driver_update:
-                await get_db().drivers.update_one(
-                    {"id": entity_id},
-                    {"$set": driver_update}
-                )
-
-        # Sync expiry date back to vehicle documents
+            await _sync_driver_expiry(db, entity_id, document_type, expiry_date)
         if entity_type == "vehicle" and expiry_date:
-            doc_type_map = {
-                "rc": "rc_expiry", "registration": "rc_expiry",
-                "insurance": "insurance_expiry",
-                "fitness": "fitness_expiry", "fc": "fitness_expiry",
-                "tax": "tax_expiry",
-                "puc": "puc_expiry", "pollution": "puc_expiry",
-                "permit": "permit_expiry",
-                "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
-            }
-            doc_key = doc_type_map.get(document_type.lower())
-            if doc_key:
-                await get_db().vehicles.update_one(
-                    {"id": entity_id},
-                    {"$set": {f"documents.{doc_key}": expiry_date}}
-                )
+            await _sync_vehicle_expiry(db, entity_id, document_type, expiry_date)
 
         return {"message": "Document uploaded successfully", "document": document_record}
     except HTTPException:
@@ -312,12 +250,7 @@ async def upload_document(
 
 @router.get("/file/{filename}")
 async def serve_document_file(filename: str):
-    # Try filesystem first
-    file_path = UPLOAD_DIR / filename
-    if file_path.exists():
-        return FileResponse(str(file_path))
-
-    # Fall back to MongoDB stored content
+    """Serve document file from MongoDB."""
     doc_id = filename.rsplit('.', 1)[0] if '.' in filename else filename
     db = get_db()
     doc = await db.documents.find_one({"id": doc_id})

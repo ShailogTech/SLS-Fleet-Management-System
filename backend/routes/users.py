@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 def get_db():
     from server import db
     return db
@@ -11,11 +11,9 @@ from typing import List, Optional
 from datetime import datetime
 from pathlib import Path
 import uuid
+import base64
 
 router = APIRouter(prefix="/users", tags=["Users"])
-
-PHOTO_DIR = Path(__file__).parent.parent / "uploads" / "photos"
-PHOTO_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ===== Profile Endpoints (MUST be before /{user_id} routes) =====
@@ -96,11 +94,21 @@ async def upload_profile_photo(
         raise HTTPException(status_code=400, detail="File too large. Max 10MB.")
 
     filename = f"{current_user['sub']}{ext}"
-    filepath = PHOTO_DIR / filename
-    with open(filepath, "wb") as f:
-        f.write(content)
-
     photo_url = f"/api/users/photo/{filename}"
+
+    # Store in MongoDB photos collection
+    await db.photos.update_one(
+        {"user_id": current_user["sub"]},
+        {"$set": {
+            "user_id": current_user["sub"],
+            "filename": filename,
+            "content_b64": base64.b64encode(content).decode('utf-8'),
+            "content_type": file.content_type or "image/jpeg",
+            "updated_at": datetime.now().isoformat()
+        }},
+        upsert=True
+    )
+
     await db.users.update_one(
         {"id": current_user["sub"]},
         {"$set": {"photo_url": photo_url}}
@@ -120,11 +128,8 @@ async def remove_profile_photo(current_user: dict = Depends(get_current_user)):
     if not photo_url:
         raise HTTPException(status_code=400, detail="No profile photo to remove")
 
-    # Delete the file from disk
-    filename = photo_url.split("/")[-1]
-    filepath = PHOTO_DIR / filename
-    if filepath.exists():
-        filepath.unlink()
+    # Delete from MongoDB photos collection
+    await db.photos.delete_one({"user_id": current_user["sub"]})
 
     # Clear photo_url in DB
     await db.users.update_one(
@@ -137,10 +142,15 @@ async def remove_profile_photo(current_user: dict = Depends(get_current_user)):
 
 @router.get("/photo/{filename}")
 async def serve_photo(filename: str):
-    filepath = PHOTO_DIR / filename
-    if not filepath.exists():
+    db = get_db()
+    # Extract user_id from filename (filename is userId.ext)
+    user_id = filename.rsplit('.', 1)[0] if '.' in filename else filename
+    photo = await db.photos.find_one({"user_id": user_id})
+    if not photo or not photo.get("content_b64"):
         raise HTTPException(status_code=404, detail="Photo not found")
-    return FileResponse(str(filepath))
+    content = base64.b64decode(photo["content_b64"])
+    content_type = photo.get("content_type", "image/jpeg")
+    return Response(content=content, media_type=content_type)
 
 
 @router.get("/profile-edits")

@@ -16,31 +16,37 @@ const ApprovalQueue = () => {
   const { user } = useAuth();
   const { registerRefresh } = useRefresh();
   const [approvals, setApprovals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
   const [commentText, setCommentText] = useState({});
   const [showCommentFor, setShowCommentFor] = useState(null);
 
   useEffect(() => {
-    fetchApprovals();
-    const interval = setInterval(fetchApprovals, 30000);
+    fetchApprovals(true);
+    const interval = setInterval(() => fetchApprovals(false), 30000);
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => { registerRefresh(fetchApprovals); }, []);
+  useEffect(() => { registerRefresh(() => fetchApprovals(false)); }, []);
 
-  const fetchApprovals = async () => {
-    setLoading(true);
+  const fetchApprovals = async (showSpinner = false) => {
+    if (showSpinner) setInitialLoading(true);
     try {
       const response = await api.get('/approvals/queue');
       setApprovals(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load approvals:', error);
-      toast.error(error.response?.data?.detail || 'Failed to load approvals');
-      setApprovals([]);
+      if (showSpinner) toast.error(error.response?.data?.detail || 'Failed to load approvals');
+      if (showSpinner) setApprovals([]);
     } finally {
-      setLoading(false);
+      if (showSpinner) setInitialLoading(false);
     }
+  };
+
+  const updateLocalApproval = (approvalId, newStatus) => {
+    setApprovals(prev => prev.map(a =>
+      a.id === approvalId ? { ...a, status: newStatus } : a
+    ));
   };
 
   const handleCheck = async (approvalId, action, comment) => {
@@ -48,7 +54,8 @@ const ApprovalQueue = () => {
     try {
       await api.post(`/approvals/${approvalId}/check`, { action, comment });
       toast.success(action === 'approve' ? 'Reviewed and forwarded to Approver' : 'Rejected and returned to Maker');
-      fetchApprovals();
+      updateLocalApproval(approvalId, action === 'approve' ? 'checked' : 'rejected');
+      fetchApprovals(false);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Action failed');
     } finally {
@@ -61,7 +68,8 @@ const ApprovalQueue = () => {
     try {
       await api.post(`/approvals/${approvalId}/approve`, { action, comment });
       toast.success(action === 'approve' ? 'Approved and published!' : 'Rejected');
-      fetchApprovals();
+      updateLocalApproval(approvalId, action === 'approve' ? 'approved' : 'rejected');
+      fetchApprovals(false);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Action failed');
     } finally {
@@ -83,7 +91,7 @@ const ApprovalQueue = () => {
       toast.success('Comment added');
       setCommentText(prev => ({ ...prev, [approvalId]: '' }));
       setShowCommentFor(null);
-      fetchApprovals();
+      fetchApprovals(false);
     } catch (error) {
       toast.error('Failed to add comment');
     }
@@ -101,7 +109,7 @@ const ApprovalQueue = () => {
   const approvedCount = approvals.filter(a => a.status === 'approved').length;
   const rejectedCount = approvals.filter(a => a.status === 'rejected').length;
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
@@ -124,7 +132,7 @@ const ApprovalQueue = () => {
             {isApprover && 'Review checked applications for final approval'}
           </p>
         </div>
-        <Button variant="outline" onClick={fetchApprovals} data-testid="refresh-btn">
+        <Button variant="outline" onClick={() => fetchApprovals(false)} data-testid="refresh-btn">
           <RefreshCw className="h-4 w-4 mr-2" /> Refresh
         </Button>
       </div>
