@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button';
 import {
   Truck, User, Phone, FileText, Calendar, MapPin, AlertCircle,
   CreditCard, CheckCircle, Clock, AlertTriangle, Navigation,
-  RefreshCw, Download, LogOut, Camera, ShieldAlert, Menu, X, UserCircle
+  RefreshCw, Download, LogOut, Camera, ShieldAlert, Menu, X, UserCircle, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
@@ -482,138 +482,139 @@ const DriverPortal = () => {
             {/* ========== VEHICLE DOCUMENT SECTION ========== */}
             {activeSection === 'documents' && (
               <>
-                {/* Vehicle Documents - Expiry Status */}
-                {vehicle && vehicle.documents && Object.keys(vehicle.documents).length > 0 ? (
-                  <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center text-lg">
-                        <FileText className="h-5 w-5 mr-2 text-slate-600" />
-                        Vehicle Documents
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {Object.entries(vehicle.documents).map(([docType, expiryDate]) => {
-                          if (!expiryDate) return null;
-                          const docStatus = getDocumentStatus(expiryDate);
-                          const DocIcon = docStatus.icon;
+                {(() => {
+                  const DOC_LABELS = {
+                    rc: 'Registration Certificate (RC)', insurance: 'Insurance',
+                    fitness: 'Fitness Certificate (FC)', tax: 'Tax Receipt',
+                    puc: 'PUC Certificate', permit: 'Permit', national_permit: 'National Permit',
+                  };
+                  const EXPIRY_KEY_TO_TYPE = {
+                    rc_expiry: 'rc', insurance_expiry: 'insurance', fitness_expiry: 'fitness',
+                    tax_expiry: 'tax', puc_expiry: 'puc', permit_expiry: 'permit',
+                    national_permit_expiry: 'national_permit',
+                  };
 
-                          return (
-                            <div
-                              key={docType}
-                              className={`p-4 rounded-lg border ${docStatus.bg} ${
-                                docStatus.status === 'expired' ? 'border-red-200' :
-                                docStatus.status === 'expiring' ? 'border-amber-200' :
-                                'border-slate-200'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center space-x-2">
-                                    <DocIcon className={`h-4 w-4 ${docStatus.color}`} />
-                                    <span className="text-sm font-semibold text-slate-700 capitalize">
-                                      {docType.replace(/_/g, ' ')}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center mt-2 text-xs text-slate-500">
-                                    <Calendar className="h-3 w-3 mr-1" />
-                                    Expiry: {new Date(expiryDate).toLocaleDateString()}
+                  // Build merged map keyed by document_type (one entry per type)
+                  const byType = {};
+                  if (vehicle && vehicle.documents) {
+                    Object.entries(vehicle.documents).forEach(([expiryKey, expiryDate]) => {
+                      if (!expiryDate) return;
+                      const docType = EXPIRY_KEY_TO_TYPE[expiryKey];
+                      if (docType) byType[docType] = { expiry: expiryDate, fileUrl: null, docNumber: null, authority: null };
+                    });
+                  }
+                  if (uploadedDocs) {
+                    uploadedDocs.forEach(doc => {
+                      const docType = doc.document_type;
+                      if (!docType) return;
+                      const existing = byType[docType];
+                      byType[docType] = {
+                        expiry: doc.expiry_date || (existing && existing.expiry) || null,
+                        fileUrl: (doc.status === 'uploaded' && doc.file_url) ? doc.file_url : null,
+                        docNumber: doc.document_number || null,
+                        authority: doc.issuing_authority || null,
+                      };
+                    });
+                  }
+
+                  const merged = Object.entries(byType);
+                  const backendUrl = (process.env.REACT_APP_BACKEND_URL || '') + '/api';
+                  const hasExpired = merged.some(([, item]) => item.expiry && new Date(item.expiry) < new Date());
+
+                  if (merged.length === 0) {
+                    return (
+                      <Card className="bg-white border-slate-200 shadow-md">
+                        <CardContent className="py-8 text-center">
+                          <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300" />
+                          <p className="text-slate-500 text-sm">No documents uploaded for this vehicle yet</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
+
+                  return (
+                    <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center text-lg">
+                          <FileText className="h-5 w-5 mr-2 text-slate-600" />
+                          Vehicle Documents
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {merged.map(([docType, item]) => {
+                            const docStatus = getDocumentStatus(item.expiry);
+                            const DocIcon = docStatus.icon;
+                            const label = DOC_LABELS[docType] || docType.replace(/_/g, ' ');
+                            const viewUrl = item.fileUrl ? `${backendUrl}${item.fileUrl}` : null;
+
+                            return (
+                              <div
+                                key={docType}
+                                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border gap-2 ${
+                                  docStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
+                                  docStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
+                                  'bg-slate-50 border-slate-200'
+                                }`}
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <DocIcon className={`h-5 w-5 flex-shrink-0 ${docStatus.color}`} />
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-slate-800">{label}</p>
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                                      {item.docNumber && <span>#{item.docNumber}</span>}
+                                      {item.expiry && (
+                                        <span className="flex items-center">
+                                          <Calendar className="h-3 w-3 mr-1" />
+                                          Expires: {new Date(item.expiry).toLocaleDateString()}
+                                        </span>
+                                      )}
+                                      {item.authority && <span>{item.authority}</span>}
+                                    </div>
                                   </div>
                                 </div>
-                                <span className={`text-xs font-bold px-2 py-1 rounded ${
-                                  docStatus.status === 'expired' ? 'bg-red-100 text-red-700' :
-                                  docStatus.status === 'expiring' ? 'bg-amber-100 text-amber-700' :
-                                  'bg-emerald-100 text-emerald-700'
-                                }`}>
-                                  {docStatus.status === 'expired' ? 'EXPIRED' :
-                                   docStatus.status === 'expiring' ? `${docStatus.days}d` :
-                                   'VALID'}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Document Count Summary */}
-                      <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-sm">
-                        <span className="text-slate-500">
-                          Total Documents: {Object.values(vehicle.documents).filter(v => v).length}
-                        </span>
-                        {Object.values(vehicle.documents).some(v => {
-                          if (!v) return false;
-                          return new Date(v) < new Date();
-                        }) && (
-                          <span className="text-red-600 font-medium flex items-center">
-                            <AlertTriangle className="h-4 w-4 mr-1" />
-                            Some documents need renewal
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <CardContent className="py-8 text-center">
-                      <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300" />
-                      <p className="text-slate-500 text-sm">No documents uploaded for this vehicle yet</p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Uploaded Document Files */}
-                {uploadedDocs && uploadedDocs.length > 0 && (
-                  <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center text-lg">
-                        <Download className="h-5 w-5 mr-2 text-slate-600" />
-                        Uploaded Document Files
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {uploadedDocs.map((doc) => (
-                          <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 gap-2" data-testid={`uploaded-doc-${doc.id}`}>
-                            <div className="flex items-center space-x-3 min-w-0">
-                              <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
-                                <FileText className="h-5 w-5 text-blue-600" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-slate-900 capitalize truncate">{doc.document_type?.replace(/_/g, ' ')}</p>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                                  {doc.document_number && <span>#{doc.document_number}</span>}
-                                  {doc.expiry_date && (
-                                    <span className="flex items-center">
-                                      <Calendar className="h-3 w-3 mr-1" />
-                                      Expires: {new Date(doc.expiry_date).toLocaleDateString()}
-                                    </span>
+                                <div className="flex items-center space-x-3 flex-shrink-0 pl-8 sm:pl-0">
+                                  {viewUrl ? (
+                                    <a
+                                      href={viewUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                                    >
+                                      <Eye className="h-3.5 w-3.5 mr-1" />
+                                      View
+                                    </a>
+                                  ) : (
+                                    <span className="text-xs text-slate-400 italic">No file</span>
                                   )}
-                                  {doc.issuing_authority && <span>{doc.issuing_authority}</span>}
+                                  <span className={`text-xs font-bold px-2 py-1 rounded ${
+                                    docStatus.status === 'expired' ? 'bg-red-100 text-red-700' :
+                                    docStatus.status === 'expiring' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-emerald-100 text-emerald-700'
+                                  }`}>
+                                    {docStatus.status === 'expired' ? 'EXPIRED' :
+                                     docStatus.status === 'expiring' ? `${docStatus.days}d` :
+                                     'VALID'}
+                                  </span>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center space-x-2 flex-shrink-0 pl-11 sm:pl-0">
-                              {doc.status === 'uploaded' && doc.file_url ? (
-                                <a
-                                  href={`${process.env.REACT_APP_BACKEND_URL}${doc.file_url}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
-                                  data-testid={`download-doc-${doc.id}`}
-                                >
-                                  <Download className="h-4 w-4 mr-1" />
-                                  View
-                                </a>
-                              ) : (
-                                <span className="text-xs text-amber-600 font-medium">Pending Upload</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-sm">
+                          <span className="text-slate-500">Total Documents: {merged.length}</span>
+                          {hasExpired && (
+                            <span className="text-red-600 font-medium flex items-center">
+                              <AlertTriangle className="h-4 w-4 mr-1" />
+                              Some documents need renewal
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               </>
             )}
 
