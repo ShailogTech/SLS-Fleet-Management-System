@@ -9,9 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import StatusBadge from '../common/StatusBadge';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  Truck, User, FileText, Calendar, MapPin, Edit2, Save, X, 
-  AlertTriangle, CheckCircle, Clock, UserPlus
+import {
+  Truck, User, FileText, Calendar, MapPin, Edit2, Save, X,
+  AlertTriangle, CheckCircle, Clock, UserPlus, Eye
 } from 'lucide-react';
 
 const VEHICLE_TYPES = [
@@ -329,102 +329,119 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
 
           <TabsContent value="documents" className="pt-4">
             <div className="space-y-3">
-              {/* Show embedded document expiry dates */}
-              {vehicle.documents && Object.entries(vehicle.documents).some(([, v]) => v) && (
-                Object.entries(vehicle.documents)
-                  .filter(([, expiryDate]) => expiryDate)
-                  .map(([docType, expiryDate]) => {
-                    const docStatus = getDocumentStatus(expiryDate);
-                    const DocIcon = docStatus.icon;
-                    return (
-                      <div
-                        key={docType}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${
-                          docStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
-                          docStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
-                          'bg-slate-50 border-slate-200'
-                        }`}
-                        data-testid={`doc-${docType}`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <FileText className="h-5 w-5 text-slate-600" />
-                          <div>
-                            <p className="font-medium text-slate-900 capitalize">
-                              {docType.replace(/_/g, ' ')}
-                            </p>
-                            <p className="text-sm text-slate-500">
-                              Expires: {new Date(expiryDate).toLocaleDateString()}
-                            </p>
-                          </div>
+              {(() => {
+                // Friendly labels for document types
+                const DOC_LABELS = {
+                  rc: 'Registration Certificate (RC)',
+                  insurance: 'Insurance',
+                  fitness: 'Fitness Certificate (FC)',
+                  tax: 'Tax Receipt',
+                  puc: 'PUC Certificate',
+                  permit: 'Permit',
+                  national_permit: 'National Permit',
+                };
+                // Map inline expiry keys → doc type
+                const EXPIRY_KEY_TO_TYPE = {
+                  rc_expiry: 'rc', insurance_expiry: 'insurance', fitness_expiry: 'fitness',
+                  tax_expiry: 'tax', puc_expiry: 'puc', permit_expiry: 'permit',
+                  national_permit_expiry: 'national_permit',
+                };
+
+                // Build merged map keyed by document_type (one entry per type)
+                const byType = {};
+
+                // 1. Seed from inline vehicle.documents expiry dates
+                if (vehicle.documents) {
+                  Object.entries(vehicle.documents).forEach(([expiryKey, expiryDate]) => {
+                    if (!expiryDate) return;
+                    const docType = EXPIRY_KEY_TO_TYPE[expiryKey];
+                    if (docType) {
+                      byType[docType] = { expiry: expiryDate, fileUrl: null, docNumber: null };
+                    }
+                  });
+                }
+
+                // 2. Override/merge with uploaded docs (they have file info + more metadata)
+                uploadedDocs.forEach(doc => {
+                  const docType = doc.document_type;
+                  if (!docType) return;
+                  const existing = byType[docType];
+                  byType[docType] = {
+                    expiry: doc.expiry_date || (existing && existing.expiry) || null,
+                    fileUrl: doc.file_url || null,
+                    docNumber: doc.document_number || null,
+                  };
+                });
+
+                const merged = Object.entries(byType);
+
+                if (merged.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-slate-500">
+                      <FileText className="h-12 w-12 mx-auto mb-2 text-slate-300" />
+                      <p>No documents recorded</p>
+                    </div>
+                  );
+                }
+
+                const backendUrl = (process.env.REACT_APP_BACKEND_URL || '') + '/api';
+
+                return merged.map(([docType, item]) => {
+                  const docStatus = getDocumentStatus(item.expiry);
+                  const DocIcon = docStatus.icon;
+                  const label = DOC_LABELS[docType] || docType.replace(/_/g, ' ');
+                  const viewUrl = item.fileUrl ? `${backendUrl}${item.fileUrl}` : null;
+
+                  return (
+                    <div
+                      key={docType}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                        docStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
+                        docStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
+                        'bg-slate-50 border-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <FileText className={`h-5 w-5 ${item.fileUrl ? 'text-blue-600' : 'text-slate-600'}`} />
+                        <div>
+                          <p className="font-medium text-slate-900">{label}</p>
+                          <p className="text-sm text-slate-500">
+                            {item.docNumber && <span>#{item.docNumber} &middot; </span>}
+                            {item.expiry ? `Expires: ${new Date(item.expiry).toLocaleDateString()}` : 'No expiry date set'}
+                          </p>
                         </div>
-                        <div className="flex items-center space-x-2">
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        {viewUrl ? (
+                          <a
+                            href={viewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">No file</span>
+                        )}
+                        <div className="flex items-center space-x-1">
                           <DocIcon className={`h-5 w-5 ${docStatus.color}`} />
                           {docStatus.status === 'expired' && (
                             <span className="text-xs font-medium text-red-600">EXPIRED</span>
                           )}
                           {docStatus.status === 'expiring' && (
-                            <span className="text-xs font-medium text-amber-600">{docStatus.days} days left</span>
+                            <span className="text-xs font-medium text-amber-600">{docStatus.days}d left</span>
                           )}
                           {docStatus.status === 'valid' && (
                             <span className="text-xs font-medium text-emerald-600">Valid</span>
                           )}
                         </div>
                       </div>
-                    );
-                  })
-              )}
-
-              {/* Show uploaded documents from documents collection */}
-              {uploadedDocs.length > 0 && uploadedDocs.map((doc) => {
-                const docStatus = getDocumentStatus(doc.expiry_date);
-                const DocIcon = docStatus.icon;
-                return (
-                  <div
-                    key={doc.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      docStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
-                      docStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
-                      'bg-slate-50 border-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-slate-900 capitalize">
-                          {doc.document_type?.replace(/_/g, ' ')}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          {doc.document_number && <span>#{doc.document_number} &middot; </span>}
-                          {doc.expiry_date ? `Expires: ${new Date(doc.expiry_date).toLocaleDateString()}` : 'No expiry date set'}
-                        </p>
-                        {doc.file_url && (
-                          <span className="text-xs text-blue-600">File uploaded</span>
-                        )}
-                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <DocIcon className={`h-5 w-5 ${docStatus.color}`} />
-                      {docStatus.status === 'expired' && (
-                        <span className="text-xs font-medium text-red-600">EXPIRED</span>
-                      )}
-                      {docStatus.status === 'expiring' && (
-                        <span className="text-xs font-medium text-amber-600">{docStatus.days} days left</span>
-                      )}
-                      {docStatus.status === 'valid' && (
-                        <span className="text-xs font-medium text-emerald-600">Valid</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Show empty state only if both sources are empty */}
-              {(!vehicle.documents || !Object.entries(vehicle.documents).some(([, v]) => v)) && uploadedDocs.length === 0 && (
-                <div className="text-center py-8 text-slate-500">
-                  <FileText className="h-12 w-12 mx-auto mb-2 text-slate-300" />
-                  <p>No documents recorded</p>
-                </div>
-              )}
+                  );
+                });
+              })()}
             </div>
           </TabsContent>
 

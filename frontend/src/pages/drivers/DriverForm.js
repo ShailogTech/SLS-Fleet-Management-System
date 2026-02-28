@@ -98,6 +98,7 @@ const DriverForm = () => {
     for (const doc of REQUIRED_DOCUMENTS) {
       const docData = docFiles[doc.key];
       if (!docData?.file && !docData?.expiry) continue;
+      if (uploadedDocs[doc.key]) continue; // Already uploaded, skip
 
       setUploadingDoc(doc.key);
       try {

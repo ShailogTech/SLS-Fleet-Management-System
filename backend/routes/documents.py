@@ -80,6 +80,29 @@ async def create_document_metadata(
     if user_role not in ["maker", "admin", "superuser", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
+    db = get_db()
+
+    # Dedup: if a document with same entity_type + entity_id + document_type exists, update it
+    existing = await db.documents.find_one(
+        {"entity_type": entity_type, "entity_id": entity_id, "document_type": document_type},
+        {"_id": 0}
+    )
+    if existing:
+        update_fields = {"updated_at": datetime.now().isoformat()}
+        if document_number: update_fields["document_number"] = document_number
+        if issue_date: update_fields["issue_date"] = issue_date
+        if expiry_date: update_fields["expiry_date"] = expiry_date
+        if issuing_authority: update_fields["issuing_authority"] = issuing_authority
+        await db.documents.update_one({"id": existing["id"]}, {"$set": update_fields})
+        updated = await db.documents.find_one({"id": existing["id"]}, {"_id": 0})
+
+        if entity_type == "driver" and expiry_date:
+            await _sync_driver_expiry(db, entity_id, document_type, expiry_date)
+        if entity_type == "vehicle" and expiry_date:
+            await _sync_vehicle_expiry(db, entity_id, document_type, expiry_date)
+
+        return {"message": "Document metadata updated (existing).", "document": updated}
+
     doc_id = str(uuid.uuid4())
     document_record = {
         "id": doc_id,
@@ -99,7 +122,6 @@ async def create_document_metadata(
         "status": "pending_upload"
     }
 
-    db = get_db()
     await db.documents.insert_one(document_record)
     del document_record["_id"]
 
@@ -121,6 +143,29 @@ async def save_document_metadata_json(
         if user_role not in ["maker", "admin", "superuser", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
             raise HTTPException(status_code=403, detail="Insufficient permissions")
 
+        db = get_db()
+
+        # Dedup: if a document with same entity_type + entity_id + document_type exists, update it
+        existing = await db.documents.find_one(
+            {"entity_type": body.entity_type, "entity_id": body.entity_id, "document_type": body.document_type},
+            {"_id": 0}
+        )
+        if existing:
+            update_fields = {"updated_at": datetime.now().isoformat()}
+            if body.document_number: update_fields["document_number"] = body.document_number
+            if body.issue_date: update_fields["issue_date"] = body.issue_date
+            if body.expiry_date: update_fields["expiry_date"] = body.expiry_date
+            if body.issuing_authority: update_fields["issuing_authority"] = body.issuing_authority
+            await db.documents.update_one({"id": existing["id"]}, {"$set": update_fields})
+            updated = await db.documents.find_one({"id": existing["id"]}, {"_id": 0, "file_content_b64": 0})
+
+            if body.entity_type == "driver" and body.expiry_date:
+                await _sync_driver_expiry(db, body.entity_id, body.document_type, body.expiry_date)
+            if body.entity_type == "vehicle" and body.expiry_date:
+                await _sync_vehicle_expiry(db, body.entity_id, body.document_type, body.expiry_date)
+
+            return {"message": "Document metadata updated (existing).", "document": updated}
+
         doc_id = str(uuid.uuid4())
         document_record = {
             "id": doc_id,
@@ -140,7 +185,6 @@ async def save_document_metadata_json(
             "status": "pending_upload"
         }
 
-        db = get_db()
         await db.documents.insert_one(document_record)
         del document_record["_id"]
 
@@ -204,9 +248,38 @@ async def upload_document(
         if file_ext not in ALLOWED_EXTENSIONS:
             raise HTTPException(status_code=400, detail="File type not allowed")
 
-        file_id = str(uuid.uuid4())
         content = await file.read()
+        db = get_db()
 
+        # Dedup: if a document with same entity_type + entity_id + document_type exists, update it
+        existing = await db.documents.find_one(
+            {"entity_type": entity_type, "entity_id": entity_id, "document_type": document_type},
+            {"_id": 0}
+        )
+        if existing:
+            file_id = existing["id"]
+            await db.documents.update_one({"id": file_id}, {"$set": {
+                "document_number": document_number or existing.get("document_number"),
+                "issue_date": issue_date or existing.get("issue_date"),
+                "expiry_date": expiry_date or existing.get("expiry_date"),
+                "issuing_authority": issuing_authority or existing.get("issuing_authority"),
+                "filename": file.filename,
+                "file_url": f"/api/documents/file/{file_id}{file_ext}",
+                "file_content_b64": base64.b64encode(content).decode('utf-8'),
+                "file_content_type": file.content_type or "application/octet-stream",
+                "status": "uploaded",
+                "updated_at": datetime.now().isoformat()
+            }})
+            updated = await db.documents.find_one({"id": file_id}, {"_id": 0, "file_content_b64": 0})
+
+            if entity_type == "driver" and expiry_date:
+                await _sync_driver_expiry(db, entity_id, document_type, expiry_date)
+            if entity_type == "vehicle" and expiry_date:
+                await _sync_vehicle_expiry(db, entity_id, document_type, expiry_date)
+
+            return {"message": "Document updated successfully", "document": updated}
+
+        file_id = str(uuid.uuid4())
         document_record = {
             "id": file_id,
             "entity_type": entity_type,
@@ -226,7 +299,6 @@ async def upload_document(
             "status": "uploaded"
         }
 
-        db = get_db()
         await db.documents.insert_one(document_record)
         del document_record["_id"]
         document_record.pop("file_content_b64", None)

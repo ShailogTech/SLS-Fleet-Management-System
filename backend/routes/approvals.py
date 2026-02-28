@@ -185,17 +185,46 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
                 {"id": approval["entity_id"]},
                 {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
             )
-            # Activate the driver's user account (created when driver was added)
+            # Auto-create or activate user account for approved driver
             if approval["entity_type"] == "driver":
                 try:
-                    driver_doc = await get_db().drivers.find_one({"id": approval["entity_id"]}, {"_id": 0})
+                    db = get_db()
+                    driver_doc = await db.drivers.find_one({"id": approval["entity_id"]}, {"_id": 0})
                     if driver_doc:
-                        await get_db().users.update_one(
-                            {"emp_id": driver_doc.get("emp_id")},
-                            {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
-                        )
+                        # Check if user already exists by emp_id
+                        existing_user = await db.users.find_one({"emp_id": driver_doc.get("emp_id")}, {"_id": 0})
+                        if existing_user:
+                            await db.users.update_one(
+                                {"id": existing_user["id"]},
+                                {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
+                            )
+                        else:
+                            # Auto-create user account for this driver
+                            driver_name = driver_doc.get("name", "driver")
+                            first_name = driver_name.split()[0].lower() if driver_name else "driver"
+                            base_email = f"{first_name}@slts.com"
+                            email = base_email
+                            counter = 1
+                            while await db.users.find_one({"email": email}):
+                                email = f"{first_name}{counter}@slts.com"
+                                counter += 1
+                            password = f"{first_name}123"
+                            user_id = str(uuid.uuid4())
+                            user_doc = {
+                                "id": user_id,
+                                "name": driver_name,
+                                "email": email,
+                                "password_hash": get_password_hash(password),
+                                "role": "driver",
+                                "emp_id": driver_doc.get("emp_id"),
+                                "phone": driver_doc.get("phone"),
+                                "status": "active",
+                                "created_at": datetime.now().isoformat(),
+                            }
+                            await db.users.insert_one(user_doc)
+                            logger.info(f"Auto-created user {email} for driver {driver_name}")
                 except Exception as e:
-                    logger.error(f"Failed to activate user for driver {approval.get('entity_id')}: {str(e)}")
+                    logger.error(f"Failed to create/activate user for driver {approval.get('entity_id')}: {str(e)}")
         else:
             await get_db().profile_edits.update_one(
                 {"id": approval["entity_id"]},
