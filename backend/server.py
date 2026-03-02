@@ -54,13 +54,12 @@ async def seed_admin():
 async def lifespan(app):
     logger.info("Starting up — connected to MongoDB")
     asyncio.create_task(seed_admin())
+    # Drop old unique index on engine_no (CSV data has duplicates)
     try:
         await db.vehicles.drop_index("engine_no_1")
     except Exception:
         pass
-    # Unset null engine_no fields so sparse index can work
-    await db.vehicles.update_many({"engine_no": None}, {"$unset": {"engine_no": ""}})
-    await db.vehicles.create_index("engine_no", unique=True, sparse=True)
+    await db.vehicles.create_index("engine_no", sparse=True)
     yield
     client.close()
     logger.info("Shutdown — MongoDB connection closed")
