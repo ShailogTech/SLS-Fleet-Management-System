@@ -32,6 +32,7 @@ const VehicleForm = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [createdVehicleId, setCreatedVehicleId] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -191,20 +192,32 @@ const VehicleForm = () => {
       toast.error('Please fill in required vehicle details');
       return;
     }
-    // Save vehicle first to get ID
-    const vehicleId = await handleSaveVehicle();
-    if (vehicleId) {
-      setCurrentStep(2);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const vehicleId = await handleSaveVehicle();
+      if (vehicleId) {
+        setCurrentStep(2);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleGoToStep3 = async () => {
-    // Upload documents
-    await handleUploadDocuments();
-    setCurrentStep(3);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await handleUploadDocuments();
+      setCurrentStep(3);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFinalSubmit = () => {
+    if (submitting) return;
+    setSubmitting(true);
     toast.success('Vehicle submitted for approval! Track status in My Submissions.');
     navigate('/my-submissions');
   };
@@ -304,8 +317,8 @@ const VehicleForm = () => {
             </div>
 
             <div className="flex justify-end mt-6 pt-4 border-t border-slate-200">
-              <Button onClick={handleGoToStep2} disabled={loading || !isStep1Valid} className="bg-slate-900 hover:bg-slate-800" data-testid="next-step-btn">
-                {loading ? 'Saving...' : 'Save & Upload Documents'}
+              <Button onClick={handleGoToStep2} disabled={loading || submitting || !isStep1Valid} className="bg-slate-900 hover:bg-slate-800" data-testid="next-step-btn">
+                {loading || submitting ? 'Saving...' : 'Save & Upload Documents'}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
@@ -348,8 +361,8 @@ const VehicleForm = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <Button onClick={handleGoToStep3} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
-              Upload & Review
+            <Button onClick={handleGoToStep3} disabled={submitting} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
+              {submitting ? 'Uploading...' : 'Upload & Review'}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
@@ -428,9 +441,9 @@ const VehicleForm = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Documents
             </Button>
-            <Button onClick={handleFinalSubmit} className="bg-emerald-600 hover:bg-emerald-700" data-testid="final-submit-btn">
+            <Button onClick={handleFinalSubmit} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700" data-testid="final-submit-btn">
               <CheckCircle className="h-4 w-4 mr-2" />
-              Done - Track in My Submissions
+              {submitting ? 'Submitting...' : 'Done - Track in My Submissions'}
             </Button>
           </div>
         </div>

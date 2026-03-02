@@ -28,6 +28,7 @@ const DriverForm = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [createdDriverId, setCreatedDriverId] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -144,16 +145,30 @@ const DriverForm = () => {
       toast.error('Please fill all required driver details');
       return;
     }
-    const driverId = await handleSaveDriver();
-    if (driverId) setCurrentStep(2);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const driverId = await handleSaveDriver();
+      if (driverId) setCurrentStep(2);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleGoToStep3 = async () => {
-    await handleUploadDocuments();
-    setCurrentStep(3);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await handleUploadDocuments();
+      setCurrentStep(3);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFinalSubmit = () => {
+    if (submitting) return;
+    setSubmitting(true);
     toast.success('Driver submitted for approval! Track status in My Submissions.');
     navigate('/my-submissions');
   };
@@ -222,8 +237,8 @@ const DriverForm = () => {
               </div>
             </div>
             <div className="flex justify-end mt-6 pt-4 border-t border-slate-200">
-              <Button onClick={handleGoToStep2} disabled={loading || !isStep1Valid} className="bg-slate-900 hover:bg-slate-800" data-testid="next-step-btn">
-                {loading ? 'Saving...' : 'Save & Upload Documents'}
+              <Button onClick={handleGoToStep2} disabled={loading || submitting || !isStep1Valid} className="bg-slate-900 hover:bg-slate-800" data-testid="next-step-btn">
+                {loading || submitting ? 'Saving...' : 'Save & Upload Documents'}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
@@ -261,8 +276,8 @@ const DriverForm = () => {
             <Button variant="outline" onClick={() => setCurrentStep(1)} data-testid="prev-step-btn">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back
             </Button>
-            <Button onClick={handleGoToStep3} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
-              Upload & Review <ArrowRight className="h-4 w-4 ml-2" />
+            <Button onClick={handleGoToStep3} disabled={submitting} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
+              {submitting ? 'Uploading...' : 'Upload & Review'} <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
         </div>
@@ -330,8 +345,8 @@ const DriverForm = () => {
             <Button variant="outline" onClick={() => setCurrentStep(2)} data-testid="prev-step-btn">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Documents
             </Button>
-            <Button onClick={handleFinalSubmit} className="bg-emerald-600 hover:bg-emerald-700" data-testid="final-submit-btn">
-              <CheckCircle className="h-4 w-4 mr-2" /> Done - Track in My Submissions
+            <Button onClick={handleFinalSubmit} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700" data-testid="final-submit-btn">
+              <CheckCircle className="h-4 w-4 mr-2" /> {submitting ? 'Submitting...' : 'Done - Track in My Submissions'}
             </Button>
           </div>
         </div>

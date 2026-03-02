@@ -512,7 +512,7 @@ const DriverPortal = () => {
                   }
 
                   const merged = Object.entries(byType);
-                  const backendUrl = (process.env.REACT_APP_BACKEND_URL || '') + '/api';
+                  const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
                   const hasExpired = merged.some(([, item]) => item.expiry && new Date(item.expiry) < new Date());
 
                   if (merged.length === 0) {

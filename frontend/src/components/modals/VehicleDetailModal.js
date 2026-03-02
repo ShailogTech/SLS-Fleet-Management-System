@@ -383,7 +383,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
                   );
                 }
 
-                const backendUrl = (process.env.REACT_APP_BACKEND_URL || '') + '/api';
+                const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
 
                 return merged.map(([docType, item]) => {
                   const docStatus = getDocumentStatus(item.expiry);
