@@ -14,6 +14,7 @@ import VehicleForm from './pages/vehicles/VehicleForm';
 import DriverList from './pages/drivers/DriverList';
 import DriverForm from './pages/drivers/DriverForm';
 import DriverPortal from './pages/drivers/DriverPortal';
+import PlantInchargePortal from './pages/plants/PlantInchargePortal';
 import ApprovalQueue from './pages/approvals/ApprovalQueue';
 import MySubmissions from './pages/approvals/MySubmissions';
 import PlantList from './pages/plants/PlantList';
@@ -35,6 +36,9 @@ const RoleBasedRedirect = () => {
 
   if (user?.role === 'driver') {
     return <Navigate to="/driver-portal" replace />;
+  }
+  if (user?.role === 'plant_incharge') {
+    return <Navigate to="/plant-portal" replace />;
   }
   return <Dashboard />;
 };
@@ -58,6 +62,16 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['driver']}>
                 <DriverPortal />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Plant Incharge portal (full page, no sidebar) */}
+          <Route
+            path="/plant-portal"
+            element={
+              <ProtectedRoute allowedRoles={['plant_incharge']}>
+                <PlantInchargePortal />
               </ProtectedRoute>
             }
           />

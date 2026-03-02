@@ -36,7 +36,11 @@ async def get_drivers(
         user_info = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
         if user_info and user_info.get("emp_id"):
             query["emp_id"] = user_info["emp_id"]
-    
+    elif user_role == "plant_incharge":
+        user_info = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
+        if user_info and user_info.get("plant"):
+            query["plant"] = user_info["plant"]
+
     drivers = await db.drivers.find(query, {"_id": 0}).to_list(1000)
 
     # Enrich with document expiry dates for drivers missing them

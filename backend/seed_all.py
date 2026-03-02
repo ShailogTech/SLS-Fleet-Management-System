@@ -46,7 +46,6 @@ ROLE_USERS = [
     {"email": "approver@sls.com",   "name": "Mike Approver",     "phone": "9876543212", "role": "approver",            "password": "approver123", "emp_id": "APR-001"},
     {"email": "office@sls.com",     "name": "Office Incharge",   "phone": "9876543213", "role": "office_incharge",     "password": "office123",   "emp_id": "OFC-001"},
     {"email": "records@sls.com",    "name": "Monisha Records",   "phone": "9876543214", "role": "records_incharge",    "password": "records123",  "emp_id": "REC-001"},
-    {"email": "plant@sls.com",      "name": "Plant Manager",     "phone": "9876543215", "role": "plant_incharge",      "password": "plant123",    "emp_id": "PLT-001", "plant": "MYSORE HP"},
     {"email": "opsmanager@sls.com", "name": "Ops Manager",       "phone": "9876543216", "role": "operational_manager", "password": "ops123",      "emp_id": "OPS-001"},
     {"email": "acmanager@sls.com",  "name": "Accounts Manager",  "phone": "9876543217", "role": "accounts_manager",    "password": "accounts123", "emp_id": "ACC-001"},
 ]
@@ -238,6 +237,29 @@ def main():
     used_emails = set()
     for ru in ROLE_USERS:
         used_emails.add(ru["email"])
+
+    # ── Dynamic plant_incharge users (one per unique plant) ──
+    plant_incharge_users = []
+    for idx, plant_name in enumerate(sorted(plant_map.keys()), start=1):
+        name_key = re.sub(r'[^a-z0-9]', '', plant_name.lower())
+        email = f"{name_key}@sls.com"
+        # Handle email collision
+        counter = 1
+        while email in used_emails:
+            email = f"{name_key}{counter}@sls.com"
+            counter += 1
+        used_emails.add(email)
+        password = f"{name_key}123"
+        plant_incharge_users.append({
+            "email": email,
+            "name": f"Plant Incharge - {plant_name}",
+            "phone": f"98765{40000 + idx}",
+            "role": "plant_incharge",
+            "password": password,
+            "emp_id": f"PLT-{idx:03d}",
+            "plant": plant_name,
+        })
+
     skipped = []
 
     # A single "csv_import" submitter ID for all seeded data
@@ -334,7 +356,7 @@ def main():
             "assigned_driver_id": driver_id,
             "assigned_driver_name": driver_name,
             "documents": veh_documents or {},
-            "status": "approved",
+            "status": "active",
             "submitted_by": submitter_id,
             "created_at": now,
             "updated_at": now,
@@ -431,7 +453,7 @@ def main():
 
     # ── Role-based users (admin, maker, checker, approver, etc.) ──
     role_user_docs = []
-    for ru in ROLE_USERS:
+    for ru in ROLE_USERS + plant_incharge_users:
         role_user_docs.append({
             "id": str(uuid.uuid4()),
             "email": ru["email"],
@@ -471,6 +493,13 @@ def main():
     for coll in ["vehicles", "drivers", "users", "plants", "tenders", "approvals", "documents", "profile_edits", "signup_requests", "photos"]:
         db[coll].delete_many({})
         print(f"  Cleared {coll}")
+
+    # Drop unique index on engine_no (CSV has duplicates)
+    try:
+        db.vehicles.drop_index("engine_no_1")
+        print("  Dropped engine_no unique index")
+    except Exception:
+        pass
 
     # Insert role-based users first
     db.users.insert_many(role_user_docs)
@@ -532,6 +561,9 @@ def main():
     print(f"\nRole-based logins:")
     for ru in ROLE_USERS:
         print(f"  {ru['email']:25s} / {ru['password']}")
+    print(f"\nPlant Incharge logins ({len(plant_incharge_users)}):")
+    for pu in plant_incharge_users:
+        print(f"  {pu['email']:35s} / {pu['password']:25s} → {pu['plant']}")
     print(f"\nSample driver logins:")
     for u in users[:5]:
         nk = u["name"].lower().replace(" ", "")
