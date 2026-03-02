@@ -469,6 +469,36 @@ def main():
         })
 
     # ═══════════════════════════════════════════════════════
+    #  Deduplicate vehicles by engine_no (keep first, drop rest)
+    # ═══════════════════════════════════════════════════════
+    seen_engine = set()
+    dup_vehicle_ids = set()
+    deduped_vehicles = []
+    for veh in vehicles:
+        eng = veh.get("engine_no")
+        if eng and eng in seen_engine:
+            dup_vehicle_ids.add(veh["id"])
+            print(f"  Dup engine_no '{eng}' — skipping {veh['vehicle_no']}")
+            continue
+        if eng:
+            seen_engine.add(eng)
+        deduped_vehicles.append(veh)
+    vehicles = deduped_vehicles
+
+    if dup_vehicle_ids:
+        kept_veh_ids = {v["id"] for v in vehicles}
+        kept_driver_ids = {v["assigned_driver_id"] for v in vehicles}
+        drivers = [d for d in drivers if d["id"] in kept_driver_ids]
+        kept_emp_ids = {d["emp_id"] for d in drivers}
+        users = [u for u in users if u["emp_id"] in kept_emp_ids]
+        approvals = [a for a in approvals if a["entity_id"] in kept_veh_ids]
+        kept_drv_ids = {d["id"] for d in drivers}
+        documents = [d for d in documents
+                     if (d["entity_type"] == "vehicle" and d["entity_id"] in kept_veh_ids)
+                     or (d["entity_type"] == "driver" and d["entity_id"] in kept_drv_ids)]
+        print(f"  Removed {len(dup_vehicle_ids)} duplicate vehicles")
+
+    # ═══════════════════════════════════════════════════════
     #  Validate
     # ═══════════════════════════════════════════════════════
     print(f"\nBuilt:")
