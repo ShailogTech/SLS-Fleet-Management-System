@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
-import { Truck, Lock, Mail, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
+import { Truck, Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -185,14 +185,15 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="login-submit-btn"
+                className="uiverse-btn"
                 data-testid="login-submit-btn"
               >
-                <span className="login-submit-text">
-                  {loading ? 'Signing in...' : 'Sign In'}
-                </span>
-                {!loading && <ArrowRight size={18} className="login-submit-arrow" />}
-                {loading && <span className="login-spinner" />}
+                <div className="uiverse-btn-outer">
+                  <div className="uiverse-btn-inner">
+                    <span>{loading ? 'SIGNING IN...' : 'SIGN IN'}</span>
+                    {loading && <span className="login-spinner" />}
+                  </div>
+                </div>
               </button>
             </form>
 

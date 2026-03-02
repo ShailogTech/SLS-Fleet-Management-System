@@ -11,6 +11,7 @@ import {
   User, Camera, Save, Edit3, X, Shield, Mail, Phone,
   Building, AlertCircle, CheckCircle, Clock, Trash2, Upload, ImageOff
 } from 'lucide-react';
+import TruckLoader from '../../components/common/TruckLoader';
 
 const UserProfile = () => {
   const { user: authUser, updateUser } = useAuth();
@@ -115,11 +116,7 @@ const UserProfile = () => {
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   if (!profile) return null;

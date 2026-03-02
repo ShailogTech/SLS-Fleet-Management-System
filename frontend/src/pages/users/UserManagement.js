@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 
 const ROLES = [
   { value: 'superuser', label: 'Super User' },
@@ -134,11 +135,7 @@ const UserManagement = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

@@ -8,6 +8,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
 import { Plus, Search, Eye, Filter, Truck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
 
@@ -21,7 +22,7 @@ const VehicleList = () => {
   const [plantFilter, setPlantFilter] = useState('all');
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal state
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,27 +36,27 @@ const VehicleList = () => {
 
   useEffect(() => {
     let filtered = vehicles;
-    
+
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(v => 
+      filtered = filtered.filter(v =>
         v.vehicle_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.owner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.plant?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.make?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(v => v.status === statusFilter);
     }
-    
+
     // Plant filter
     if (plantFilter !== 'all') {
       filtered = filtered.filter(v => v.plant === plantFilter);
     }
-    
+
     setFilteredVehicles(filtered);
   }, [searchTerm, statusFilter, plantFilter, vehicles]);
 
@@ -103,11 +104,7 @@ const VehicleList = () => {
   const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (
@@ -249,9 +246,9 @@ const VehicleList = () => {
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
               {filteredVehicles.map((vehicle) => (
-                <tr 
-                  key={vehicle.id} 
-                  className="hover:bg-slate-50 transition-colors cursor-pointer" 
+                <tr
+                  key={vehicle.id}
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
                   onClick={() => handleViewVehicle(vehicle.id)}
                   data-testid={`vehicle-row-${vehicle.id}`}
                 >
@@ -271,9 +268,9 @@ const VehicleList = () => {
                     <StatusBadge status={vehicle.status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleViewVehicle(vehicle.id);

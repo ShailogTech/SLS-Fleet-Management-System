@@ -8,6 +8,7 @@ import {
   ArrowRight, FileText, Eye, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
@@ -104,11 +105,7 @@ const MySubmissions = () => {
   const rejectedCount = submissions.filter(s => s.status === 'rejected').length;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

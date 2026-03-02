@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/input';
 import { Plus, AlertTriangle, Calendar, CheckCircle } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
 
@@ -49,11 +50,7 @@ const StoppageList = () => {
   const canCreate = ['plant_incharge', 'office_incharge', 'admin', 'superuser'].includes(user?.role);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

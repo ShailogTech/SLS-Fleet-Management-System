@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
 import { useNavigate } from 'react-router-dom';
+import TruckLoader from '../../components/common/TruckLoader';
 
 const DriverList = () => {
   const { user } = useAuth();
@@ -136,11 +137,7 @@ const DriverList = () => {
   const onLeaveDrivers = drivers.filter(d => d.status === 'on_leave').length;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

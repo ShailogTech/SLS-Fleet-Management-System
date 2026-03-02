@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { BarChart3, FileText, Download, TrendingUp, Truck, Users, Calendar, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 
 const Reports = () => {
   const { registerRefresh } = useRefresh();
@@ -35,11 +36,7 @@ const Reports = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

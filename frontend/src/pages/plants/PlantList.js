@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Plus, MapPin, Building, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
 
@@ -50,11 +51,7 @@ const PlantList = () => {
   const canCreate = ['admin', 'superuser'].includes(user?.role);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

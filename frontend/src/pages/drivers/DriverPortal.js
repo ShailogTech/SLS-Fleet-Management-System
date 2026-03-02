@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import GPSTracker from '../../components/GPSTracker';
 import { cn } from '../../lib/utils';
+import TruckLoader from '../../components/common/TruckLoader';
 
 const DriverPortal = () => {
   const { user, logout } = useAuth();
@@ -55,14 +56,7 @@ const DriverPortal = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
+    return <TruckLoader fullScreen message="Loading your dashboard..." />;
   }
 
   const handleSos = async () => {

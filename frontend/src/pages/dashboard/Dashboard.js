@@ -5,6 +5,7 @@ import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Truck, Users, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -37,11 +38,7 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   const metrics = [
@@ -49,29 +46,21 @@ const Dashboard = () => {
       title: 'Total Vehicles',
       value: stats?.total_vehicles || 0,
       icon: Truck,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
     },
     {
       title: 'Active Drivers',
       value: stats?.active_drivers || 0,
       icon: Users,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
     },
     {
       title: 'Active Tenders',
       value: stats?.active_tenders || 0,
       icon: FileText,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
     },
     {
       title: 'Pending Approvals',
       value: stats?.pending_approvals || 0,
       icon: CheckSquare,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
     },
   ];
 
@@ -90,19 +79,19 @@ const Dashboard = () => {
         {metrics.map((metric) => {
           const Icon = metric.icon;
           return (
-            <Card key={metric.title} className="border-slate-200" data-testid={`metric-card-${metric.title.toLowerCase().replace(' ', '-')}`}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-600">{metric.title}</p>
-                    <p className="text-3xl font-bold text-slate-900 mt-2">{metric.value}</p>
-                  </div>
-                  <div className={`${metric.bgColor} p-3 rounded-lg`}>
-                    <Icon className={`h-6 w-6 ${metric.color}`} />
-                  </div>
+            <div
+              key={metric.title}
+              className="dash-metric-card"
+              data-testid={`metric-card-${metric.title.toLowerCase().replace(' ', '-')}`}
+            >
+              <div className="dash-metric-content">
+                <div className="dash-metric-icon">
+                  <Icon className="dash-metric-icon-svg" />
                 </div>
-              </CardContent>
-            </Card>
+                <p className="dash-metric-value">{metric.value}</p>
+                <p className="dash-metric-title">{metric.title}</p>
+              </div>
+            </div>
           );
         })}
       </div>

@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
+import TruckLoader from '../../components/common/TruckLoader';
 import { 
   UserPlus, Check, X, Clock, User, Mail, Phone, Calendar, 
   RefreshCw, Shield, AlertCircle
@@ -93,11 +94,7 @@ const SignupRequests = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

@@ -3,6 +3,7 @@ import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import TruckLoader from '../../components/common/TruckLoader';
 import { DayPicker } from 'react-day-picker';
 import { format, isSameDay, parseISO } from 'date-fns';
 import {
@@ -87,11 +88,7 @@ const ExpiryCalendar = () => {
   const selectedDocs = selectedDateStr ? (calendarData[selectedDateStr] || []) : [];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { AlertTriangle, AlertCircle, Info, CheckCircle, Search, RefreshCw, Calendar, Eye, FileText, Truck, User } from 'lucide-react';
 import { toast } from 'sonner';
+import TruckLoader from '../../components/common/TruckLoader';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
 import DriverDetailModal from '../../components/modals/DriverDetailModal';
 
@@ -114,11 +115,7 @@ const AlertCenter = () => {
   const driverAlerts = alerts.filter(a => a.entity_type === 'driver').length;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (

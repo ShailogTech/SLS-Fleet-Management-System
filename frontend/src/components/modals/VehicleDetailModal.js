@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import StatusBadge from '../common/StatusBadge';
+import TruckLoader from '../common/TruckLoader';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -110,9 +111,9 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
       return;
     }
     try {
-      await api.put(`/vehicles/${vehicleId}`, { 
-        ...editData, 
-        assigned_driver_id: selectedDriverId 
+      await api.put(`/vehicles/${vehicleId}`, {
+        ...editData,
+        assigned_driver_id: selectedDriverId
       });
       toast.success('Driver assigned successfully');
       setShowAssignDriver(false);
@@ -129,7 +130,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
     const today = new Date();
     const expiry = new Date(expiryDate);
     const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-    
+
     if (daysUntilExpiry < 0) {
       return { status: 'expired', icon: AlertTriangle, color: 'text-red-600', days: daysUntilExpiry };
     } else if (daysUntilExpiry <= 30) {
@@ -142,9 +143,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl">
-          <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-          </div>
+          <TruckLoader />
         </DialogContent>
       </Dialog>
     );
@@ -169,9 +168,9 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
             <div className="flex items-center space-x-2">
               <StatusBadge status={vehicle.status} />
               {canEdit && !isEditing && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => setIsEditing(true)}
                   data-testid="edit-vehicle-btn"
                 >
@@ -242,8 +241,8 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
               <div>
                 <Label className="text-slate-500">Vehicle Type</Label>
                 {isEditing ? (
-                  <Select 
-                    value={editData.vehicle_type || ''} 
+                  <Select
+                    value={editData.vehicle_type || ''}
                     onValueChange={(value) => setEditData({ ...editData, vehicle_type: value })}
                   >
                     <SelectTrigger>
@@ -284,8 +283,8 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
               <div>
                 <Label className="text-slate-500">Status</Label>
                 {isEditing ? (
-                  <Select 
-                    value={editData.status || ''} 
+                  <Select
+                    value={editData.status || ''}
                     onValueChange={(value) => setEditData({ ...editData, status: value })}
                   >
                     <SelectTrigger>
@@ -304,8 +303,8 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
               <div>
                 <Label className="text-slate-500">Plant</Label>
                 {isEditing ? (
-                  <Select 
-                    value={editData.plant || ''} 
+                  <Select
+                    value={editData.plant || ''}
                     onValueChange={(value) => setEditData({ ...editData, plant: value })}
                   >
                     <SelectTrigger>
@@ -459,8 +458,8 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
                     </div>
                   </div>
                   {canEdit && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => setShowAssignDriver(!showAssignDriver)}
                       data-testid="assign-driver-btn"

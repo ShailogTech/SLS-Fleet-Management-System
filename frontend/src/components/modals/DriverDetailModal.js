@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import StatusBadge from '../common/StatusBadge';
+import TruckLoader from '../common/TruckLoader';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -113,9 +114,7 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl">
-          <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-          </div>
+          <TruckLoader />
         </DialogContent>
       </Dialog>
     );

@@ -605,75 +605,153 @@ h1, h2, h3, h4, h5, h6 {
   color: #ef4444;
 }
 
-/* Submit button */
-.login-submit-btn {
+/* Submit button — UIverse neumorphic (FColombati/spotty-snake-82) */
+.uiverse-btn {
+  all: unset;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  position: relative;
+  border-radius: 100em;
+  background-color: rgba(0, 0, 0, 0.75);
+  box-shadow:
+    -0.15em -0.15em 0.15em -0.075em rgba(5, 5, 5, 0.25),
+    0.0375em 0.0375em 0.0675em 0 rgba(5, 5, 5, 0.1);
+  display: block;
   width: 100%;
-  height: 50px;
   margin-top: 4px;
+  font-size: 16px;
+}
+
+.uiverse-btn::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: calc(100% + 0.3em);
+  height: calc(100% + 0.3em);
+  top: -0.15em;
+  left: -0.15em;
+  border-radius: inherit;
+  background: linear-gradient(
+    -135deg,
+    rgba(5, 5, 5, 0.5),
+    transparent 20%,
+    transparent 100%
+  );
+  filter: blur(0.0125em);
+  opacity: 0.25;
+  mix-blend-mode: multiply;
+}
+
+.uiverse-btn .uiverse-btn-outer {
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+  transition: box-shadow 300ms ease;
+  will-change: box-shadow;
+  box-shadow:
+    0 0.05em 0.05em -0.01em rgba(5, 5, 5, 1),
+    0 0.01em 0.01em -0.01em rgba(5, 5, 5, 0.5),
+    0.15em 0.3em 0.1em -0.01em rgba(5, 5, 5, 0.25);
+}
+
+.uiverse-btn:hover .uiverse-btn-outer {
+  box-shadow:
+    0 0 0 0 rgba(5, 5, 5, 1),
+    0 0 0 0 rgba(5, 5, 5, 0.5),
+    0 0 0 0 rgba(5, 5, 5, 0.25);
+}
+
+.uiverse-btn-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 0.85em 1.5em;
+  background-image: linear-gradient(
+    135deg,
+    rgba(230, 230, 230, 1),
+    rgba(180, 180, 180, 1)
+  );
+  transition:
+    box-shadow 300ms ease,
+    clip-path 250ms ease,
+    background-image 250ms ease,
+    transform 250ms ease;
+  will-change: box-shadow, clip-path, background-image, transform;
+  overflow: clip;
+  clip-path: inset(0 0 0 0 round 100em);
+  box-shadow:
+    0 0 0 0 inset rgba(5, 5, 5, 0.1),
+    -0.05em -0.05em 0.05em 0 inset rgba(5, 5, 5, 0.25),
+    0 0 0 0 inset rgba(5, 5, 5, 0.1),
+    0 0 0.05em 0.2em inset rgba(255, 255, 255, 0.25),
+    0.025em 0.05em 0.1em 0 inset rgba(255, 255, 255, 1),
+    0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25),
+    -0.075em -0.25em 0.25em 0.1em inset rgba(5, 5, 5, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #000000;
-  border: none;
-  border-radius: 12px;
-  color: #ffffff;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
+}
+
+.uiverse-btn:hover .uiverse-btn-inner {
+  clip-path: inset(
+    clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px)
+      clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px) round 100em
+  );
+  box-shadow:
+    0.1em 0.15em 0.05em 0 inset rgba(5, 5, 5, 0.75),
+    -0.025em -0.03em 0.05em 0.025em inset rgba(5, 5, 5, 0.5),
+    0.25em 0.25em 0.2em 0 inset rgba(5, 5, 5, 0.5),
+    0 0 0.05em 0.5em inset rgba(255, 255, 255, 0.15),
+    0 0 0 0 inset rgba(255, 255, 255, 1),
+    0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25),
+    -0.075em -0.12em 0.2em 0.1em inset rgba(5, 5, 5, 0.25);
+}
+
+.uiverse-btn .uiverse-btn-inner span {
   position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  z-index: 4;
+  font-family: "Inter", sans-serif;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0);
+  background-image: linear-gradient(
+    135deg,
+    rgba(25, 25, 25, 1),
+    rgba(75, 75, 75, 1)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: transform 250ms ease;
+  display: block;
+  will-change: transform;
+  text-shadow: rgba(0, 0, 0, 0.1) 0 0 0.1em;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.login-submit-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
+.uiverse-btn:hover .uiverse-btn-inner span {
+  transform: scale(0.975);
 }
 
-.login-submit-btn:hover:not(:disabled)::before {
-  opacity: 1;
+.uiverse-btn:active .uiverse-btn-inner {
+  transform: scale(0.975);
 }
 
-.login-submit-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-}
-
-.login-submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.login-submit-btn:disabled {
+.uiverse-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-}
-
-.login-submit-text {
-  position: relative;
-  z-index: 1;
-}
-
-.login-submit-arrow {
-  position: relative;
-  z-index: 1;
-  transition: transform 0.3s;
-}
-
-.login-submit-btn:hover .login-submit-arrow {
-  transform: translateX(3px);
+  pointer-events: none;
 }
 
 .login-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.15);
+  border-top-color: rgba(25,25,25,0.8);
   border-radius: 50%;
   animation: loginSpin 0.6s linear infinite;
 }
@@ -689,6 +767,7 @@ h1, h2, h3, h4, h5, h6 {
   60% { transform: translateX(-4px); }
   80% { transform: translateX(4px); }
 }
+
 
 /* Profile photo remove modal animations */
 @keyframes profileModalFadeIn {
@@ -729,4 +808,221 @@ h1, h2, h3, h4, h5, h6 {
   .login-form-title {
     font-size: 1.5rem;
   }
+}
+
+/* ============================================
+   DASHBOARD METRIC CARDS — UIverse (Gaurav-WebDev)
+   ============================================ */
+
+.dash-metric-card {
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.7s ease-in-out;
+  overflow: hidden;
+  padding: 28px 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.dash-metric-card::before {
+  content: "";
+  position: absolute;
+  height: 40%;
+  width: 100%;
+  background-color: #f87171;
+  bottom: 0;
+  right: 0;
+  transform: translateY(70px);
+  border-radius: 100%;
+  transition: all 0.7s ease-in-out;
+}
+
+.dash-metric-card:hover::before {
+  transform: scale(7) translate(-20px);
+}
+
+.dash-metric-card:hover {
+  box-shadow: 1px -10px 500px 500px rgba(248, 113, 113, 0.29);
+  border-color: transparent;
+}
+
+.dash-metric-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.dash-metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.06);
+  margin-bottom: 4px;
+  transition: background 0.7s ease-in-out;
+}
+
+.dash-metric-card:hover .dash-metric-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dash-metric-icon-svg {
+  width: 24px;
+  height: 24px;
+  color: #f87171;
+  transition: color 0.7s ease-in-out;
+}
+
+.dash-metric-card:hover .dash-metric-icon-svg {
+  color: #ffffff;
+}
+
+.dash-metric-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.1;
+  font-family: 'Chivo', sans-serif;
+  transition: color 0.7s ease-in-out;
+}
+
+.dash-metric-card:hover .dash-metric-value {
+  color: #f3f3f3;
+}
+
+.dash-metric-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #64748b;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.7s ease-in-out;
+}
+
+.dash-metric-card:hover .dash-metric-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ============================================
+   FLUID PARALLAX PAGE TRANSITION
+   ============================================ */
+
+/* Page sections — staggered parallax entrance.
+   Targets direct children of each page's root div
+   (e.g. header, stats grid, filters, table wrapper). */
+
+.page-transition > * > * {
+  opacity: 0;
+  animation: fluidParallaxIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger delays + increasing travel distance = parallax depth */
+.page-transition > * > *:nth-child(1)    { animation-delay: 0.05s; --fluid-y: 18px; }
+.page-transition > * > *:nth-child(2)    { animation-delay: 0.12s; --fluid-y: 32px; }
+.page-transition > * > *:nth-child(3)    { animation-delay: 0.19s; --fluid-y: 44px; }
+.page-transition > * > *:nth-child(4)    { animation-delay: 0.26s; --fluid-y: 52px; }
+.page-transition > * > *:nth-child(5)    { animation-delay: 0.32s; --fluid-y: 56px; }
+.page-transition > * > *:nth-child(n+6)  { animation-delay: 0.36s; --fluid-y: 58px; }
+
+@keyframes fluidParallaxIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--fluid-y, 30px));
+    filter: blur(1.5px);
+  }
+  40% {
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .page-transition > * > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* Animated Logout Button */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition-duration: 0.3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+  background-color: rgb(255, 65, 65);
+}
+
+.logout-btn-sign {
+  width: 100%;
+  transition-duration: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-btn-sign svg {
+  width: 17px;
+}
+
+.logout-btn-sign svg path {
+  fill: white;
+}
+
+.logout-btn-text {
+  position: absolute;
+  right: 0%;
+  width: 0%;
+  opacity: 0;
+  color: white;
+  font-size: 1.2em;
+  font-weight: 600;
+  transition-duration: 0.3s;
+}
+
+.logout-btn:hover {
+  width: 125px;
+  border-radius: 40px;
+  transition-duration: 0.3s;
+}
+
+.logout-btn:hover .logout-btn-sign {
+  width: 30%;
+  transition-duration: 0.3s;
+  padding-left: 20px;
+}
+
+.logout-btn:hover .logout-btn-text {
+  opacity: 1;
+  width: 70%;
+  transition-duration: 0.3s;
+  padding-right: 10px;
+}
+
+.logout-btn:active {
+  transform: translate(2px, 2px);
 }

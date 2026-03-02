@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
+import TruckLoader from '../../components/common/TruckLoader';
 
 const ApprovalQueue = () => {
   const { user } = useAuth();
@@ -110,11 +111,7 @@ const ApprovalQueue = () => {
   const rejectedCount = approvals.filter(a => a.status === 'rejected').length;
 
   if (initialLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
-    );
+    return <TruckLoader />;
   }
 
   return (
