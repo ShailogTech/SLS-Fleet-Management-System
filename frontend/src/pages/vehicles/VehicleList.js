@@ -41,6 +41,7 @@ const VehicleList = () => {
     if (searchTerm) {
       filtered = filtered.filter(v =>
         v.vehicle_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.engine_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.owner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.plant?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.make?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -181,7 +182,7 @@ const VehicleList = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 type="text"
-                placeholder="Search by vehicle number, owner, plant, or make..."
+                placeholder="Search by vehicle no, engine no, owner, plant, or make..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -228,6 +229,9 @@ const VehicleList = () => {
                   Vehicle No
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Engine No
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Owner
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -247,13 +251,16 @@ const VehicleList = () => {
             <tbody className="bg-white divide-y divide-slate-100">
               {filteredVehicles.map((vehicle) => (
                 <tr
-                  key={vehicle.id}
+                  key={vehicle.engine_no || vehicle.id}
                   className="hover:bg-slate-50 transition-colors cursor-pointer"
-                  onClick={() => handleViewVehicle(vehicle.id)}
-                  data-testid={`vehicle-row-${vehicle.id}`}
+                  onClick={() => handleViewVehicle(vehicle.engine_no)}
+                  data-testid={`vehicle-row-${vehicle.engine_no}`}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                     {vehicle.vehicle_no}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono">
+                    {vehicle.engine_no || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
                     {vehicle.owner_name}
@@ -273,9 +280,9 @@ const VehicleList = () => {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleViewVehicle(vehicle.id);
+                        handleViewVehicle(vehicle.engine_no);
                       }}
-                      data-testid={`view-vehicle-${vehicle.id}`}
+                      data-testid={`view-vehicle-${vehicle.engine_no}`}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       View

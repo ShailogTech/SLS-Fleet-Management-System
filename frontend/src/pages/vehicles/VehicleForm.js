@@ -8,7 +8,7 @@ import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, ArrowRight, CheckCircle, Upload, FileText, X, Truck, 
+  ArrowLeft, ArrowRight, CheckCircle, Upload, FileText, X, Truck,
   ClipboardCheck, Eye
 } from 'lucide-react';
 
@@ -50,10 +50,6 @@ const VehicleForm = () => {
   const [uploadingDoc, setUploadingDoc] = useState(null);
   const [uploadedDocs, setUploadedDocs] = useState({});
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
   const handleDocFileSelect = (docKey, file) => {
     setDocFiles(prev => ({ ...prev, [docKey]: { ...prev[docKey], file } }));
   };
@@ -83,7 +79,7 @@ const VehicleForm = () => {
   };
 
   // Step 1 validation
-  const isStep1Valid = formData.vehicle_no && formData.owner_name && formData.make;
+  const isStep1Valid = formData.vehicle_no && formData.owner_name && formData.make && formData.engine_no;
 
   // Step 2: Check if required docs have at least expiry set
   const requiredDocsWithExpiry = REQUIRED_DOCUMENTS.filter(d => d.required).every(
@@ -97,7 +93,7 @@ const VehicleForm = () => {
       const cleanedData = { ...formData };
       
       // Convert empty strings to null for top-level optional fields
-      ['capacity', 'reg_date', 'chassis_no', 'engine_no', 'rto', 'plant', 'phone', 'vehicle_type'].forEach(field => {
+      ['capacity', 'reg_date', 'chassis_no', 'rto', 'plant', 'phone', 'vehicle_type'].forEach(field => {
         if (cleanedData[field] === '') cleanedData[field] = null;
       });
       
@@ -287,6 +283,10 @@ const VehicleForm = () => {
                 <Input value={formData.vehicle_type} onChange={e => handleChange('vehicle_type', e.target.value)} placeholder="e.g., Tanker, Truck" data-testid="vehicle-type-input" />
               </div>
               <div>
+                <Label>Engine Number *</Label>
+                <Input value={formData.engine_no} onChange={e => handleChange('engine_no', e.target.value)} placeholder="e.g., KCEZ419373" data-testid="engine-no-input" />
+              </div>
+              <div>
                 <Label>Capacity</Label>
                 <Input value={formData.capacity} onChange={e => handleChange('capacity', e.target.value)} placeholder="e.g., 6X2" data-testid="capacity-input" />
               </div>
@@ -297,10 +297,6 @@ const VehicleForm = () => {
               <div>
                 <Label>Chassis Number</Label>
                 <Input value={formData.chassis_no} onChange={e => handleChange('chassis_no', e.target.value)} data-testid="chassis-no-input" />
-              </div>
-              <div>
-                <Label>Engine Number</Label>
-                <Input value={formData.engine_no} onChange={e => handleChange('engine_no', e.target.value)} data-testid="engine-no-input" />
               </div>
               <div>
                 <Label>RTO</Label>
@@ -387,6 +383,7 @@ const VehicleForm = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
                       ['Vehicle No', formData.vehicle_no],
+                      ['Engine No', formData.engine_no],
                       ['Owner', formData.owner_name],
                       ['Make', formData.make],
                       ['Type', formData.vehicle_type || 'N/A'],

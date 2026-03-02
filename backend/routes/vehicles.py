@@ -34,9 +34,16 @@ async def get_vehicles(
     vehicles = await get_db().vehicles.find(query, {"_id": 0}).to_list(1000)
     return vehicles
 
-@router.get("/{vehicle_id}")
-async def get_vehicle(vehicle_id: str, current_user: dict = Depends(get_current_user)):
-    vehicle = await get_db().vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+async def _find_vehicle(identifier: str):
+    """Find a vehicle by engine_no first, then fall back to id (UUID)."""
+    vehicle = await get_db().vehicles.find_one({"engine_no": identifier}, {"_id": 0})
+    if not vehicle:
+        vehicle = await get_db().vehicles.find_one({"id": identifier}, {"_id": 0})
+    return vehicle
+
+@router.get("/{identifier}")
+async def get_vehicle(identifier: str, current_user: dict = Depends(get_current_user)):
+    vehicle = await _find_vehicle(identifier)
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     return vehicle
@@ -50,7 +57,11 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depen
     existing = await get_db().vehicles.find_one({"vehicle_no": vehicle_data.vehicle_no}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Vehicle number already exists")
-    
+
+    existing_engine = await get_db().vehicles.find_one({"engine_no": vehicle_data.engine_no}, {"_id": 0})
+    if existing_engine:
+        raise HTTPException(status_code=400, detail="Engine number already exists. Each vehicle must have a unique engine number.")
+
     vehicle = Vehicle(**vehicle_data.model_dump())
     vehicle.submitted_by = current_user["sub"]
     vehicle.status = "pending"
@@ -76,16 +87,23 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depen
     
     return vehicle
 
-@router.put("/{vehicle_id}")
-async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, current_user: dict = Depends(get_current_user)):
+@router.put("/{identifier}")
+async def update_vehicle(identifier: str, vehicle_data: VehicleCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
     if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
-    
-    existing = await get_db().vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+
+    existing = await _find_vehicle(identifier)
     if not existing:
         raise HTTPException(status_code=404, detail="Vehicle not found")
-    
+
+    vehicle_id = existing["id"]
+
+    if vehicle_data.engine_no and vehicle_data.engine_no != existing.get("engine_no"):
+        dup_engine = await get_db().vehicles.find_one({"engine_no": vehicle_data.engine_no, "id": {"$ne": vehicle_id}}, {"_id": 0})
+        if dup_engine:
+            raise HTTPException(status_code=400, detail="Engine number already exists. Each vehicle must have a unique engine number.")
+
     update_data = vehicle_data.model_dump()
     update_data["updated_at"] = datetime.now().isoformat()
     if update_data.get("reg_date"):
@@ -94,20 +112,21 @@ async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, current_u
         for key, value in update_data["documents"].items():
             if value:
                 update_data["documents"][key] = value.isoformat() if hasattr(value, 'isoformat') else value
-    
+
     await get_db().vehicles.update_one({"id": vehicle_id}, {"$set": update_data})
-    
+
     updated_vehicle = await get_db().vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     return updated_vehicle
 
-@router.delete("/{vehicle_id}")
-async def delete_vehicle(vehicle_id: str, current_user: dict = Depends(get_current_user)):
+@router.delete("/{identifier}")
+async def delete_vehicle(identifier: str, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
     if user_role not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
-    
-    result = await get_db().vehicles.delete_one({"id": vehicle_id})
-    if result.deleted_count == 0:
+
+    existing = await _find_vehicle(identifier)
+    if not existing:
         raise HTTPException(status_code=404, detail="Vehicle not found")
-    
+
+    await get_db().vehicles.delete_one({"id": existing["id"]})
     return {"message": "Vehicle deleted successfully"}

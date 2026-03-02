@@ -19,7 +19,7 @@ class VehicleBase(BaseModel):
     reg_date: Optional[date] = None
     make: str
     chassis_no: Optional[str] = None
-    engine_no: Optional[str] = None
+    engine_no: str
     rto: Optional[str] = None
     plant: Optional[str] = None
     tender: Optional[str] = None

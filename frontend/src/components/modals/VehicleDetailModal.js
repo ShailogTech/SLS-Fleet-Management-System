@@ -43,37 +43,38 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
 
   const canEdit = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
 
+  const fetchUploadedDocs = useCallback(async (vehUuid) => {
+    try {
+      if (!vehUuid) return;
+      const response = await api.get(`/documents/vehicle/${vehUuid}`);
+      setUploadedDocs(response.data);
+    } catch (error) {
+      console.error('Failed to load uploaded documents');
+    }
+  }, []);
+
   const fetchVehicleDetails = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get(`/vehicles/${vehicleId}`);
       setVehicle(response.data);
       setEditData(response.data);
+      fetchUploadedDocs(response.data.id);
     } catch (error) {
       toast.error('Failed to load vehicle details');
       onClose();
     } finally {
       setLoading(false);
     }
-  }, [vehicleId, onClose]);
-
-  const fetchUploadedDocs = useCallback(async () => {
-    try {
-      const response = await api.get(`/documents/vehicle/${vehicleId}`);
-      setUploadedDocs(response.data);
-    } catch (error) {
-      console.error('Failed to load uploaded documents');
-    }
-  }, [vehicleId]);
+  }, [vehicleId, onClose, fetchUploadedDocs]);
 
   useEffect(() => {
     if (isOpen && vehicleId) {
       fetchVehicleDetails();
       fetchDrivers();
       fetchPlants();
-      fetchUploadedDocs();
     }
-  }, [isOpen, vehicleId, fetchVehicleDetails, fetchUploadedDocs]);
+  }, [isOpen, vehicleId, fetchVehicleDetails]);
 
   const fetchDrivers = async () => {
     try {
@@ -95,7 +96,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
 
   const handleSave = async () => {
     try {
-      await api.put(`/vehicles/${vehicleId}`, editData);
+      await api.put(`/vehicles/${vehicle.engine_no}`, editData);
       toast.success('Vehicle updated successfully');
       setIsEditing(false);
       fetchVehicleDetails();
@@ -111,7 +112,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
       return;
     }
     try {
-      await api.put(`/vehicles/${vehicleId}`, {
+      await api.put(`/vehicles/${vehicle.engine_no}`, {
         ...editData,
         assigned_driver_id: selectedDriverId
       });
@@ -162,7 +163,11 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
               </div>
               <div>
                 <DialogTitle className="text-xl">{vehicle.vehicle_no}</DialogTitle>
-                <p className="text-sm text-slate-500">{vehicle.make} - {vehicle.vehicle_type || 'N/A'}</p>
+                <p className="text-sm text-slate-500">
+                  <span className="font-mono font-semibold text-slate-700">ENG: {vehicle.engine_no}</span>
+                  <span className="mx-1.5">·</span>
+                  {vehicle.make} - {vehicle.vehicle_type || 'N/A'}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -277,7 +282,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
                     onChange={(e) => setEditData({ ...editData, engine_no: e.target.value })}
                   />
                 ) : (
-                  <p className="font-medium text-slate-900">{vehicle.engine_no || 'N/A'}</p>
+                  <p className="font-medium font-mono text-slate-900">{vehicle.engine_no || 'N/A'}</p>
                 )}
               </div>
               <div>
