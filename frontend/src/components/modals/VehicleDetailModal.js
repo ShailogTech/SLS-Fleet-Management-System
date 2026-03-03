@@ -112,9 +112,8 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
       return;
     }
     try {
-      await api.put(`/vehicles/${vehicle.engine_no}`, {
-        ...editData,
-        assigned_driver_id: selectedDriverId
+      await api.post(`/vehicles/${vehicle.engine_no}/assign-driver`, {
+        driver_id: selectedDriverId
       });
       toast.success('Driver assigned successfully');
       setShowAssignDriver(false);

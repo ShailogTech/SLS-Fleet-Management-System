@@ -44,7 +44,8 @@ const VehicleList = () => {
         v.engine_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.owner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.plant?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.make?.toLowerCase().includes(searchTerm.toLowerCase())
+        v.make?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.assigned_driver_name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -238,6 +239,9 @@ const VehicleList = () => {
                   Make
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Driver
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Plant
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -267,6 +271,9 @@ const VehicleList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
                     {vehicle.make}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                    {vehicle.assigned_driver_name || <span className="text-slate-400">—</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
                     {vehicle.plant || '-'}

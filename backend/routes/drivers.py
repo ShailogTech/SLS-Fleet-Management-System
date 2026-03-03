@@ -169,6 +169,73 @@ async def update_driver(driver_id: str, driver_data: DriverCreate, current_user:
     updated_driver = await get_db().drivers.find_one({"id": driver_id}, {"_id": 0})
     return updated_driver
 
+@router.post("/{driver_id}/assign-vehicle")
+async def assign_vehicle_to_driver(driver_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Assign a vehicle to a driver. Updates both driver and vehicle records."""
+    user_role = current_user.get("role")
+    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    db = get_db()
+    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
+    if not driver:
+        raise HTTPException(status_code=404, detail="Driver not found")
+
+    vehicle_no = body.get("vehicle_no")
+
+    # If vehicle_no is empty/null, unassign
+    if not vehicle_no:
+        old_vehicle_no = driver.get("allocated_vehicle")
+        if old_vehicle_no:
+            await db.vehicles.update_one(
+                {"vehicle_no": old_vehicle_no},
+                {"$set": {"assigned_driver_id": None, "assigned_driver_name": None, "updated_at": datetime.now().isoformat()}}
+            )
+        await db.drivers.update_one(
+            {"id": driver_id},
+            {"$set": {"allocated_vehicle": None, "updated_at": datetime.now().isoformat()}}
+        )
+        return {"message": "Vehicle unassigned from driver"}
+
+    # Find the vehicle
+    vehicle = await db.vehicles.find_one({"vehicle_no": vehicle_no}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    # Clear old vehicle's assigned_driver (if driver was assigned to a different vehicle)
+    old_vehicle_no = driver.get("allocated_vehicle")
+    if old_vehicle_no and old_vehicle_no != vehicle_no:
+        await db.vehicles.update_one(
+            {"vehicle_no": old_vehicle_no},
+            {"$set": {"assigned_driver_id": None, "assigned_driver_name": None, "updated_at": datetime.now().isoformat()}}
+        )
+
+    # Clear old driver on this vehicle (if a different driver was assigned to it)
+    old_driver_id = vehicle.get("assigned_driver_id")
+    if old_driver_id and old_driver_id != driver_id:
+        await db.drivers.update_one(
+            {"id": old_driver_id},
+            {"$set": {"allocated_vehicle": None, "updated_at": datetime.now().isoformat()}}
+        )
+
+    # Update driver with new vehicle
+    await db.drivers.update_one(
+        {"id": driver_id},
+        {"$set": {"allocated_vehicle": vehicle_no, "updated_at": datetime.now().isoformat()}}
+    )
+
+    # Update vehicle with new driver
+    await db.vehicles.update_one(
+        {"id": vehicle["id"]},
+        {"$set": {
+            "assigned_driver_id": driver_id,
+            "assigned_driver_name": driver.get("name"),
+            "updated_at": datetime.now().isoformat()
+        }}
+    )
+
+    return {"message": "Vehicle assigned to driver successfully", "driver_name": driver.get("name"), "vehicle_no": vehicle_no}
+
 @router.delete("/{driver_id}")
 async def delete_driver(driver_id: str, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
