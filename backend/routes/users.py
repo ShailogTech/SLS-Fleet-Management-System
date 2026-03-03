@@ -215,6 +215,29 @@ async def reject_profile_edit(edit_id: str, current_user: dict = Depends(get_cur
 
 # ===== Admin User Management Endpoints =====
 
+@router.get("/available-plants")
+async def get_available_plants(current_user: dict = Depends(get_current_user)):
+    """Get plants that don't have an active plant_incharge assigned."""
+    user_role = current_user.get("role")
+    if user_role not in ["admin", "superuser"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    db = get_db()
+    # Get all plant names
+    all_plants = await db.plants.find({"is_active": True}, {"_id": 0, "plant_name": 1}).to_list(1000)
+    all_plant_names = [p["plant_name"] for p in all_plants]
+
+    # Get plants already assigned to active plant_incharge users
+    assigned = await db.users.find(
+        {"role": "plant_incharge", "status": "active", "plant": {"$ne": None}},
+        {"_id": 0, "plant": 1}
+    ).to_list(1000)
+    assigned_plants = {u["plant"] for u in assigned}
+
+    available = [p for p in all_plant_names if p not in assigned_plants]
+    return {"available": sorted(available), "assigned": sorted(assigned_plants)}
+
+
 @router.get("", response_model=List[dict])
 async def get_users(current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
@@ -236,12 +259,15 @@ async def create_user(user_data: UserCreate, current_user: dict = Depends(get_cu
     
     user_dict = user_data.model_dump()
     password = user_dict.pop("password")
-    
+    plant = user_dict.pop("plant", None)
+
     user = User(**user_dict)
     user_doc = user.model_dump()
     user_doc["password_hash"] = get_password_hash(password)
     user_doc["created_at"] = user_doc["created_at"].isoformat()
-    
+    if plant and user_data.role == "plant_incharge":
+        user_doc["plant"] = plant
+
     await get_db().users.insert_one(user_doc)
     
     user_response = {k: v for k, v in user_doc.items() if k not in ["password_hash", "_id"]}
@@ -266,7 +292,12 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
         update_data["role"] = user_data["role"]
     if "status" in user_data:
         update_data["status"] = user_data["status"]
-    
+    if "plant" in user_data:
+        update_data["plant"] = user_data["plant"]
+    # Clear plant if role changed away from plant_incharge
+    if update_data.get("role") and update_data["role"] != "plant_incharge":
+        update_data["plant"] = None
+
     await get_db().users.update_one({"id": user_id}, {"$set": update_data})
     
     updated_user = await get_db().users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})

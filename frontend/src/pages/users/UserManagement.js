@@ -42,7 +42,9 @@ const UserManagement = () => {
     phone: '',
     password: '',
     role: 'viewer',
+    plant: '',
   });
+  const [availablePlants, setAvailablePlants] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -75,6 +77,15 @@ const UserManagement = () => {
     }
   };
 
+  const fetchAvailablePlants = async () => {
+    try {
+      const res = await api.get('/users/available-plants');
+      setAvailablePlants(res.data.available || []);
+    } catch (error) {
+      console.log('Failed to load available plants');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -103,7 +114,9 @@ const UserManagement = () => {
       phone: user.phone,
       role: user.role,
       password: '',
+      plant: user.plant || '',
     });
+    if (user.role === 'plant_incharge') fetchAvailablePlants();
     setIsModalOpen(true);
   };
 
@@ -125,6 +138,7 @@ const UserManagement = () => {
       phone: '',
       password: '',
       role: 'viewer',
+      plant: '',
     });
     setEditingUser(null);
   };
@@ -194,7 +208,10 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="role">Role *</Label>
-                  <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                  <Select value={formData.role} onValueChange={(value) => {
+                    setFormData({ ...formData, role: value, plant: value !== 'plant_incharge' ? '' : formData.plant });
+                    if (value === 'plant_incharge') fetchAvailablePlants();
+                  }}>
                     <SelectTrigger data-testid="user-role-select">
                       <SelectValue />
                     </SelectTrigger>
@@ -207,6 +224,34 @@ const UserManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {formData.role === 'plant_incharge' && (
+                  <div>
+                    <Label htmlFor="plant">Assign Plant *</Label>
+                    <Select value={formData.plant} onValueChange={(value) => setFormData({ ...formData, plant: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a plant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* If editing and user already has a plant, show it as an option */}
+                        {editingUser?.plant && !availablePlants.includes(editingUser.plant) && (
+                          <SelectItem key={editingUser.plant} value={editingUser.plant}>
+                            {editingUser.plant} (current)
+                          </SelectItem>
+                        )}
+                        {availablePlants.map((p) => (
+                          <SelectItem key={p} value={p}>
+                            {p}
+                          </SelectItem>
+                        ))}
+                        {availablePlants.length === 0 && !editingUser?.plant && (
+                          <SelectItem value="__none" disabled>
+                            No plants available
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {!editingUser && (
                   <div className="col-span-2">
                     <Label htmlFor="password">Password *</Label>
@@ -260,6 +305,7 @@ const UserManagement = () => {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Phone</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Plant</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Actions</th>
                 </tr>
@@ -274,6 +320,9 @@ const UserManagement = () => {
                       <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
                         {ROLES.find(r => r.value === user.role)?.label || user.role}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-700">
+                      {user.plant || '—'}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={user.status} />

@@ -15,6 +15,7 @@ class UserCreate(BaseModel):
     phone: str
     password: str = Field(..., min_length=6, max_length=20)
     role: str = "viewer"
+    plant: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
