@@ -4,7 +4,7 @@ import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import {
-  Truck, User, Phone, FileText, Calendar, Eye,
+  Truck, User, Phone, Eye,
   CheckCircle, Clock, AlertTriangle,
   RefreshCw, LogOut, Menu, X, UserCircle, Users, Building
 } from 'lucide-react';
@@ -328,99 +328,50 @@ const PlantInchargePortal = () => {
                     {vehicles.map((veh) => {
                       const docs = veh.documents || {};
                       const expiryKeys = ['rc_expiry', 'insurance_expiry', 'fitness_expiry', 'tax_expiry', 'puc_expiry', 'permit_expiry', 'national_permit_expiry'];
-                      const expiredCount = expiryKeys.filter(k => docs[k] && new Date(docs[k]) < new Date()).length;
-                      const validCount = expiryKeys.filter(k => docs[k] && new Date(docs[k]) >= new Date()).length;
+                      const hasExpired = expiryKeys.some(k => docs[k] && new Date(docs[k]) < new Date());
+                      const hasExpiring = expiryKeys.some(k => {
+                        if (!docs[k]) return false;
+                        const days = Math.ceil((new Date(docs[k]) - new Date()) / 86400000);
+                        return days >= 0 && days <= 30;
+                      });
+                      const dotColor = hasExpired ? 'bg-red-500' : hasExpiring ? 'bg-amber-500' : 'bg-emerald-500';
 
                       return (
                         <Card
                           key={veh.id}
-                          className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-blue-300"
+                          className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-slate-300"
                           onClick={() => setSelectedVehicleId(veh.id)}
                         >
-                          <CardContent className="p-5">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                              {/* Left: Vehicle info */}
-                              <div className="flex items-start space-x-4 flex-1">
-                                <div className="bg-blue-100 p-3 rounded-xl flex-shrink-0">
-                                  <Truck className="h-6 w-6 text-blue-600" />
+                          <CardContent className="p-4 flex items-center justify-between gap-4">
+                            <div className="flex items-center space-x-4 min-w-0 flex-1">
+                              <div className="relative flex-shrink-0">
+                                <div className="bg-slate-100 p-2.5 rounded-lg">
+                                  <Truck className="h-5 w-5 text-slate-600" />
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="text-base font-bold text-slate-900">{veh.vehicle_no}</p>
-                                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                      veh.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                      veh.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                      'bg-slate-100 text-slate-600'
-                                    }`}>
-                                      {veh.status?.toUpperCase()}
-                                    </span>
-                                    {expiredCount > 0 && (
-                                      <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-100 text-red-700 flex items-center">
-                                        <AlertTriangle className="h-3 w-3 mr-1" />
-                                        {expiredCount} expired
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-sm text-slate-500 mt-0.5">{veh.make} {veh.capacity ? `| ${veh.capacity}` : ''}</p>
-
-                                  {/* Info grid */}
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1 mt-3">
-                                    <div>
-                                      <p className="text-xs text-slate-400 uppercase">Owner</p>
-                                      <p className="text-sm font-medium text-slate-700 truncate">{veh.owner_name || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-slate-400 uppercase">Driver</p>
-                                      <p className="text-sm font-medium text-slate-700 truncate">{veh.assigned_driver_name || 'Unassigned'}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-slate-400 uppercase">Engine No</p>
-                                      <p className="text-sm font-medium text-slate-700 truncate">{veh.engine_no || 'N/A'}</p>
-                                    </div>
-                                  </div>
-                                </div>
+                                <span className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white ${dotColor}`} />
                               </div>
-
-                              {/* Right: View button */}
-                              <div className="flex items-center flex-shrink-0 pl-12 sm:pl-0">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                                  onClick={(e) => { e.stopPropagation(); setSelectedVehicleId(veh.id); }}
-                                >
-                                  <Eye className="h-4 w-4 mr-1.5" />
-                                  View Details
-                                </Button>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-slate-900 truncate">{veh.vehicle_no}</p>
+                                <p className="text-xs text-slate-500 truncate">{veh.make} {veh.capacity ? `| ${veh.capacity}` : ''}</p>
+                              </div>
+                              <div className="hidden sm:block text-right min-w-0">
+                                <p className="text-xs text-slate-400">Driver</p>
+                                <p className="text-sm text-slate-700 truncate">{veh.assigned_driver_name || '—'}</p>
+                              </div>
+                              <div className="hidden md:block text-right min-w-0">
+                                <p className="text-xs text-slate-400">Owner</p>
+                                <p className="text-sm text-slate-700 truncate">{veh.owner_name || '—'}</p>
                               </div>
                             </div>
-
-                            {/* Document expiry strip */}
-                            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">
-                              {[
-                                { key: 'rc_expiry', label: 'RC' },
-                                { key: 'insurance_expiry', label: 'INS' },
-                                { key: 'fitness_expiry', label: 'FC' },
-                                { key: 'tax_expiry', label: 'TAX' },
-                                { key: 'puc_expiry', label: 'PUC' },
-                                { key: 'permit_expiry', label: 'PMT' },
-                                { key: 'national_permit_expiry', label: 'NP' },
-                              ].map(({ key, label }) => {
-                                const st = getDocumentStatus(docs[key]);
-                                const StIcon = st.icon;
-                                return (
-                                  <span key={key} className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border ${
-                                    st.status === 'expired' ? 'bg-red-50 border-red-200 text-red-700' :
-                                    st.status === 'expiring' ? 'bg-amber-50 border-amber-200 text-amber-700' :
-                                    st.status === 'valid' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                                    'bg-slate-50 border-slate-200 text-slate-500'
-                                  }`}>
-                                    <StIcon className="h-3 w-3" />
-                                    {label}: {docs[key] ? new Date(docs[key]).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
-                                  </span>
-                                );
-                              })}
-                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-shrink-0"
+                              onClick={(e) => { e.stopPropagation(); setSelectedVehicleId(veh.id); }}
+                            >
+                              <Eye className="h-4 w-4 mr-1.5" />
+                              View
+                            </Button>
                           </CardContent>
                         </Card>
                       );
@@ -448,103 +399,50 @@ const PlantInchargePortal = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     {drivers.map((drv) => {
                       const dlStatus = getDocumentStatus(drv.dl_expiry);
                       const hazStatus = getDocumentStatus(drv.hazardous_cert_expiry);
-                      const DlIcon = dlStatus.icon;
-                      const HazIcon = hazStatus.icon;
+                      const hasExpired = dlStatus.status === 'expired' || hazStatus.status === 'expired';
+                      const hasExpiring = dlStatus.status === 'expiring' || hazStatus.status === 'expiring';
+                      const dotColor = hasExpired ? 'bg-red-500' : hasExpiring ? 'bg-amber-500' : 'bg-emerald-500';
 
                       return (
                         <Card
                           key={drv.id}
-                          className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-purple-300"
+                          className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-slate-300"
                           onClick={() => setSelectedDriverId(drv.id)}
                         >
-                          <CardContent className="p-5">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start space-x-3 flex-1 min-w-0">
-                                <div className="bg-purple-100 p-2.5 rounded-xl flex-shrink-0">
-                                  <User className="h-5 w-5 text-purple-600" />
+                          <CardContent className="p-4 flex items-center justify-between gap-4">
+                            <div className="flex items-center space-x-4 min-w-0 flex-1">
+                              <div className="relative flex-shrink-0">
+                                <div className="bg-slate-100 p-2.5 rounded-lg">
+                                  <User className="h-5 w-5 text-slate-600" />
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="font-bold text-slate-900">{drv.name}</p>
-                                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                      drv.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                      'bg-amber-100 text-amber-700'
-                                    }`}>
-                                      {drv.status?.toUpperCase()}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-slate-500 mt-0.5">EMP: {drv.emp_id}</p>
-
-                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
-                                    {drv.phone && (
-                                      <p className="text-sm text-slate-600 flex items-center">
-                                        <Phone className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                                        {drv.phone}
-                                      </p>
-                                    )}
-                                    {drv.allocated_vehicle && (
-                                      <p className="text-sm text-slate-600 flex items-center">
-                                        <Truck className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                                        {drv.allocated_vehicle}
-                                      </p>
-                                    )}
-                                    {drv.dl_no && (
-                                      <p className="text-sm text-slate-600 flex items-center">
-                                        <FileText className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                                        DL: {drv.dl_no}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
+                                <span className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white ${dotColor}`} />
                               </div>
-
-                              {/* View button */}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-purple-600 border-purple-200 hover:bg-purple-50 flex-shrink-0"
-                                onClick={(e) => { e.stopPropagation(); setSelectedDriverId(drv.id); }}
-                              >
-                                <Eye className="h-4 w-4 mr-1.5" />
-                                View
-                              </Button>
-                            </div>
-
-                            {/* Document status strip */}
-                            <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
-                              <div className={`p-2.5 rounded-lg border flex items-center justify-between ${
-                                dlStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
-                                dlStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
-                                dlStatus.status === 'valid' ? 'bg-emerald-50 border-emerald-200' :
-                                'bg-slate-50 border-slate-200'
-                              }`}>
-                                <div>
-                                  <p className="text-xs font-semibold text-slate-700">Driving License</p>
-                                  <p className="text-xs text-slate-500 mt-0.5">
-                                    {drv.dl_expiry ? new Date(drv.dl_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
-                                  </p>
-                                </div>
-                                <DlIcon className={`h-4 w-4 ${dlStatus.color}`} />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-slate-900 truncate">{drv.name}</p>
+                                <p className="text-xs text-slate-500 truncate">EMP: {drv.emp_id}</p>
                               </div>
-                              <div className={`p-2.5 rounded-lg border flex items-center justify-between ${
-                                hazStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
-                                hazStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
-                                hazStatus.status === 'valid' ? 'bg-emerald-50 border-emerald-200' :
-                                'bg-slate-50 border-slate-200'
-                              }`}>
-                                <div>
-                                  <p className="text-xs font-semibold text-slate-700">Hazardous Cert</p>
-                                  <p className="text-xs text-slate-500 mt-0.5">
-                                    {drv.hazardous_cert_expiry ? new Date(drv.hazardous_cert_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
-                                  </p>
-                                </div>
-                                <HazIcon className={`h-4 w-4 ${hazStatus.color}`} />
+                              <div className="hidden sm:block text-right min-w-0">
+                                <p className="text-xs text-slate-400">Phone</p>
+                                <p className="text-sm text-slate-700 truncate">{drv.phone || '—'}</p>
+                              </div>
+                              <div className="hidden md:block text-right min-w-0">
+                                <p className="text-xs text-slate-400">Vehicle</p>
+                                <p className="text-sm text-slate-700 truncate">{drv.allocated_vehicle || '—'}</p>
                               </div>
                             </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-shrink-0"
+                              onClick={(e) => { e.stopPropagation(); setSelectedDriverId(drv.id); }}
+                            >
+                              <Eye className="h-4 w-4 mr-1.5" />
+                              View
+                            </Button>
                           </CardContent>
                         </Card>
                       );
