@@ -35,6 +35,8 @@ const SignupRequests = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [selectedPlant, setSelectedPlant] = useState('');
+  const [availablePlants, setAvailablePlants] = useState([]);
 
   useEffect(() => {
     fetchRequests();
@@ -54,9 +56,19 @@ const SignupRequests = () => {
     }
   };
 
+  const fetchAvailablePlants = async () => {
+    try {
+      const res = await api.get('/users/available-plants');
+      setAvailablePlants(res.data.available || []);
+    } catch (error) {
+      console.log('Failed to load available plants');
+    }
+  };
+
   const handleApproveClick = (request) => {
     setSelectedRequest(request);
     setSelectedRole('');
+    setSelectedPlant('');
     setIsApproveModalOpen(true);
   };
 
@@ -65,10 +77,18 @@ const SignupRequests = () => {
       toast.error('Please select a role');
       return;
     }
+    if (selectedRole === 'plant_incharge' && !selectedPlant) {
+      toast.error('Please assign a plant for Plant Incharge');
+      return;
+    }
 
     setProcessing(true);
     try {
-      await api.post(`/auth/signup-requests/${selectedRequest.id}/approve?role=${selectedRole}`);
+      let url = `/auth/signup-requests/${selectedRequest.id}/approve?role=${selectedRole}`;
+      if (selectedRole === 'plant_incharge' && selectedPlant) {
+        url += `&plant=${encodeURIComponent(selectedPlant)}`;
+      }
+      await api.post(url);
       toast.success('User approved and activated successfully');
       setIsApproveModalOpen(false);
       fetchRequests();
@@ -230,7 +250,11 @@ const SignupRequests = () => {
 
               <div>
                 <Label>Assign Role *</Label>
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <Select value={selectedRole} onValueChange={(value) => {
+                  setSelectedRole(value);
+                  setSelectedPlant('');
+                  if (value === 'plant_incharge') fetchAvailablePlants();
+                }}>
                   <SelectTrigger className="mt-1" data-testid="role-select">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -247,6 +271,33 @@ const SignupRequests = () => {
                 </p>
               </div>
 
+              {selectedRole === 'plant_incharge' && (
+                <div>
+                  <Label>Assign Plant *</Label>
+                  <Select value={selectedPlant} onValueChange={setSelectedPlant}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select a plant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePlants.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                      {availablePlants.length === 0 && (
+                        <SelectItem value="__none" disabled>
+                          No plants available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-amber-600 mt-2 flex items-center">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    Only plants without an existing Plant Incharge are shown
+                  </p>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
                 <Button
                   variant="outline"
@@ -258,7 +309,7 @@ const SignupRequests = () => {
                 <Button
                   onClick={handleApprove}
                   className="bg-emerald-600 hover:bg-emerald-700"
-                  disabled={processing || !selectedRole}
+                  disabled={processing || !selectedRole || (selectedRole === 'plant_incharge' && !selectedPlant)}
                   data-testid="confirm-approve-btn"
                 >
                   {processing ? 'Processing...' : 'Approve & Activate'}

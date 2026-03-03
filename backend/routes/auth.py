@@ -71,7 +71,7 @@ async def get_signup_requests(current_user: dict = Depends(get_current_user)):
     return requests
 
 @router.post("/signup-requests/{request_id}/approve")
-async def approve_signup_request(request_id: str, role: str, current_user: dict = Depends(get_current_user)):
+async def approve_signup_request(request_id: str, role: str, plant: str = None, current_user: dict = Depends(get_current_user)):
     """Approve a signup request and assign a role"""
     db = get_db()
     
@@ -90,6 +90,10 @@ async def approve_signup_request(request_id: str, role: str, current_user: dict 
     if role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}")
     
+    # Validate plant assignment for plant_incharge
+    if role == "plant_incharge" and not plant:
+        raise HTTPException(status_code=400, detail="Plant must be assigned for plant_incharge role")
+
     # Create the user
     user_doc = {
         "id": str(uuid.uuid4()),
@@ -101,6 +105,8 @@ async def approve_signup_request(request_id: str, role: str, current_user: dict 
         "password_hash": signup_req["password_hash"],
         "created_at": datetime.now(timezone.utc).isoformat()
     }
+    if role == "plant_incharge" and plant:
+        user_doc["plant"] = plant
     
     await db.users.insert_one(user_doc)
     
