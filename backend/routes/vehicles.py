@@ -115,6 +115,16 @@ async def update_vehicle(identifier: str, vehicle_data: VehicleCreate, current_u
 
     await get_db().vehicles.update_one({"id": vehicle_id}, {"$set": update_data})
 
+    # If plant changed and vehicle has an assigned driver, sync driver's plant
+    new_plant = update_data.get("plant")
+    old_plant = existing.get("plant")
+    assigned_driver_id = existing.get("assigned_driver_id") or update_data.get("assigned_driver_id")
+    if new_plant and new_plant != old_plant and assigned_driver_id:
+        await get_db().drivers.update_one(
+            {"id": assigned_driver_id},
+            {"$set": {"plant": new_plant, "updated_at": datetime.now().isoformat()}}
+        )
+
     updated_vehicle = await get_db().vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     return updated_vehicle
 
@@ -178,14 +188,14 @@ async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: di
         }}
     )
 
-    # Update driver with new vehicle
-    await db.drivers.update_one(
-        {"id": driver_id},
-        {"$set": {
-            "allocated_vehicle": vehicle.get("vehicle_no"),
-            "updated_at": datetime.now().isoformat()
-        }}
-    )
+    # Update driver with new vehicle and sync plant
+    driver_update = {
+        "allocated_vehicle": vehicle.get("vehicle_no"),
+        "updated_at": datetime.now().isoformat()
+    }
+    if vehicle.get("plant"):
+        driver_update["plant"] = vehicle["plant"]
+    await db.drivers.update_one({"id": driver_id}, {"$set": driver_update})
 
     return {"message": "Driver assigned to vehicle successfully", "driver_name": driver.get("name"), "vehicle_no": vehicle.get("vehicle_no")}
 

@@ -218,11 +218,14 @@ async def assign_vehicle_to_driver(driver_id: str, body: dict, current_user: dic
             {"$set": {"allocated_vehicle": None, "updated_at": datetime.now().isoformat()}}
         )
 
-    # Update driver with new vehicle
-    await db.drivers.update_one(
-        {"id": driver_id},
-        {"$set": {"allocated_vehicle": vehicle_no, "updated_at": datetime.now().isoformat()}}
-    )
+    # Update driver with new vehicle and sync plant from vehicle
+    driver_update = {
+        "allocated_vehicle": vehicle_no,
+        "updated_at": datetime.now().isoformat()
+    }
+    if vehicle.get("plant"):
+        driver_update["plant"] = vehicle["plant"]
+    await db.drivers.update_one({"id": driver_id}, {"$set": driver_update})
 
     # Update vehicle with new driver
     await db.vehicles.update_one(
