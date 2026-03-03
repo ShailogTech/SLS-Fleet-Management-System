@@ -668,8 +668,8 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.85em 1.5em;
   background-image: linear-gradient(
     135deg,
-    rgba(230, 230, 230, 1),
-    rgba(180, 180, 180, 1)
+    rgba(250, 250, 250, 1),
+    rgba(220, 220, 220, 1)
   );
   transition:
     box-shadow 300ms ease,
@@ -820,39 +820,11 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   border-radius: 24px;
-  cursor: pointer;
-  position: relative;
-  transition: all 0.7s ease-in-out;
-  overflow: hidden;
   padding: 28px 24px;
   border: 1px solid #e2e8f0;
 }
 
-.dash-metric-card::before {
-  content: "";
-  position: absolute;
-  height: 40%;
-  width: 100%;
-  background-color: #f87171;
-  bottom: 0;
-  right: 0;
-  transform: translateY(70px);
-  border-radius: 100%;
-  transition: all 0.7s ease-in-out;
-}
-
-.dash-metric-card:hover::before {
-  transform: scale(7) translate(-20px);
-}
-
-.dash-metric-card:hover {
-  box-shadow: 1px -10px 500px 500px rgba(248, 113, 113, 0.29);
-  border-color: transparent;
-}
-
 .dash-metric-content {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -870,22 +842,12 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   background: rgba(0, 0, 0, 0.06);
   margin-bottom: 4px;
-  transition: background 0.7s ease-in-out;
-}
-
-.dash-metric-card:hover .dash-metric-icon {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .dash-metric-icon-svg {
   width: 24px;
   height: 24px;
   color: #f87171;
-  transition: color 0.7s ease-in-out;
-}
-
-.dash-metric-card:hover .dash-metric-icon-svg {
-  color: #ffffff;
 }
 
 .dash-metric-value {
@@ -894,11 +856,6 @@ h1, h2, h3, h4, h5, h6 {
   color: #1e293b;
   line-height: 1.1;
   font-family: 'Chivo', sans-serif;
-  transition: color 0.7s ease-in-out;
-}
-
-.dash-metric-card:hover .dash-metric-value {
-  color: #f3f3f3;
 }
 
 .dash-metric-title {
@@ -906,11 +863,6 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
   color: #64748b;
   font-family: 'Inter', sans-serif;
-  transition: color 0.7s ease-in-out;
-}
-
-.dash-metric-card:hover .dash-metric-title {
-  color: rgba(255, 255, 255, 0.85);
 }
 
 /* ============================================

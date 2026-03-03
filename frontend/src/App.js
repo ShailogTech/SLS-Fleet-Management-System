@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RefreshProvider } from './contexts/RefreshContext';
@@ -18,6 +18,7 @@ import PlantInchargePortal from './pages/plants/PlantInchargePortal';
 import ApprovalQueue from './pages/approvals/ApprovalQueue';
 import MySubmissions from './pages/approvals/MySubmissions';
 import PlantList from './pages/plants/PlantList';
+import PlantForm from './pages/plants/PlantForm';
 import StoppageList from './pages/stoppages/StoppageList';
 import TenderManagement from './pages/tenders/TenderManagement';
 import UserManagement from './pages/users/UserManagement';
@@ -26,8 +27,6 @@ import AlertCenter from './pages/alerts/AlertCenter';
 import Reports from './pages/reports/Reports';
 import SignupRequests from './pages/admin/SignupRequests';
 import ExpiryCalendar from './pages/calendar/ExpiryCalendar';
-import SplashScreen from './components/SplashScreen';
-
 import './App.css';
 
 // Component to handle role-based default routing
@@ -44,13 +43,9 @@ const RoleBasedRedirect = () => {
 };
 
 function App() {
-  const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem('splashShown'));
-  const handleSplashFinish = useCallback(() => { sessionStorage.setItem('splashShown', '1'); setShowSplash(false); }, []);
-
   return (
     <AuthProvider>
       <RefreshProvider>
-      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -91,6 +86,7 @@ function App() {
             <Route path="drivers/new" element={<DriverForm />} />
             <Route path="profile" element={<UserProfile />} />
             <Route path="plants" element={<PlantList />} />
+            <Route path="plants/new" element={<PlantForm />} />
             <Route path="stoppages" element={<StoppageList />} />
             <Route path="tenders" element={<TenderManagement />} />
             <Route path="alerts" element={<AlertCenter />} />

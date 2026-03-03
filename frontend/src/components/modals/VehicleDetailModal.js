@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   Truck, User, FileText, Calendar, MapPin, Edit2, Save, X,
-  AlertTriangle, CheckCircle, Clock, UserPlus, Eye
+  AlertTriangle, CheckCircle, Clock, UserPlus, Eye, Upload
 } from 'lucide-react';
 
 const VEHICLE_TYPES = [
@@ -40,6 +40,28 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
   const [editData, setEditData] = useState({});
   const [showAssignDriver, setShowAssignDriver] = useState(false);
   const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [uploadingDocType, setUploadingDocType] = useState(null);
+
+  const handleDocUpload = async (docType, file, entityId) => {
+    if (!file) return;
+    setUploadingDocType(docType);
+    try {
+      const formData = new FormData();
+      formData.append('entity_type', 'vehicle');
+      formData.append('entity_id', entityId);
+      formData.append('document_type', docType);
+      formData.append('file', file);
+      await api.post('/documents/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success('Document uploaded successfully');
+      fetchUploadedDocs(entityId);
+    } catch (error) {
+      toast.error('Failed to upload document');
+    } finally {
+      setUploadingDocType(null);
+    }
+  };
 
   const canEdit = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
 
@@ -426,7 +448,13 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
                             View
                           </a>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">No file</span>
+                          <button
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                            disabled
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            View
+                          </button>
                         )}
                         <div className="flex items-center space-x-1">
                           <DocIcon className={`h-5 w-5 ${docStatus.color}`} />
