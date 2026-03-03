@@ -4,13 +4,15 @@ import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import {
-  Truck, User, Phone, FileText, Calendar,
+  Truck, User, Phone, FileText, Calendar, Eye,
   CheckCircle, Clock, AlertTriangle,
   RefreshCw, LogOut, Menu, X, UserCircle, Users, Building
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
 import TruckLoader from '../../components/common/TruckLoader';
+import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
+import DriverDetailModal from '../../components/modals/DriverDetailModal';
 
 const PlantInchargePortal = () => {
   const { user, logout } = useAuth();
@@ -20,6 +22,8 @@ const PlantInchargePortal = () => {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('plant');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [selectedDriverId, setSelectedDriverId] = useState(null);
 
   useEffect(() => {
     fetchPlantData();
@@ -324,52 +328,75 @@ const PlantInchargePortal = () => {
                     {vehicles.map((veh) => {
                       const docs = veh.documents || {};
                       const expiryKeys = ['rc_expiry', 'insurance_expiry', 'fitness_expiry', 'tax_expiry', 'puc_expiry', 'permit_expiry', 'national_permit_expiry'];
-                      const expiredCount = expiryKeys.filter(k => {
-                        const d = docs[k];
-                        return d && new Date(d) < new Date();
-                      }).length;
+                      const expiredCount = expiryKeys.filter(k => docs[k] && new Date(docs[k]) < new Date()).length;
+                      const validCount = expiryKeys.filter(k => docs[k] && new Date(docs[k]) >= new Date()).length;
 
                       return (
-                        <Card key={veh.id} className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                              <div className="flex items-center space-x-4">
-                                <div className="bg-blue-100 p-2.5 rounded-lg flex-shrink-0">
-                                  <Truck className="h-5 w-5 text-blue-600" />
+                        <Card
+                          key={veh.id}
+                          className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-blue-300"
+                          onClick={() => setSelectedVehicleId(veh.id)}
+                        >
+                          <CardContent className="p-5">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                              {/* Left: Vehicle info */}
+                              <div className="flex items-start space-x-4 flex-1">
+                                <div className="bg-blue-100 p-3 rounded-xl flex-shrink-0">
+                                  <Truck className="h-6 w-6 text-blue-600" />
                                 </div>
-                                <div>
-                                  <p className="font-bold text-slate-900">{veh.vehicle_no}</p>
-                                  <p className="text-sm text-slate-500">{veh.make} {veh.capacity ? `| ${veh.capacity}` : ''}</p>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-base font-bold text-slate-900">{veh.vehicle_no}</p>
+                                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                      veh.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                                      veh.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                      'bg-slate-100 text-slate-600'
+                                    }`}>
+                                      {veh.status?.toUpperCase()}
+                                    </span>
+                                    {expiredCount > 0 && (
+                                      <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-100 text-red-700 flex items-center">
+                                        <AlertTriangle className="h-3 w-3 mr-1" />
+                                        {expiredCount} expired
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-slate-500 mt-0.5">{veh.make} {veh.capacity ? `| ${veh.capacity}` : ''}</p>
+
+                                  {/* Info grid */}
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1 mt-3">
+                                    <div>
+                                      <p className="text-xs text-slate-400 uppercase">Owner</p>
+                                      <p className="text-sm font-medium text-slate-700 truncate">{veh.owner_name || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-slate-400 uppercase">Driver</p>
+                                      <p className="text-sm font-medium text-slate-700 truncate">{veh.assigned_driver_name || 'Unassigned'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-slate-400 uppercase">Engine No</p>
+                                      <p className="text-sm font-medium text-slate-700 truncate">{veh.engine_no || 'N/A'}</p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-3 pl-12 sm:pl-0">
-                                <div className="text-right">
-                                  <p className="text-xs text-slate-500">Owner</p>
-                                  <p className="text-sm font-medium text-slate-700">{veh.owner_name || 'N/A'}</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-xs text-slate-500">Driver</p>
-                                  <p className="text-sm font-medium text-slate-700">{veh.assigned_driver_name || 'Unassigned'}</p>
-                                </div>
-                                <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${
-                                  veh.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                  veh.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                  'bg-slate-100 text-slate-600'
-                                }`}>
-                                  {veh.status?.toUpperCase()}
-                                </span>
-                                {expiredCount > 0 && (
-                                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700 flex items-center">
-                                    <AlertTriangle className="h-3 w-3 mr-1" />
-                                    {expiredCount} expired
-                                  </span>
-                                )}
+                              {/* Right: View button */}
+                              <div className="flex items-center flex-shrink-0 pl-12 sm:pl-0">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                  onClick={(e) => { e.stopPropagation(); setSelectedVehicleId(veh.id); }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1.5" />
+                                  View Details
+                                </Button>
                               </div>
                             </div>
 
-                            {/* Document expiry row */}
-                            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                            {/* Document expiry strip */}
+                            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">
                               {[
                                 { key: 'rc_expiry', label: 'RC' },
                                 { key: 'insurance_expiry', label: 'INS' },
@@ -380,8 +407,15 @@ const PlantInchargePortal = () => {
                                 { key: 'national_permit_expiry', label: 'NP' },
                               ].map(({ key, label }) => {
                                 const st = getDocumentStatus(docs[key]);
+                                const StIcon = st.icon;
                                 return (
-                                  <span key={key} className={`inline-flex items-center px-2 py-0.5 text-xs rounded ${st.bg} ${st.color}`}>
+                                  <span key={key} className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border ${
+                                    st.status === 'expired' ? 'bg-red-50 border-red-200 text-red-700' :
+                                    st.status === 'expiring' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                    st.status === 'valid' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                    'bg-slate-50 border-slate-200 text-slate-500'
+                                  }`}>
+                                    <StIcon className="h-3 w-3" />
                                     {label}: {docs[key] ? new Date(docs[key]).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
                                   </span>
                                 );
@@ -418,57 +452,97 @@ const PlantInchargePortal = () => {
                     {drivers.map((drv) => {
                       const dlStatus = getDocumentStatus(drv.dl_expiry);
                       const hazStatus = getDocumentStatus(drv.hazardous_cert_expiry);
+                      const DlIcon = dlStatus.icon;
+                      const HazIcon = hazStatus.icon;
 
                       return (
-                        <Card key={drv.id} className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
-                          <CardContent className="p-4">
-                            <div className="flex items-start space-x-3">
-                              <div className="bg-purple-100 p-2.5 rounded-lg flex-shrink-0">
-                                <User className="h-5 w-5 text-purple-600" />
+                        <Card
+                          key={drv.id}
+                          className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-purple-300"
+                          onClick={() => setSelectedDriverId(drv.id)}
+                        >
+                          <CardContent className="p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start space-x-3 flex-1 min-w-0">
+                                <div className="bg-purple-100 p-2.5 rounded-xl flex-shrink-0">
+                                  <User className="h-5 w-5 text-purple-600" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-bold text-slate-900">{drv.name}</p>
+                                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                      drv.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                                      'bg-amber-100 text-amber-700'
+                                    }`}>
+                                      {drv.status?.toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-slate-500 mt-0.5">EMP: {drv.emp_id}</p>
+
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
+                                    {drv.phone && (
+                                      <p className="text-sm text-slate-600 flex items-center">
+                                        <Phone className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                                        {drv.phone}
+                                      </p>
+                                    )}
+                                    {drv.allocated_vehicle && (
+                                      <p className="text-sm text-slate-600 flex items-center">
+                                        <Truck className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                                        {drv.allocated_vehicle}
+                                      </p>
+                                    )}
+                                    {drv.dl_no && (
+                                      <p className="text-sm text-slate-600 flex items-center">
+                                        <FileText className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                                        DL: {drv.dl_no}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-bold text-slate-900 truncate">{drv.name}</p>
-                                <p className="text-sm text-slate-500">EMP: {drv.emp_id}</p>
-                                {drv.phone && (
-                                  <p className="text-sm text-slate-500 flex items-center mt-0.5">
-                                    <Phone className="h-3 w-3 mr-1" />
-                                    {drv.phone}
-                                  </p>
-                                )}
-                                {drv.allocated_vehicle && (
-                                  <p className="text-sm text-slate-500 flex items-center mt-0.5">
-                                    <Truck className="h-3 w-3 mr-1" />
-                                    {drv.allocated_vehicle}
-                                  </p>
-                                )}
-                              </div>
-                              <span className={`px-2 py-1 text-xs font-bold rounded-full flex-shrink-0 ${
-                                drv.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                'bg-amber-100 text-amber-700'
-                              }`}>
-                                {drv.status?.toUpperCase()}
-                              </span>
+
+                              {/* View button */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-purple-600 border-purple-200 hover:bg-purple-50 flex-shrink-0"
+                                onClick={(e) => { e.stopPropagation(); setSelectedDriverId(drv.id); }}
+                              >
+                                <Eye className="h-4 w-4 mr-1.5" />
+                                View
+                              </Button>
                             </div>
 
-                            {/* Document status */}
+                            {/* Document status strip */}
                             <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
-                              <div className={`p-2 rounded-lg border ${dlStatus.bg} ${dlStatus.status === 'expired' ? 'border-red-200' : dlStatus.status === 'expiring' ? 'border-amber-200' : 'border-slate-200'}`}>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-medium text-slate-700">DL</span>
-                                  <dlStatus.icon className={`h-3.5 w-3.5 ${dlStatus.color}`} />
+                              <div className={`p-2.5 rounded-lg border flex items-center justify-between ${
+                                dlStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
+                                dlStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
+                                dlStatus.status === 'valid' ? 'bg-emerald-50 border-emerald-200' :
+                                'bg-slate-50 border-slate-200'
+                              }`}>
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-700">Driving License</p>
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    {drv.dl_expiry ? new Date(drv.dl_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
+                                  </p>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-0.5">
-                                  {drv.dl_expiry ? new Date(drv.dl_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
-                                </p>
+                                <DlIcon className={`h-4 w-4 ${dlStatus.color}`} />
                               </div>
-                              <div className={`p-2 rounded-lg border ${hazStatus.bg} ${hazStatus.status === 'expired' ? 'border-red-200' : hazStatus.status === 'expiring' ? 'border-amber-200' : 'border-slate-200'}`}>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-medium text-slate-700">Hazardous</span>
-                                  <hazStatus.icon className={`h-3.5 w-3.5 ${hazStatus.color}`} />
+                              <div className={`p-2.5 rounded-lg border flex items-center justify-between ${
+                                hazStatus.status === 'expired' ? 'bg-red-50 border-red-200' :
+                                hazStatus.status === 'expiring' ? 'bg-amber-50 border-amber-200' :
+                                hazStatus.status === 'valid' ? 'bg-emerald-50 border-emerald-200' :
+                                'bg-slate-50 border-slate-200'
+                              }`}>
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-700">Hazardous Cert</p>
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    {drv.hazardous_cert_expiry ? new Date(drv.hazardous_cert_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
+                                  </p>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-0.5">
-                                  {drv.hazardous_cert_expiry ? new Date(drv.hazardous_cert_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
-                                </p>
+                                <HazIcon className={`h-4 w-4 ${hazStatus.color}`} />
                               </div>
                             </div>
                           </CardContent>
@@ -483,6 +557,22 @@ const PlantInchargePortal = () => {
           </div>
         </main>
       </div>
+
+      {/* Vehicle Detail Modal */}
+      <VehicleDetailModal
+        isOpen={!!selectedVehicleId}
+        onClose={() => setSelectedVehicleId(null)}
+        vehicleId={selectedVehicleId}
+        onUpdate={fetchVehicles}
+      />
+
+      {/* Driver Detail Modal */}
+      <DriverDetailModal
+        isOpen={!!selectedDriverId}
+        onClose={() => setSelectedDriverId(null)}
+        driverId={selectedDriverId}
+        onUpdate={fetchDrivers}
+      />
     </div>
   );
 };
