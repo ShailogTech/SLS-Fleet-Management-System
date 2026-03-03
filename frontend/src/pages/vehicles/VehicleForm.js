@@ -45,6 +45,10 @@ const VehicleForm = () => {
     }
   });
 
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   // Document files state: { rc: { file, expiry }, insurance: { file, expiry }, ... }
   const [docFiles, setDocFiles] = useState({});
   const [uploadingDoc, setUploadingDoc] = useState(null);
