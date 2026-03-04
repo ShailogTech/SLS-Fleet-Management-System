@@ -199,6 +199,51 @@ async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: di
 
     return {"message": "Driver assigned to vehicle successfully", "driver_name": driver.get("name"), "vehicle_no": vehicle.get("vehicle_no")}
 
+@router.post("/{identifier}/shift")
+async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Shift (renumber) a vehicle: save NOC/LOE flags and update vehicle_no. engine_no stays unchanged."""
+    user_role = current_user.get("role")
+    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    vehicle = await _find_vehicle(identifier)
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    new_vehicle_no = body.get("new_vehicle_no", "").strip()
+    if not new_vehicle_no:
+        raise HTTPException(status_code=400, detail="New vehicle number is required")
+
+    # Check the new vehicle_no is not already taken by another vehicle
+    dup = await get_db().vehicles.find_one({"vehicle_no": new_vehicle_no, "id": {"$ne": vehicle["id"]}}, {"_id": 0})
+    if dup:
+        raise HTTPException(status_code=400, detail="Vehicle number already exists")
+
+    update_data = {
+        "noc_applied": bool(body.get("noc_applied")),
+        "noc_obtained": bool(body.get("noc_obtained")),
+        "loe_obtained": bool(body.get("loe_obtained")),
+        "vehicle_no": new_vehicle_no,
+        "updated_at": datetime.now().isoformat(),
+    }
+
+    if body.get("tender"):
+        update_data["tender_name"] = body["tender"]
+    if body.get("plant"):
+        update_data["plant"] = body["plant"]
+
+    await get_db().vehicles.update_one({"id": vehicle["id"]}, {"$set": update_data})
+
+    # If vehicle has an assigned driver, update the driver's allocated_vehicle too
+    if vehicle.get("assigned_driver_id"):
+        await get_db().drivers.update_one(
+            {"id": vehicle["assigned_driver_id"]},
+            {"$set": {"allocated_vehicle": new_vehicle_no, "updated_at": datetime.now().isoformat()}}
+        )
+
+    updated = await get_db().vehicles.find_one({"id": vehicle["id"]}, {"_id": 0})
+    return updated
+
 @router.delete("/{identifier}")
 async def delete_vehicle(identifier: str, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")

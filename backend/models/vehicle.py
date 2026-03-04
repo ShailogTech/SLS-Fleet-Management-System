@@ -32,6 +32,9 @@ class VehicleBase(BaseModel):
     vehicle_type: Optional[str] = None
     assigned_driver_id: Optional[str] = None
     assigned_driver_name: Optional[str] = None
+    noc_applied: Optional[bool] = None
+    noc_obtained: Optional[bool] = None
+    loe_obtained: Optional[bool] = None
     
 class VehicleCreate(VehicleBase):
     documents: Optional[VehicleDocuments] = None

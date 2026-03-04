@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
@@ -6,7 +7,9 @@ import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import StatusBadge from '../../components/common/StatusBadge';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
-import { Plus, Search, Eye, Filter, Truck, RefreshCw } from 'lucide-react';
+import { Label } from '../../components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Plus, Search, Eye, Filter, Truck, RefreshCw, ArrowRightLeft, ArrowLeft, X } from 'lucide-react';
 import { toast } from 'sonner';
 import TruckLoader from '../../components/common/TruckLoader';
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,15 +24,35 @@ const VehicleList = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [plantFilter, setPlantFilter] = useState('all');
   const [plants, setPlants] = useState([]);
+  const [tenders, setTenders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal state
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Shift modal state
+  const [shiftVehicle, setShiftVehicle] = useState(null);
+  const [shiftForm, setShiftForm] = useState({ noc_applied: false, noc_obtained: false, loe_obtained: false, new_vehicle_no: '', tender: '', plant: '' });
+  const [showRenumberInput, setShowRenumberInput] = useState(false);
+  const [shiftLoading, setShiftLoading] = useState(false);
+
+  // Inline create states
+  const [shiftView, setShiftView] = useState('main'); // 'main' | 'createTender' | 'createPlant'
+  const [newTenderForm, setNewTenderForm] = useState({
+    tender_name: '', tender_no: '', client: '', start_date: '', end_date: '',
+    contract_type: '', plant: '', sd_number: '', sd_value: '', sd_bank: '',
+    bg_number: '', bg_value: '', bg_bank: '', assigned_vehicles: [],
+  });
+  const [newPlantForm, setNewPlantForm] = useState({ plant_name: '', plant_type: '', city: '', state: '', contact_phone: '', contact_email: '', plant_incharge_id: '' });
+  const [inchargeUsers, setInchargeUsers] = useState([]);
+  const [inlineCreateLoading, setInlineCreateLoading] = useState(false);
+
   useEffect(() => {
     fetchVehicles();
     fetchPlants();
+    fetchTenders();
+    fetchInchargeUsers();
   }, []);
 
   useEffect(() => { registerRefresh(fetchVehicles); }, []);
@@ -83,6 +106,22 @@ const VehicleList = () => {
     }
   };
 
+  const fetchTenders = async () => {
+    try {
+      const response = await api.get('/tenders');
+      setTenders(response.data);
+    } catch (error) {
+      console.error('Failed to load tenders');
+    }
+  };
+
+  const fetchInchargeUsers = async () => {
+    try {
+      const res = await api.get('/users');
+      setInchargeUsers(res.data.filter(u => u.role === 'plant_incharge' && u.status === 'active'));
+    } catch { /* ignore */ }
+  };
+
   const handleViewVehicle = (vehicleId) => {
     setSelectedVehicleId(vehicleId);
     setIsModalOpen(true);
@@ -98,6 +137,97 @@ const VehicleList = () => {
   };
 
   const canCreate = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
+  const canShift = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
+
+  const handleOpenShift = (vehicle) => {
+    setShiftVehicle(vehicle);
+    setShiftForm({ noc_applied: false, noc_obtained: false, loe_obtained: false, new_vehicle_no: '', tender: '', plant: '' });
+    setShowRenumberInput(false);
+    setShiftView('main');
+  };
+
+  const handleCloseShift = () => {
+    setShiftVehicle(null);
+    setShowRenumberInput(false);
+    setShiftView('main');
+  };
+
+  const allChecked = shiftForm.noc_applied && shiftForm.noc_obtained && shiftForm.loe_obtained;
+
+  const handleShiftSubmit = async () => {
+    if (!shiftForm.new_vehicle_no.trim()) {
+      toast.error('Please enter a new vehicle number');
+      return;
+    }
+    setShiftLoading(true);
+    try {
+      await api.post(`/vehicles/${shiftVehicle.engine_no}/shift`, {
+        noc_applied: shiftForm.noc_applied,
+        noc_obtained: shiftForm.noc_obtained,
+        loe_obtained: shiftForm.loe_obtained,
+        new_vehicle_no: shiftForm.new_vehicle_no.trim(),
+        tender: shiftForm.tender || null,
+        plant: shiftForm.plant || null,
+      });
+      toast.success('Vehicle renumbered successfully');
+      handleCloseShift();
+      fetchVehicles();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to shift vehicle');
+    } finally {
+      setShiftLoading(false);
+    }
+  };
+
+  const handleCreateTenderInline = async () => {
+    const { tender_name, tender_no, client, start_date, end_date } = newTenderForm;
+    if (!tender_name || !tender_no || !client || !start_date || !end_date) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+    setInlineCreateLoading(true);
+    try {
+      await api.post('/tenders', newTenderForm);
+      toast.success('Tender created');
+      await fetchTenders();
+      setShiftForm(prev => ({ ...prev, tender: tender_name }));
+      setNewTenderForm({
+        tender_name: '', tender_no: '', client: '', start_date: '', end_date: '',
+        contract_type: '', plant: '', sd_number: '', sd_value: '', sd_bank: '',
+        bg_number: '', bg_value: '', bg_bank: '', assigned_vehicles: [],
+      });
+      setShiftView('main');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create tender');
+    } finally {
+      setInlineCreateLoading(false);
+    }
+  };
+
+  const handleCreatePlantInline = async () => {
+    const { plant_name, plant_type, city, state } = newPlantForm;
+    if (!plant_name || !plant_type || !city || !state) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+    setInlineCreateLoading(true);
+    try {
+      const payload = { ...newPlantForm };
+      if (!payload.contact_phone) delete payload.contact_phone;
+      if (!payload.contact_email) delete payload.contact_email;
+      if (!payload.plant_incharge_id) delete payload.plant_incharge_id;
+      await api.post('/plants', payload);
+      toast.success('Plant created');
+      await fetchPlants();
+      setShiftForm(prev => ({ ...prev, plant: plant_name }));
+      setNewPlantForm({ plant_name: '', plant_type: '', city: '', state: '', contact_phone: '', contact_email: '', plant_incharge_id: '' });
+      setShiftView('main');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create plant');
+    } finally {
+      setInlineCreateLoading(false);
+    }
+  };
 
   // Stats
   const totalVehicles = vehicles.length;
@@ -282,18 +412,34 @@ const VehicleList = () => {
                     <StatusBadge status={vehicle.status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewVehicle(vehicle.engine_no);
-                      }}
-                      data-testid={`view-vehicle-${vehicle.engine_no}`}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewVehicle(vehicle.engine_no);
+                        }}
+                        data-testid={`view-vehicle-${vehicle.engine_no}`}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                      {canShift && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenShift(vehicle);
+                          }}
+                          data-testid={`shift-vehicle-${vehicle.engine_no}`}
+                        >
+                          <ArrowRightLeft className="h-4 w-4 mr-2" />
+                          Shift
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -322,6 +468,464 @@ const VehicleList = () => {
         vehicleId={selectedVehicleId}
         onUpdate={handleVehicleUpdate}
       />
+
+      {/* Shift Modal */}
+      {shiftVehicle && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={handleCloseShift} />
+          <div className={`relative bg-white rounded-lg shadow-xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto ${shiftView !== 'main' ? 'max-w-4xl' : 'max-w-md'}`}>
+
+            {/* === Main Shift View === */}
+            {shiftView === 'main' && (
+              <>
+                <h2 className="text-lg font-semibold text-slate-900 mb-1">Shift Vehicle</h2>
+                <p className="text-sm text-slate-500 mb-4 font-mono">{shiftVehicle.vehicle_no}</p>
+
+                <div className="space-y-3 mb-5">
+                  {[
+                    { key: 'noc_applied', label: 'NOC Applied' },
+                    { key: 'noc_obtained', label: 'NOC Obtained' },
+                    { key: 'loe_obtained', label: 'LOE Obtained' },
+                  ].map(({ key, label }) => (
+                    <label key={key} className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={shiftForm[key]}
+                        onChange={(e) => setShiftForm(prev => ({ ...prev, [key]: e.target.checked }))}
+                        className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                      />
+                      <span className="text-sm text-slate-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {!showRenumberInput ? (
+                  <Button
+                    className="w-full bg-slate-900 hover:bg-slate-800"
+                    disabled={!allChecked}
+                    onClick={() => setShowRenumberInput(true)}
+                  >
+                    Renumber
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Vehicle Number</Label>
+                      <Input
+                        value={shiftForm.new_vehicle_no}
+                        onChange={(e) => setShiftForm(prev => ({ ...prev, new_vehicle_no: e.target.value }))}
+                        placeholder="Enter vehicle number"
+                        className="mt-1"
+                        data-testid="shift-new-vehicle-no"
+                      />
+                    </div>
+
+                    {/* Tender */}
+                    <div>
+                      <Label>Tender</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1">
+                          <Select
+                            value={shiftForm.tender}
+                            onValueChange={(val) => setShiftForm(prev => ({ ...prev, tender: val }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Tender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {tenders.map((t) => (
+                                <SelectItem key={t.id} value={t.tender_name}>
+                                  {t.tender_name} ({t.tender_no})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          title="Create Tender"
+                          onClick={() => setShiftView('createTender')}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Plant */}
+                    <div>
+                      <Label>Plant</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1">
+                          <Select
+                            value={shiftForm.plant}
+                            onValueChange={(val) => setShiftForm(prev => ({ ...prev, plant: val }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Plant" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {plants.map((p) => (
+                                <SelectItem key={p.id} value={p.plant_name}>
+                                  {p.plant_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          title="Create Plant"
+                          onClick={() => setShiftView('createPlant')}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" onClick={handleCloseShift}>
+                        Cancel
+                      </Button>
+                      <Button
+                        className="flex-1 bg-slate-900 hover:bg-slate-800"
+                        disabled={!shiftForm.new_vehicle_no.trim() || shiftLoading}
+                        onClick={handleShiftSubmit}
+                      >
+                        {shiftLoading ? 'Submitting...' : 'Submit'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {!showRenumberInput && (
+                  <Button variant="ghost" className="w-full mt-2" onClick={handleCloseShift}>
+                    Cancel
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* === Create Tender View (full tabbed form) === */}
+            {shiftView === 'createTender' && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setShiftView('main')}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <h2 className="text-lg font-semibold text-slate-900">Add New Tender</h2>
+                </div>
+
+                <Tabs defaultValue="basic">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                    <TabsTrigger value="financial">Financial</TabsTrigger>
+                    <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="basic" className="space-y-3 pt-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Tender Name *</Label>
+                        <Input
+                          value={newTenderForm.tender_name}
+                          onChange={(e) => setNewTenderForm(prev => ({ ...prev, tender_name: e.target.value }))}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Tender Number *</Label>
+                        <Input
+                          value={newTenderForm.tender_no}
+                          onChange={(e) => setNewTenderForm(prev => ({ ...prev, tender_no: e.target.value }))}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Client *</Label>
+                        <Input
+                          value={newTenderForm.client}
+                          onChange={(e) => setNewTenderForm(prev => ({ ...prev, client: e.target.value }))}
+                          placeholder="e.g., HPCL, BPCL, IOCL"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Contract Type</Label>
+                        <Input
+                          value={newTenderForm.contract_type}
+                          onChange={(e) => setNewTenderForm(prev => ({ ...prev, contract_type: e.target.value }))}
+                          placeholder="e.g., SLGC, SLTS"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Plant</Label>
+                        <Input
+                          value={newTenderForm.plant}
+                          onChange={(e) => setNewTenderForm(prev => ({ ...prev, plant: e.target.value }))}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div></div>
+                      <div>
+                        <Label>Start Date *</Label>
+                        <Input
+                          type="date"
+                          value={newTenderForm.start_date}
+                          onChange={(e) => setNewTenderForm(prev => ({ ...prev, start_date: e.target.value }))}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>End Date *</Label>
+                        <Input
+                          type="date"
+                          value={newTenderForm.end_date}
+                          onChange={(e) => setNewTenderForm(prev => ({ ...prev, end_date: e.target.value }))}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="financial" className="space-y-4 pt-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 mb-3">Security Deposit (SD)</h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label>SD Number</Label>
+                          <Input
+                            value={newTenderForm.sd_number}
+                            onChange={(e) => setNewTenderForm(prev => ({ ...prev, sd_number: e.target.value }))}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label>SD Amount</Label>
+                          <Input
+                            value={newTenderForm.sd_value}
+                            onChange={(e) => setNewTenderForm(prev => ({ ...prev, sd_value: e.target.value }))}
+                            placeholder="₹"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label>SD Bank</Label>
+                          <Input
+                            value={newTenderForm.sd_bank}
+                            onChange={(e) => setNewTenderForm(prev => ({ ...prev, sd_bank: e.target.value }))}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 mb-3">Bank Guarantee (BG)</h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label>BG Number</Label>
+                          <Input
+                            value={newTenderForm.bg_number}
+                            onChange={(e) => setNewTenderForm(prev => ({ ...prev, bg_number: e.target.value }))}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label>BG Amount</Label>
+                          <Input
+                            value={newTenderForm.bg_value}
+                            onChange={(e) => setNewTenderForm(prev => ({ ...prev, bg_value: e.target.value }))}
+                            placeholder="₹"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label>BG Bank</Label>
+                          <Input
+                            value={newTenderForm.bg_bank}
+                            onChange={(e) => setNewTenderForm(prev => ({ ...prev, bg_bank: e.target.value }))}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="vehicles" className="space-y-3 pt-4">
+                    <div>
+                      <Label>Assigned Vehicles</Label>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {newTenderForm.assigned_vehicles?.map((vNo) => (
+                          <span key={vNo} className="inline-flex items-center px-3 py-1 bg-slate-100 rounded-full text-sm">
+                            {vNo}
+                            <button
+                              type="button"
+                              onClick={() => setNewTenderForm(prev => ({ ...prev, assigned_vehicles: prev.assigned_vehicles.filter(v => v !== vNo) }))}
+                              className="ml-2 text-slate-500 hover:text-slate-700"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                        {(!newTenderForm.assigned_vehicles || newTenderForm.assigned_vehicles.length === 0) && (
+                          <span className="text-slate-500 text-sm">No vehicles assigned</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Available Vehicles</Label>
+                      <div className="mt-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg">
+                        {vehicles
+                          .filter(v => !newTenderForm.assigned_vehicles?.includes(v.vehicle_no))
+                          .map((v) => (
+                            <div key={v.id} className="flex items-center justify-between p-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0">
+                              <div>
+                                <p className="font-medium text-slate-900 text-sm">{v.vehicle_no}</p>
+                                <p className="text-xs text-slate-500">{v.make} - {v.owner_name}</p>
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setNewTenderForm(prev => ({ ...prev, assigned_vehicles: [...(prev.assigned_vehicles || []), v.vehicle_no] }))}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Assign
+                              </Button>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                <div className="flex gap-2 pt-4 border-t border-slate-200 mt-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setShiftView('main')}>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 bg-slate-900 hover:bg-slate-800"
+                    disabled={inlineCreateLoading}
+                    onClick={handleCreateTenderInline}
+                  >
+                    {inlineCreateLoading ? 'Creating...' : 'Create Tender'}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* === Create Plant View (full form) === */}
+            {shiftView === 'createPlant' && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setShiftView('main')}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">Add New Plant</h2>
+                    <p className="text-sm text-slate-500">Register a new plant location</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Plant Name *</Label>
+                      <Input
+                        value={newPlantForm.plant_name}
+                        onChange={(e) => setNewPlantForm(prev => ({ ...prev, plant_name: e.target.value }))}
+                        placeholder="Enter plant name"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Plant Type *</Label>
+                      <select
+                        value={newPlantForm.plant_type}
+                        onChange={(e) => setNewPlantForm(prev => ({ ...prev, plant_type: e.target.value }))}
+                        className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <option value="">Select type</option>
+                        <option value="HPCL">HPCL</option>
+                        <option value="IOCL">IOCL</option>
+                        <option value="BPCL">BPCL</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>City *</Label>
+                      <Input
+                        value={newPlantForm.city}
+                        onChange={(e) => setNewPlantForm(prev => ({ ...prev, city: e.target.value }))}
+                        placeholder="Enter city"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>State *</Label>
+                      <Input
+                        value={newPlantForm.state}
+                        onChange={(e) => setNewPlantForm(prev => ({ ...prev, state: e.target.value }))}
+                        placeholder="Enter state"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Contact Phone</Label>
+                      <Input
+                        value={newPlantForm.contact_phone}
+                        onChange={(e) => setNewPlantForm(prev => ({ ...prev, contact_phone: e.target.value }))}
+                        placeholder="Enter phone number"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Contact Email</Label>
+                      <Input
+                        type="email"
+                        value={newPlantForm.contact_email}
+                        onChange={(e) => setNewPlantForm(prev => ({ ...prev, contact_email: e.target.value }))}
+                        placeholder="Enter email address"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Plant Incharge</Label>
+                      <select
+                        value={newPlantForm.plant_incharge_id}
+                        onChange={(e) => setNewPlantForm(prev => ({ ...prev, plant_incharge_id: e.target.value }))}
+                        className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <option value="">Select plant incharge</option>
+                        {inchargeUsers.map(u => (
+                          <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-4 border-t border-slate-200">
+                    <Button variant="outline" className="flex-1" onClick={() => setShiftView('main')}>
+                      Cancel
+                    </Button>
+                    <Button
+                      className="flex-1 bg-slate-900 hover:bg-slate-800"
+                      disabled={inlineCreateLoading}
+                      onClick={handleCreatePlantInline}
+                    >
+                      {inlineCreateLoading ? 'Creating...' : 'Create Plant'}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
