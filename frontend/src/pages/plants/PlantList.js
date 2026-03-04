@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Plus, MapPin, Building, Phone, ArrowLeft, Truck } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Plus, MapPin, Building, Phone, ArrowLeft, Truck, Eye, User, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import TruckLoader from '../../components/common/TruckLoader';
+import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
+import DriverDetailModal from '../../components/modals/DriverDetailModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
 
@@ -24,6 +27,12 @@ const PlantList = () => {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState(null);
+  const [viewPlant, setViewPlant] = useState(null);
+  const [plantVehicles, setPlantVehicles] = useState([]);
+  const [plantDrivers, setPlantDrivers] = useState([]);
+  const [loadingPlantData, setLoadingPlantData] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [selectedDriverId, setSelectedDriverId] = useState(null);
 
   useEffect(() => {
     fetchPlants();
@@ -55,6 +64,29 @@ const PlantList = () => {
   const getPlantStats = (plantName) => {
     const stat = stats.find(s => s._id === plantName);
     return stat || { total_vehicles: 0, active_vehicles: 0 };
+  };
+
+  const handleViewPlant = async (plantName) => {
+    setViewPlant(plantName);
+    setLoadingPlantData(true);
+    try {
+      const [vehRes, drvRes] = await Promise.all([
+        api.get(`/vehicles?plant=${encodeURIComponent(plantName)}`),
+        api.get(`/drivers?plant=${encodeURIComponent(plantName)}`),
+      ]);
+      setPlantVehicles(vehRes.data);
+      setPlantDrivers(drvRes.data);
+    } catch (error) {
+      toast.error('Failed to load plant data');
+    } finally {
+      setLoadingPlantData(false);
+    }
+  };
+
+  const closePlantView = () => {
+    setViewPlant(null);
+    setPlantVehicles([]);
+    setPlantDrivers([]);
   };
 
   const canCreate = ['admin', 'superuser'].includes(user?.role);
@@ -204,6 +236,16 @@ const PlantList = () => {
                         <span className="font-semibold text-emerald-600">{plantStats.active_vehicles}</span>
                       </div>
                     </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full mt-3"
+                      onClick={() => handleViewPlant(plant.plant_name)}
+                    >
+                      <Eye className="h-4 w-4 mr-1.5" />
+                      View Vehicles & Drivers
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -211,6 +253,111 @@ const PlantList = () => {
           })}
         </div>
       )}
+      {/* Plant Vehicles & Drivers Dialog */}
+      <Dialog open={!!viewPlant} onOpenChange={closePlantView}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-xl">
+              <Building className="h-5 w-5 mr-2 text-blue-600" />
+              {viewPlant}
+            </DialogTitle>
+          </DialogHeader>
+
+          {loadingPlantData ? (
+            <TruckLoader />
+          ) : (
+            <div className="space-y-6 mt-4">
+              {/* Vehicles */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
+                  <Truck className="h-4 w-4 mr-2" />
+                  Vehicles ({plantVehicles.length})
+                </h3>
+                {plantVehicles.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">No vehicles at this plant</p>
+                ) : (
+                  <div className="space-y-2">
+                    {plantVehicles.map((veh) => (
+                      <div
+                        key={veh.id}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
+                        onClick={() => setSelectedVehicleId(veh.engine_no)}
+                      >
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <Truck className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 truncate">{veh.vehicle_no}</p>
+                            <p className="text-xs text-slate-500 truncate">{veh.make} {veh.capacity ? `| ${veh.capacity}` : ''}</p>
+                          </div>
+                        </div>
+                        <div className="hidden sm:block text-right min-w-0 mx-4">
+                          <p className="text-xs text-slate-400">Driver</p>
+                          <p className="text-sm text-slate-700 truncate">{veh.assigned_driver_name || '—'}</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="flex-shrink-0">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Drivers */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
+                  <Users className="h-4 w-4 mr-2" />
+                  Drivers ({plantDrivers.length})
+                </h3>
+                {plantDrivers.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">No drivers at this plant</p>
+                ) : (
+                  <div className="space-y-2">
+                    {plantDrivers.map((drv) => (
+                      <div
+                        key={drv.id}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
+                        onClick={() => setSelectedDriverId(drv.id)}
+                      >
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <User className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 truncate">{drv.name}</p>
+                            <p className="text-xs text-slate-500 truncate">EMP: {drv.emp_id}</p>
+                          </div>
+                        </div>
+                        <div className="hidden sm:block text-right min-w-0 mx-4">
+                          <p className="text-xs text-slate-400">Vehicle</p>
+                          <p className="text-sm text-slate-700 truncate">{drv.allocated_vehicle || '—'}</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="flex-shrink-0">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Vehicle Detail Modal */}
+      <VehicleDetailModal
+        isOpen={!!selectedVehicleId}
+        onClose={() => setSelectedVehicleId(null)}
+        vehicleId={selectedVehicleId}
+        onUpdate={() => { fetchStats(); if (viewPlant) handleViewPlant(viewPlant); }}
+      />
+
+      {/* Driver Detail Modal */}
+      <DriverDetailModal
+        isOpen={!!selectedDriverId}
+        onClose={() => setSelectedDriverId(null)}
+        driverId={selectedDriverId}
+        onUpdate={() => { if (viewPlant) handleViewPlant(viewPlant); }}
+      />
     </div>
   );
 };

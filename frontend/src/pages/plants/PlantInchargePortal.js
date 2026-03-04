@@ -217,26 +217,44 @@ const PlantInchargePortal = () => {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <CardContent className="p-4 flex items-center space-x-3">
-                      <div className="bg-emerald-100 p-3 rounded-lg">
-                        <Truck className="h-6 w-6 text-emerald-600" />
+                  <Card
+                    className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+                    onClick={() => setActiveSection('vehicles')}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-emerald-100 p-3 rounded-lg">
+                          <Truck className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500 uppercase">Vehicles</p>
+                          <p className="text-lg font-bold text-slate-900">{plantData?.vehicle_count || 0}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase">Vehicles</p>
-                        <p className="text-lg font-bold text-slate-900">{plantData?.vehicle_count || 0}</p>
-                      </div>
+                      <Button size="sm" variant="outline" className="flex-shrink-0">
+                        <Eye className="h-4 w-4 mr-1.5" />
+                        View
+                      </Button>
                     </CardContent>
                   </Card>
-                  <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <CardContent className="p-4 flex items-center space-x-3">
-                      <div className="bg-purple-100 p-3 rounded-lg">
-                        <Users className="h-6 w-6 text-purple-600" />
+                  <Card
+                    className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+                    onClick={() => setActiveSection('drivers')}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-purple-100 p-3 rounded-lg">
+                          <Users className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500 uppercase">Drivers</p>
+                          <p className="text-lg font-bold text-slate-900">{plantData?.driver_count || 0}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase">Drivers</p>
-                        <p className="text-lg font-bold text-slate-900">{plantData?.driver_count || 0}</p>
-                      </div>
+                      <Button size="sm" variant="outline" className="flex-shrink-0">
+                        <Eye className="h-4 w-4 mr-1.5" />
+                        View
+                      </Button>
                     </CardContent>
                   </Card>
                 </div>
