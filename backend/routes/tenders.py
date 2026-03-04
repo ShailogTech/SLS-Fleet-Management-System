@@ -46,7 +46,20 @@ async def create_tender(tender_data: TenderCreate, current_user: dict = Depends(
         tender_doc["contract_validity"] = tender_doc["contract_validity"].isoformat()
     
     await get_db().tenders.insert_one(tender_doc)
-    
+
+    # Sync: update assigned vehicles with tender info
+    if tender.assigned_vehicles:
+        await get_db().vehicles.update_many(
+            {"vehicle_no": {"$in": tender.assigned_vehicles}},
+            {"$set": {
+                "tender": tender.id,
+                "tender_no": tender.tender_no,
+                "tender_name": tender.tender_name,
+                "plant": tender.plant or None,
+                "updated_at": datetime.now().isoformat()
+            }}
+        )
+
     return tender
 
 @router.put("/{tender_id}", response_model=Tender)
@@ -67,7 +80,34 @@ async def update_tender(tender_id: str, tender_data: TenderCreate, current_user:
         update_data["contract_validity"] = update_data["contract_validity"].isoformat()
     
     await get_db().tenders.update_one({"id": tender_id}, {"$set": update_data})
-    
+
+    # Sync: diff old vs new assigned_vehicles
+    old_vehicles = set(existing.get("assigned_vehicles") or [])
+    new_vehicles = set(update_data.get("assigned_vehicles") or [])
+    removed = old_vehicles - new_vehicles
+    added = new_vehicles - old_vehicles
+
+    tender_name = update_data.get("tender_name", existing.get("tender_name"))
+    tender_no = update_data.get("tender_no", existing.get("tender_no"))
+    plant = update_data.get("plant", existing.get("plant"))
+
+    if removed:
+        await get_db().vehicles.update_many(
+            {"vehicle_no": {"$in": list(removed)}},
+            {"$set": {"tender": None, "tender_no": None, "tender_name": None, "updated_at": datetime.now().isoformat()}}
+        )
+    if added:
+        await get_db().vehicles.update_many(
+            {"vehicle_no": {"$in": list(added)}},
+            {"$set": {
+                "tender": tender_id,
+                "tender_no": tender_no,
+                "tender_name": tender_name,
+                "plant": plant or None,
+                "updated_at": datetime.now().isoformat()
+            }}
+        )
+
     updated_tender = await get_db().tenders.find_one({"id": tender_id}, {"_id": 0})
     return updated_tender
 
@@ -77,8 +117,17 @@ async def delete_tender(tender_id: str, current_user: dict = Depends(get_current
     if user_role not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
-    result = await get_db().tenders.delete_one({"id": tender_id})
-    if result.deleted_count == 0:
+    existing = await get_db().tenders.find_one({"id": tender_id}, {"_id": 0})
+    if not existing:
         raise HTTPException(status_code=404, detail="Tender not found")
-    
+
+    # Clear tender info from all assigned vehicles
+    assigned = existing.get("assigned_vehicles") or []
+    if assigned:
+        await get_db().vehicles.update_many(
+            {"vehicle_no": {"$in": assigned}},
+            {"$set": {"tender": None, "tender_no": None, "tender_name": None, "updated_at": datetime.now().isoformat()}}
+        )
+
+    await get_db().tenders.delete_one({"id": tender_id})
     return {"message": "Tender deleted successfully"}
