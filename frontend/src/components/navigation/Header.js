@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRefresh } from '../../contexts/RefreshContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, UserCircle, RefreshCw } from 'lucide-react';
+import { Bell, UserCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const { triggerRefresh } = useRefresh();
   const navigate = useNavigate();
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
   const [imgLoaded, setImgLoaded] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { setImgLoaded(false); }, [user?.photo_url]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await triggerRefresh();
-    setRefreshing(false);
-  };
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-10" data-testid="header">
@@ -31,17 +22,6 @@ const Header = () => {
         </div>
 
         <div className="flex items-center space-x-1 sm:space-x-4 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            data-testid="refresh-btn"
-            title="Refresh page data"
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          </Button>
-
           <Button
             variant="ghost"
             size="sm"

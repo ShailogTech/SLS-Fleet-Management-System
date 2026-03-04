@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { toast } from 'sonner';
 import { ArrowLeft, Building, Save } from 'lucide-react';
 
-const PLANT_TYPES = ['Manufacturing', 'Warehouse', 'Distribution', 'Office', 'Other'];
+const PLANT_TYPES = ['HPCL', 'IOCL', 'BPCL'];
 
 const PlantForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [inchargeUsers, setInchargeUsers] = useState([]);
   const [formData, setFormData] = useState({
     plant_name: '',
     plant_type: '',
@@ -20,7 +21,21 @@ const PlantForm = () => {
     state: '',
     contact_phone: '',
     contact_email: '',
+    plant_incharge_id: '',
   });
+
+  useEffect(() => {
+    const fetchInchargeUsers = async () => {
+      try {
+        const res = await api.get('/users');
+        const available = res.data.filter(
+          u => u.role === 'plant_incharge' && u.status === 'active'
+        );
+        setInchargeUsers(available);
+      } catch { /* ignore */ }
+    };
+    fetchInchargeUsers();
+  }, []);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -39,6 +54,7 @@ const PlantForm = () => {
       const payload = { ...formData };
       if (!payload.contact_phone) delete payload.contact_phone;
       if (!payload.contact_email) delete payload.contact_email;
+      if (!payload.plant_incharge_id) delete payload.plant_incharge_id;
 
       await api.post('/plants', payload);
       toast.success('Plant created successfully');
@@ -142,6 +158,21 @@ const PlantForm = () => {
                   onChange={(e) => handleChange('contact_email', e.target.value)}
                   placeholder="Enter email address"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="plant_incharge_id">Plant Incharge</Label>
+                <select
+                  id="plant_incharge_id"
+                  value={formData.plant_incharge_id}
+                  onChange={(e) => handleChange('plant_incharge_id', e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select plant incharge</option>
+                  {inchargeUsers.map(u => (
+                    <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                  ))}
+                </select>
               </div>
             </div>
 

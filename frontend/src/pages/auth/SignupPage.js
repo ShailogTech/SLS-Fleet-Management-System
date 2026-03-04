@@ -192,19 +192,20 @@ const SignupPage = () => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               <div>
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative mt-1">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     id="name"
-                    name="name"
+                    name="signup-fullname"
                     type="text"
                     value={formData.name}
-                    onChange={handleChange}
+                    onChange={(e) => handleChange({ target: { name: 'name', value: e.target.value } })}
                     required
                     placeholder="Enter your full name"
+                    autoComplete="new-password"
                     className={`pl-10 ${errors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-name-input"
                   />
@@ -223,12 +224,14 @@ const SignupPage = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     id="email"
-                    name="email"
-                    type="email"
+                    name="signup-email-field"
+                    type="text"
+                    inputMode="email"
                     value={formData.email}
-                    onChange={handleChange}
+                    onChange={(e) => handleChange({ target: { name: 'email', value: e.target.value } })}
                     required
                     placeholder="Enter your email"
+                    autoComplete="new-password"
                     className={`pl-10 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-email-input"
                   />
@@ -247,12 +250,13 @@ const SignupPage = () => {
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     id="phone"
-                    name="phone"
+                    name="signup-phone-field"
                     type="tel"
                     value={formData.phone}
-                    onChange={handleChange}
+                    onChange={(e) => handleChange({ target: { name: 'phone', value: e.target.value } })}
                     required
                     placeholder="Enter your phone number"
+                    autoComplete="new-password"
                     className={`pl-10 ${errors.phone ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-phone-input"
                   />
@@ -271,13 +275,14 @@ const SignupPage = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     id="password"
-                    name="password"
+                    name="signup-pass-field"
                     type="password"
                     value={formData.password}
-                    onChange={handleChange}
+                    onChange={(e) => handleChange({ target: { name: 'password', value: e.target.value } })}
                     required
                     placeholder="Create a password (6-20 chars)"
                     maxLength={20}
+                    autoComplete="new-password"
                     className={`pl-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-password-input"
                   />
@@ -296,12 +301,13 @@ const SignupPage = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     id="confirmPassword"
-                    name="confirmPassword"
+                    name="signup-confirm-field"
                     type="password"
                     value={formData.confirmPassword}
-                    onChange={handleChange}
+                    onChange={(e) => handleChange({ target: { name: 'confirmPassword', value: e.target.value } })}
                     required
                     placeholder="Confirm your password"
+                    autoComplete="new-password"
                     className={`pl-10 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
                     data-testid="signup-confirm-password-input"
                   />

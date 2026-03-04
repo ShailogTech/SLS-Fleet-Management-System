@@ -112,7 +112,7 @@ const LoginPage = () => {
               <p className="login-form-subtitle">Enter your credentials to access the dashboard</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="login-form">
+            <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
               {/* Error Alert */}
               {error && (
                 <div style={{
@@ -138,7 +138,9 @@ const LoginPage = () => {
                   <Mail className="login-input-icon" size={18} />
                   <input
                     id="email"
-                    type="email"
+                    name="login-email-field"
+                    type="text"
+                    inputMode="email"
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     onFocus={() => setFocusedField('email')}
@@ -146,7 +148,7 @@ const LoginPage = () => {
                     required
                     placeholder="name@company.com"
                     className="login-input"
-                    autoComplete="email"
+                    autoComplete="new-password"
                     data-testid="login-email-input"
                   />
                 </div>
@@ -159,6 +161,7 @@ const LoginPage = () => {
                   <Lock className="login-input-icon" size={18} />
                   <input
                     id="password"
+                    name="login-pass-field"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setError(''); }}
@@ -167,7 +170,7 @@ const LoginPage = () => {
                     required
                     placeholder="Enter your password"
                     className="login-input login-input-pw"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     data-testid="login-password-input"
                   />
                   <button
@@ -185,15 +188,10 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="uiverse-btn"
+                className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 data-testid="login-submit-btn"
               >
-                <div className="uiverse-btn-outer">
-                  <div className="uiverse-btn-inner">
-                    <span>{loading ? 'SIGNING IN...' : 'SIGN IN'}</span>
-                    {loading && <span className="login-spinner" />}
-                  </div>
-                </div>
+                {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
 

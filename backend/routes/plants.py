@@ -41,8 +41,16 @@ async def create_plant(plant_data: PlantCreate, current_user: dict = Depends(get
     plant_doc = plant.model_dump()
     plant_doc["created_at"] = plant_doc["created_at"].isoformat()
     plant_doc["updated_at"] = plant_doc["updated_at"].isoformat()
-    
+
     await db.plants.insert_one(plant_doc)
+
+    # Assign plant to the incharge user
+    if plant_data.plant_incharge_id:
+        await db.users.update_one(
+            {"id": plant_data.plant_incharge_id},
+            {"$set": {"plant": plant_data.plant_name}}
+        )
+
     return plant
 
 @router.put("/{plant_id}", response_model=Plant)

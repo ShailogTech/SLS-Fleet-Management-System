@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
@@ -206,8 +207,8 @@ const UserProfile = () => {
         </CardContent>
       </Card>
 
-      {/* Remove Photo Confirmation Modal */}
-      {showRemoveModal && (
+      {/* Remove Photo Confirmation Modal — portal to body to avoid page-transition opacity override */}
+      {showRemoveModal && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ animation: 'profileModalFadeIn 0.2s ease-out' }}
@@ -264,7 +265,8 @@ const UserProfile = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Pending Edit Notice */}
