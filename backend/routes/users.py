@@ -217,23 +217,28 @@ async def reject_profile_edit(edit_id: str, current_user: dict = Depends(get_cur
 
 @router.get("/available-plants")
 async def get_available_plants(current_user: dict = Depends(get_current_user)):
-    """Get plants that don't have an active plant_incharge assigned."""
+    """Get plants and their assignment status. One incharge can manage multiple plants."""
     user_role = current_user.get("role")
     if user_role not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     db = get_db()
-    # Get all plant names
-    all_plants = await db.plants.find({"is_active": True}, {"_id": 0, "plant_name": 1}).to_list(1000)
-    all_plant_names = [p["plant_name"] for p in all_plants]
+    all_plants = await db.plants.find({"is_active": True}, {"_id": 0, "plant_name": 1, "plant_incharge_id": 1}).to_list(1000)
 
-    # Get plants already assigned to active plant_incharge users
-    assigned = await db.users.find(
+    assigned_plants = set()
+    for p in all_plants:
+        if p.get("plant_incharge_id"):
+            assigned_plants.add(p["plant_name"])
+
+    # Also check users with plant field set (legacy link)
+    assigned_users = await db.users.find(
         {"role": "plant_incharge", "status": "active", "plant": {"$ne": None}},
         {"_id": 0, "plant": 1}
     ).to_list(1000)
-    assigned_plants = {u["plant"] for u in assigned}
+    for u in assigned_users:
+        assigned_plants.add(u["plant"])
 
+    all_plant_names = [p["plant_name"] for p in all_plants]
     available = [p for p in all_plant_names if p not in assigned_plants]
     return {"available": sorted(available), "assigned": sorted(assigned_plants)}
 

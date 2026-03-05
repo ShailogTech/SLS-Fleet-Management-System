@@ -147,7 +147,7 @@ const PlantInchargePortal = () => {
                 <Building className="h-5 w-5 text-slate-400" />
               </div>
               <div className="text-xs text-slate-500 min-w-0">
-                <div className="font-semibold text-slate-900 truncate">{plantData?.plant_name || 'Plant Incharge'}</div>
+                <div className="font-semibold text-slate-900 truncate">{plantData?.plant_names?.join(', ') || plantData?.plant_name || 'Plant Incharge'}</div>
                 <div className="truncate">{user?.email}</div>
                 <div className="mt-0.5 capitalize">Plant Incharge</div>
               </div>
@@ -175,7 +175,7 @@ const PlantInchargePortal = () => {
               </div>
               <div className="min-w-0">
                 <h2 className="text-sm sm:text-lg font-bold text-slate-900 truncate" style={{ fontFamily: 'Chivo, sans-serif' }}>
-                  {plantData?.plant_name || 'Plant Dashboard'}
+                  {plantData?.plant_names?.join(', ') || plantData?.plant_name || 'Plant Dashboard'}
                 </h2>
                 <p className="text-xs text-slate-500 truncate">Plant Incharge Portal</p>
               </div>
@@ -213,7 +213,7 @@ const PlantInchargePortal = () => {
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 uppercase">Plant</p>
-                        <p className="text-lg font-bold text-slate-900">{plantData?.plant_name || 'N/A'}</p>
+                        <p className="text-lg font-bold text-slate-900">{plantData?.plant_names?.join(', ') || plantData?.plant_name || 'N/A'}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -260,37 +260,39 @@ const PlantInchargePortal = () => {
                 </div>
 
                 {/* Plant Details */}
-                {plantData?.plant && (
+                {plantData?.plants?.length > 0 && (
                   <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center text-lg">
                         <Building className="h-5 w-5 mr-2 text-slate-600" />
-                        Plant Details
+                        Plant Details ({plantData.plants.length})
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-3 bg-slate-50 rounded-lg">
-                          <p className="text-xs text-slate-500 uppercase mb-1">Plant Name</p>
-                          <p className="font-medium text-slate-900">{plantData.plant.plant_name}</p>
+                    <CardContent className="space-y-4">
+                      {plantData.plants.map((p) => (
+                        <div key={p.id || p.plant_name} className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg">
+                          <div>
+                            <p className="text-xs text-slate-500 uppercase mb-1">Plant Name</p>
+                            <p className="font-medium text-slate-900">{p.plant_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500 uppercase mb-1">Type</p>
+                            <p className="font-medium text-slate-900">{p.plant_type || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500 uppercase mb-1">City</p>
+                            <p className="font-medium text-slate-900">{p.city || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500 uppercase mb-1">Status</p>
+                            <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
+                              p.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                              {p.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="p-3 bg-slate-50 rounded-lg">
-                          <p className="text-xs text-slate-500 uppercase mb-1">Plant Type</p>
-                          <p className="font-medium text-slate-900">{plantData.plant.plant_type || 'N/A'}</p>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-lg">
-                          <p className="text-xs text-slate-500 uppercase mb-1">City</p>
-                          <p className="font-medium text-slate-900">{plantData.plant.city || 'N/A'}</p>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-lg">
-                          <p className="text-xs text-slate-500 uppercase mb-1">Status</p>
-                          <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-                            plantData.plant.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                          }`}>
-                            {plantData.plant.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                      </div>
+                      ))}
                     </CardContent>
                   </Card>
                 )}
@@ -334,7 +336,7 @@ const PlantInchargePortal = () => {
               <>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-slate-900">
-                    Vehicles at {plantData?.plant_name} ({vehicles.length})
+                    Vehicles ({vehicles.length})
                   </h3>
                 </div>
 
@@ -409,7 +411,7 @@ const PlantInchargePortal = () => {
               <>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-slate-900">
-                    Drivers at {plantData?.plant_name} ({drivers.length})
+                    Drivers ({drivers.length})
                   </h3>
                 </div>
 

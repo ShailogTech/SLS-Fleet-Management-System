@@ -25,8 +25,12 @@ const TenderManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showCreatePlant, setShowCreatePlant] = useState(false);
-  const [newPlantName, setNewPlantName] = useState('');
-  const [newPlantType, setNewPlantType] = useState('');
+  const [createPlantForm, setCreatePlantForm] = useState({
+    plant_name: '', plant_type: '', city: '', state: '',
+    contact_phone: '', contact_email: '', plant_incharge_id: '',
+  });
+  const [createPlantLoading, setCreatePlantLoading] = useState(false);
+  const [inchargeUsers, setInchargeUsers] = useState([]);
 
   // Shift modal state
   const [shiftVehicle, setShiftVehicle] = useState(null);
@@ -69,6 +73,7 @@ const TenderManagement = () => {
     fetchTenders();
     fetchVehicles();
     fetchPlants();
+    fetchInchargeUsers();
   }, []);
 
   useEffect(() => { registerRefresh(fetchTenders); }, []);
@@ -121,26 +126,35 @@ const TenderManagement = () => {
     }
   };
 
+  const fetchInchargeUsers = async () => {
+    try {
+      const res = await api.get('/users');
+      setInchargeUsers(res.data.filter(u => u.role === 'plant_incharge' && u.status === 'active'));
+    } catch { /* ignore */ }
+  };
+
   const handleCreatePlant = async () => {
-    if (!newPlantName.trim()) {
-      toast.error('Plant name is required');
+    const { plant_name, plant_type, city, state } = createPlantForm;
+    if (!plant_name || !plant_type || !city || !state) {
+      toast.error('Please fill all required fields');
       return;
     }
+    setCreatePlantLoading(true);
     try {
-      await api.post('/plants', {
-        plant_name: newPlantName.trim(),
-        plant_type: newPlantType.trim() || formData.client || 'Other',
-        city: 'TBD',
-        state: 'TBD',
-      });
+      const payload = { ...createPlantForm };
+      if (!payload.contact_phone) delete payload.contact_phone;
+      if (!payload.contact_email) delete payload.contact_email;
+      if (!payload.plant_incharge_id) delete payload.plant_incharge_id;
+      await api.post('/plants', payload);
       toast.success('Plant created successfully');
-      setFormData({ ...formData, plant: newPlantName.trim() });
+      setFormData(prev => ({ ...prev, plant: plant_name }));
       setShowCreatePlant(false);
-      setNewPlantName('');
-      setNewPlantType('');
+      setCreatePlantForm({ plant_name: '', plant_type: '', city: '', state: '', contact_phone: '', contact_email: '', plant_incharge_id: '' });
       fetchPlants();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create plant');
+    } finally {
+      setCreatePlantLoading(false);
     }
   };
 
@@ -344,8 +358,7 @@ const TenderManagement = () => {
     });
     setEditingTender(null);
     setShowCreatePlant(false);
-    setNewPlantName('');
-    setNewPlantType('');
+    setCreatePlantForm({ plant_name: '', plant_type: '', city: '', state: '', contact_phone: '', contact_email: '', plant_incharge_id: '' });
   };
 
   const openNewTenderModal = () => {
@@ -663,46 +676,39 @@ const TenderManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="plant">Plant</Label>
-                    <Select
-                      value={formData.plant || ''}
-                      onValueChange={(value) => {
-                        if (value === '__create__') {
-                          setShowCreatePlant(true);
-                          setNewPlantType(formData.client || '');
-                        } else {
-                          setFormData({ ...formData, plant: value });
-                          setShowCreatePlant(false);
-                        }
-                      }}
-                    >
-                      <SelectTrigger data-testid="plant-input">
-                        <SelectValue placeholder="Select a plant" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {plants.map((p) => (
-                          <SelectItem key={p.id} value={p.plant_name}>{p.plant_name}</SelectItem>
-                        ))}
-                        <SelectItem value="__create__">+ Create New Plant</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {showCreatePlant && (
-                      <div className="mt-2 p-3 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
-                        <Input
-                          placeholder="Plant name *"
-                          value={newPlantName}
-                          onChange={(e) => setNewPlantName(e.target.value)}
-                        />
-                        <Input
-                          placeholder="Plant type (e.g. HPCL)"
-                          value={newPlantType}
-                          onChange={(e) => setNewPlantType(e.target.value)}
-                        />
-                        <div className="flex space-x-2">
-                          <Button type="button" size="sm" onClick={handleCreatePlant}>Create</Button>
-                          <Button type="button" size="sm" variant="outline" onClick={() => setShowCreatePlant(false)}>Cancel</Button>
-                        </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Select
+                          value={formData.plant || ''}
+                          onValueChange={(value) => {
+                            setFormData({ ...formData, plant: value });
+                            setShowCreatePlant(false);
+                          }}
+                        >
+                          <SelectTrigger data-testid="plant-input">
+                            <SelectValue placeholder="Select a plant" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {plants.map((p) => (
+                              <SelectItem key={p.id} value={p.plant_name}>{p.plant_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        title="Create Plant"
+                        onClick={() => {
+                          setShowCreatePlant(true);
+                          setCreatePlantForm(prev => ({ ...prev, plant_type: formData.client || '' }));
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div></div>
                   <div>
@@ -1074,6 +1080,107 @@ const TenderManagement = () => {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Plant Modal */}
+      <Dialog open={showCreatePlant} onOpenChange={setShowCreatePlant}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-lg">
+              <Building className="h-5 w-5 mr-2 text-blue-600" />
+              Add New Plant
+            </DialogTitle>
+            <p className="text-sm text-slate-500">Register a new plant location</p>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <Label>Plant Name *</Label>
+              <Input
+                value={createPlantForm.plant_name}
+                onChange={(e) => setCreatePlantForm(prev => ({ ...prev, plant_name: e.target.value }))}
+                placeholder="Enter plant name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Plant Type *</Label>
+              <Select
+                value={createPlantForm.plant_type}
+                onValueChange={(val) => setCreatePlantForm(prev => ({ ...prev, plant_type: val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HPCL">HPCL</SelectItem>
+                  <SelectItem value="IOCL">IOCL</SelectItem>
+                  <SelectItem value="BPCL">BPCL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>City *</Label>
+              <Input
+                value={createPlantForm.city}
+                onChange={(e) => setCreatePlantForm(prev => ({ ...prev, city: e.target.value }))}
+                placeholder="Enter city"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>State *</Label>
+              <Input
+                value={createPlantForm.state}
+                onChange={(e) => setCreatePlantForm(prev => ({ ...prev, state: e.target.value }))}
+                placeholder="Enter state"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Phone</Label>
+              <Input
+                value={createPlantForm.contact_phone}
+                onChange={(e) => setCreatePlantForm(prev => ({ ...prev, contact_phone: e.target.value }))}
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Email</Label>
+              <Input
+                type="email"
+                value={createPlantForm.contact_email}
+                onChange={(e) => setCreatePlantForm(prev => ({ ...prev, contact_email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Plant Incharge</Label>
+              <Select
+                value={createPlantForm.plant_incharge_id}
+                onValueChange={(val) => setCreatePlantForm(prev => ({ ...prev, plant_incharge_id: val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select plant incharge" />
+                </SelectTrigger>
+                <SelectContent>
+                  {inchargeUsers.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.name} ({u.email})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 mt-4">
+            <Button type="button" variant="outline" onClick={() => setShowCreatePlant(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-slate-900 hover:bg-slate-800"
+              disabled={createPlantLoading}
+              onClick={handleCreatePlant}
+            >
+              {createPlantLoading ? 'Creating...' : 'Create Plant'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

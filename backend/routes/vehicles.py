@@ -9,6 +9,7 @@ from utils.permissions import get_current_user
 from typing import List, Optional
 import os
 from datetime import datetime
+from utils.plant_helpers import get_incharge_plant_names
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
 
@@ -28,9 +29,10 @@ async def get_vehicles(
     user_role = current_user.get("role")
     if user_role == "plant_incharge":
         user_info = await get_db().users.find_one({"id": current_user["sub"]}, {"_id": 0})
-        if user_info and user_info.get("plant"):
-            query["plant"] = user_info["plant"]
-    
+        plant_names = await get_incharge_plant_names(get_db(), current_user["sub"], user_info.get("plant") if user_info else None)
+        if plant_names:
+            query["plant"] = {"$in": plant_names}
+
     vehicles = await get_db().vehicles.find(query, {"_id": 0}).to_list(1000)
     return vehicles
 
@@ -219,6 +221,11 @@ async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depend
     if dup:
         raise HTTPException(status_code=400, detail="Vehicle number already exists")
 
+    old_vehicle_no = vehicle.get("vehicle_no")
+    old_tender_name = vehicle.get("tender_name")
+    new_tender_name = body.get("tender")
+    new_plant = body.get("plant")
+
     update_data = {
         "noc_applied": bool(body.get("noc_applied")),
         "noc_obtained": bool(body.get("noc_obtained")),
@@ -227,18 +234,51 @@ async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depend
         "updated_at": datetime.now().isoformat(),
     }
 
-    if body.get("tender"):
-        update_data["tender_name"] = body["tender"]
-    if body.get("plant"):
-        update_data["plant"] = body["plant"]
+    # Look up the new tender to get full details
+    if new_tender_name:
+        tender_doc = await get_db().tenders.find_one({"tender_name": new_tender_name}, {"_id": 0})
+        if tender_doc:
+            update_data["tender"] = tender_doc.get("id")
+            update_data["tender_no"] = tender_doc.get("tender_no")
+            update_data["tender_name"] = new_tender_name
+        else:
+            update_data["tender_name"] = new_tender_name
+    else:
+        # No tender selected — clear tender fields
+        update_data["tender"] = None
+        update_data["tender_no"] = None
+        update_data["tender_name"] = None
+
+    # Always set plant (even if None, to clear old value)
+    update_data["plant"] = new_plant or None
 
     await get_db().vehicles.update_one({"id": vehicle["id"]}, {"$set": update_data})
 
-    # If vehicle has an assigned driver, update the driver's allocated_vehicle too
+    # 1. Remove old vehicle_no from old tender's assigned_vehicles
+    if old_tender_name:
+        await get_db().tenders.update_one(
+            {"tender_name": old_tender_name},
+            {"$pull": {"assigned_vehicles": old_vehicle_no}}
+        )
+
+    # 2. Add new vehicle_no to new tender's assigned_vehicles
+    if new_tender_name:
+        await get_db().tenders.update_one(
+            {"tender_name": new_tender_name},
+            {"$addToSet": {"assigned_vehicles": new_vehicle_no}}
+        )
+
+    # 3. If vehicle has an assigned driver, update allocated_vehicle and sync plant
     if vehicle.get("assigned_driver_id"):
+        driver_update = {
+            "allocated_vehicle": new_vehicle_no,
+            "updated_at": datetime.now().isoformat()
+        }
+        if new_plant:
+            driver_update["plant"] = new_plant
         await get_db().drivers.update_one(
             {"id": vehicle["assigned_driver_id"]},
-            {"$set": {"allocated_vehicle": new_vehicle_no, "updated_at": datetime.now().isoformat()}}
+            {"$set": driver_update}
         )
 
     updated = await get_db().vehicles.find_one({"id": vehicle["id"]}, {"_id": 0})

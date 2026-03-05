@@ -28,6 +28,8 @@ const PlantList = () => {
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState(null);
   const [viewPlant, setViewPlant] = useState(null);
+  const [viewPlantData, setViewPlantData] = useState(null);
+  const [plantIncharge, setPlantIncharge] = useState(null);
   const [plantVehicles, setPlantVehicles] = useState([]);
   const [plantDrivers, setPlantDrivers] = useState([]);
   const [loadingPlantData, setLoadingPlantData] = useState(false);
@@ -66,16 +68,25 @@ const PlantList = () => {
     return stat || { total_vehicles: 0, active_vehicles: 0 };
   };
 
-  const handleViewPlant = async (plantName) => {
-    setViewPlant(plantName);
+  const handleViewPlant = async (plant) => {
+    setViewPlant(plant.plant_name);
+    setViewPlantData(plant);
+    setPlantIncharge(null);
     setLoadingPlantData(true);
     try {
-      const [vehRes, drvRes] = await Promise.all([
-        api.get(`/vehicles?plant=${encodeURIComponent(plantName)}`),
-        api.get(`/drivers?plant=${encodeURIComponent(plantName)}`),
+      const [vehRes, drvRes, usersRes] = await Promise.all([
+        api.get(`/vehicles?plant=${encodeURIComponent(plant.plant_name)}`),
+        api.get(`/drivers?plant=${encodeURIComponent(plant.plant_name)}`),
+        api.get('/users'),
       ]);
       setPlantVehicles(vehRes.data);
       setPlantDrivers(drvRes.data);
+      // Find incharge: either by plant_incharge_id on plant record, or by user with role=plant_incharge and matching plant
+      const incharge = usersRes.data.find(u =>
+        (plant.plant_incharge_id && u.id === plant.plant_incharge_id) ||
+        (u.role === 'plant_incharge' && u.plant === plant.plant_name)
+      );
+      setPlantIncharge(incharge || null);
     } catch (error) {
       toast.error('Failed to load plant data');
     } finally {
@@ -85,6 +96,8 @@ const PlantList = () => {
 
   const closePlantView = () => {
     setViewPlant(null);
+    setViewPlantData(null);
+    setPlantIncharge(null);
     setPlantVehicles([]);
     setPlantDrivers([]);
   };
@@ -241,7 +254,7 @@ const PlantList = () => {
                       size="sm"
                       variant="outline"
                       className="w-full mt-3"
-                      onClick={() => handleViewPlant(plant.plant_name)}
+                      onClick={() => handleViewPlant(plant)}
                     >
                       <Eye className="h-4 w-4 mr-1.5" />
                       View Vehicles & Drivers
@@ -261,12 +274,41 @@ const PlantList = () => {
               <Building className="h-5 w-5 mr-2 text-blue-600" />
               {viewPlant}
             </DialogTitle>
+            {viewPlantData && (
+              <p className="text-sm text-slate-500 mt-1">
+                {viewPlantData.plant_type} &middot; {viewPlantData.city}, {viewPlantData.state}
+              </p>
+            )}
           </DialogHeader>
 
           {loadingPlantData ? (
             <TruckLoader />
           ) : (
             <div className="space-y-6 mt-4">
+              {/* Plant Incharge */}
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  Plant Incharge
+                </h3>
+                {plantIncharge ? (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{plantIncharge.name}</p>
+                      <p className="text-xs text-slate-500">{plantIncharge.email}</p>
+                      {plantIncharge.phone && (
+                        <p className="text-xs text-slate-500">{plantIncharge.phone}</p>
+                      )}
+                    </div>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                      {plantIncharge.status || 'active'}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">No plant incharge assigned</p>
+                )}
+              </div>
+
               {/* Vehicles */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
@@ -348,7 +390,7 @@ const PlantList = () => {
         isOpen={!!selectedVehicleId}
         onClose={() => setSelectedVehicleId(null)}
         vehicleId={selectedVehicleId}
-        onUpdate={() => { fetchStats(); if (viewPlant) handleViewPlant(viewPlant); }}
+        onUpdate={() => { fetchStats(); if (viewPlantData) handleViewPlant(viewPlantData); }}
       />
 
       {/* Driver Detail Modal */}
@@ -356,7 +398,7 @@ const PlantList = () => {
         isOpen={!!selectedDriverId}
         onClose={() => setSelectedDriverId(null)}
         driverId={selectedDriverId}
-        onUpdate={() => { if (viewPlant) handleViewPlant(viewPlant); }}
+        onUpdate={() => { if (viewPlantData) handleViewPlant(viewPlantData); }}
       />
     </div>
   );

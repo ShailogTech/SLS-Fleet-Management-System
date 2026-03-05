@@ -44,12 +44,14 @@ async def create_plant(plant_data: PlantCreate, current_user: dict = Depends(get
 
     await db.plants.insert_one(plant_doc)
 
-    # Assign plant to the incharge user
+    # Assign plant to the incharge user (set user.plant only if not already set)
     if plant_data.plant_incharge_id:
-        await db.users.update_one(
-            {"id": plant_data.plant_incharge_id},
-            {"$set": {"plant": plant_data.plant_name}}
-        )
+        incharge_user = await db.users.find_one({"id": plant_data.plant_incharge_id}, {"_id": 0, "plant": 1})
+        if incharge_user and not incharge_user.get("plant"):
+            await db.users.update_one(
+                {"id": plant_data.plant_incharge_id},
+                {"$set": {"plant": plant_data.plant_name}}
+            )
 
     return plant
 

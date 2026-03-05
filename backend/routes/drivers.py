@@ -12,6 +12,7 @@ import os
 import uuid
 import logging
 from datetime import datetime
+from utils.plant_helpers import get_incharge_plant_names
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,9 @@ async def get_drivers(
             query["emp_id"] = user_info["emp_id"]
     elif user_role == "plant_incharge":
         user_info = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
-        if user_info and user_info.get("plant"):
-            query["plant"] = user_info["plant"]
+        plant_names = await get_incharge_plant_names(db, current_user["sub"], user_info.get("plant") if user_info else None)
+        if plant_names:
+            query["plant"] = {"$in": plant_names}
 
     drivers = await db.drivers.find(query, {"_id": 0}).to_list(1000)
 
