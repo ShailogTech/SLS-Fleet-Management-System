@@ -24,6 +24,7 @@ const PlantInchargePortal = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedDriverId, setSelectedDriverId] = useState(null);
+  const [plantFilter, setPlantFilter] = useState('all');
 
   useEffect(() => {
     fetchPlantData();
@@ -204,7 +205,7 @@ const PlantInchargePortal = () => {
             {/* ========== MY PLANT SECTION ========== */}
             {activeSection === 'plant' && (
               <>
-                {/* Stats Row */}
+                {/* Total Stats Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
                     <CardContent className="p-4 flex items-center space-x-3">
@@ -212,8 +213,8 @@ const PlantInchargePortal = () => {
                         <Building className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 uppercase">Plant</p>
-                        <p className="text-lg font-bold text-slate-900">{plantData?.plant_names?.join(', ') || plantData?.plant_name || 'N/A'}</p>
+                        <p className="text-xs text-slate-500 uppercase">Total Plants</p>
+                        <p className="text-lg font-bold text-slate-900">{plantData?.plants?.length || 0}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -227,7 +228,7 @@ const PlantInchargePortal = () => {
                           <Truck className="h-6 w-6 text-emerald-600" />
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase">Vehicles</p>
+                          <p className="text-xs text-slate-500 uppercase">Total Vehicles</p>
                           <p className="text-lg font-bold text-slate-900">{plantData?.vehicle_count || 0}</p>
                         </div>
                       </div>
@@ -247,7 +248,7 @@ const PlantInchargePortal = () => {
                           <Users className="h-6 w-6 text-purple-600" />
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase">Drivers</p>
+                          <p className="text-xs text-slate-500 uppercase">Total Drivers</p>
                           <p className="text-lg font-bold text-slate-900">{plantData?.driver_count || 0}</p>
                         </div>
                       </div>
@@ -259,7 +260,7 @@ const PlantInchargePortal = () => {
                   </Card>
                 </div>
 
-                {/* Plant Details */}
+                {/* Per-Plant Details Cards */}
                 {plantData?.plants?.length > 0 && (
                   <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
                     <CardHeader className="pb-3">
@@ -270,27 +271,55 @@ const PlantInchargePortal = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {plantData.plants.map((p) => (
-                        <div key={p.id || p.plant_name} className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg">
-                          <div>
-                            <p className="text-xs text-slate-500 uppercase mb-1">Plant Name</p>
-                            <p className="font-medium text-slate-900">{p.plant_name}</p>
+                        <div key={p.id || p.plant_name} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <Building className="h-4 w-4 text-blue-600" />
+                              <h4 className="font-bold text-slate-900">{p.plant_name}</h4>
+                              <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                                p.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {p.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                            <span className="text-xs text-slate-400 bg-slate-200 px-2 py-0.5 rounded">{p.plant_type || 'N/A'}</span>
                           </div>
-                          <div>
-                            <p className="text-xs text-slate-500 uppercase mb-1">Type</p>
-                            <p className="font-medium text-slate-900">{p.plant_type || 'N/A'}</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase mb-0.5">City</p>
+                              <p className="text-sm font-medium text-slate-900">{p.city || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase mb-0.5">State</p>
+                              <p className="text-sm font-medium text-slate-900">{p.state || 'N/A'}</p>
+                            </div>
+                            <div
+                              className="cursor-pointer hover:bg-emerald-50 rounded p-1 -m-1 transition-colors"
+                              onClick={() => { setPlantFilter(p.plant_name); setActiveSection('vehicles'); }}
+                            >
+                              <p className="text-[10px] text-slate-500 uppercase mb-0.5">Vehicles</p>
+                              <p className="text-sm font-bold text-emerald-600">{p.vehicle_count || 0}</p>
+                            </div>
+                            <div
+                              className="cursor-pointer hover:bg-purple-50 rounded p-1 -m-1 transition-colors"
+                              onClick={() => { setPlantFilter(p.plant_name); setActiveSection('drivers'); }}
+                            >
+                              <p className="text-[10px] text-slate-500 uppercase mb-0.5">Drivers</p>
+                              <p className="text-sm font-bold text-purple-600">{p.driver_count || 0}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-xs text-slate-500 uppercase mb-1">City</p>
-                            <p className="font-medium text-slate-900">{p.city || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 uppercase mb-1">Status</p>
-                            <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-                              p.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                            }`}>
-                              {p.is_active ? 'Active' : 'Inactive'}
-                            </span>
-                          </div>
+                          {(p.contact_phone || p.contact_email) && (
+                            <div className="mt-2 pt-2 border-t border-slate-200 flex flex-wrap gap-4">
+                              {p.contact_phone && (
+                                <span className="text-xs text-slate-500 flex items-center gap-1">
+                                  <Phone className="h-3 w-3" /> {p.contact_phone}
+                                </span>
+                              )}
+                              {p.contact_email && (
+                                <span className="text-xs text-slate-500">{p.contact_email}</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </CardContent>
@@ -332,25 +361,63 @@ const PlantInchargePortal = () => {
             )}
 
             {/* ========== VEHICLES SECTION ========== */}
-            {activeSection === 'vehicles' && (
+            {activeSection === 'vehicles' && (() => {
+              const filteredVehicles = plantFilter === 'all' ? vehicles : vehicles.filter(v => v.plant === plantFilter);
+              return (
               <>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-lg font-bold text-slate-900">
-                    Vehicles ({vehicles.length})
+                    Vehicles ({filteredVehicles.length}{plantFilter !== 'all' ? ` in ${plantFilter}` : ''})
                   </h3>
                 </div>
 
-                {vehicles.length === 0 ? (
+                {/* Plant Filter Tabs */}
+                {plantData?.plant_names?.length > 1 && (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setPlantFilter('all')}
+                      className={cn(
+                        'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                        plantFilter === 'all'
+                          ? 'bg-slate-900 text-white border-slate-900'
+                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                      )}
+                    >
+                      All ({vehicles.length})
+                    </button>
+                    {plantData.plant_names.map(pn => {
+                      const count = vehicles.filter(v => v.plant === pn).length;
+                      return (
+                        <button
+                          key={pn}
+                          onClick={() => setPlantFilter(pn)}
+                          className={cn(
+                            'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                            plantFilter === pn
+                              ? 'bg-slate-900 text-white border-slate-900'
+                              : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                          )}
+                        >
+                          {pn} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {filteredVehicles.length === 0 ? (
                   <Card className="bg-white border-slate-200 shadow-md">
                     <CardContent className="py-12 text-center">
                       <Truck className="h-12 w-12 mx-auto mb-3 text-slate-300" />
                       <h3 className="font-semibold text-slate-900 mb-1">No Vehicles Found</h3>
-                      <p className="text-sm text-slate-500">No vehicles are assigned to this plant.</p>
+                      <p className="text-sm text-slate-500">
+                        {plantFilter !== 'all' ? `No vehicles in ${plantFilter}.` : 'No vehicles are assigned to your plants.'}
+                      </p>
                     </CardContent>
                   </Card>
                 ) : (
                   <div className="space-y-3">
-                    {vehicles.map((veh) => {
+                    {filteredVehicles.map((veh) => {
                       const docs = veh.documents || {};
                       const expiryKeys = ['rc_expiry', 'insurance_expiry', 'fitness_expiry', 'tax_expiry', 'puc_expiry', 'permit_expiry', 'national_permit_expiry'];
                       const hasExpired = expiryKeys.some(k => docs[k] && new Date(docs[k]) < new Date());
@@ -387,6 +454,13 @@ const PlantInchargePortal = () => {
                                 <p className="text-xs text-slate-400">Owner</p>
                                 <p className="text-sm text-slate-700 truncate">{veh.owner_name || '—'}</p>
                               </div>
+                              {plantData?.plant_names?.length > 1 && plantFilter === 'all' && veh.plant && (
+                                <div className="hidden sm:block">
+                                  <span className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-blue-50 text-blue-700 border border-blue-200 truncate max-w-[120px]">
+                                    {veh.plant}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                             <Button
                               size="sm"
@@ -404,28 +478,67 @@ const PlantInchargePortal = () => {
                   </div>
                 )}
               </>
-            )}
+              );
+            })()}
 
             {/* ========== DRIVERS SECTION ========== */}
-            {activeSection === 'drivers' && (
+            {activeSection === 'drivers' && (() => {
+              const filteredDrivers = plantFilter === 'all' ? drivers : drivers.filter(d => d.plant === plantFilter);
+              return (
               <>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-lg font-bold text-slate-900">
-                    Drivers ({drivers.length})
+                    Drivers ({filteredDrivers.length}{plantFilter !== 'all' ? ` in ${plantFilter}` : ''})
                   </h3>
                 </div>
 
-                {drivers.length === 0 ? (
+                {/* Plant Filter Tabs */}
+                {plantData?.plant_names?.length > 1 && (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setPlantFilter('all')}
+                      className={cn(
+                        'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                        plantFilter === 'all'
+                          ? 'bg-slate-900 text-white border-slate-900'
+                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                      )}
+                    >
+                      All ({drivers.length})
+                    </button>
+                    {plantData.plant_names.map(pn => {
+                      const count = drivers.filter(d => d.plant === pn).length;
+                      return (
+                        <button
+                          key={pn}
+                          onClick={() => setPlantFilter(pn)}
+                          className={cn(
+                            'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                            plantFilter === pn
+                              ? 'bg-slate-900 text-white border-slate-900'
+                              : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                          )}
+                        >
+                          {pn} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {filteredDrivers.length === 0 ? (
                   <Card className="bg-white border-slate-200 shadow-md">
                     <CardContent className="py-12 text-center">
                       <Users className="h-12 w-12 mx-auto mb-3 text-slate-300" />
                       <h3 className="font-semibold text-slate-900 mb-1">No Drivers Found</h3>
-                      <p className="text-sm text-slate-500">No drivers are assigned to this plant.</p>
+                      <p className="text-sm text-slate-500">
+                        {plantFilter !== 'all' ? `No drivers in ${plantFilter}.` : 'No drivers are assigned to your plants.'}
+                      </p>
                     </CardContent>
                   </Card>
                 ) : (
                   <div className="space-y-3">
-                    {drivers.map((drv) => {
+                    {filteredDrivers.map((drv) => {
                       const dlStatus = getDocumentStatus(drv.dl_expiry);
                       const hazStatus = getDocumentStatus(drv.hazardous_cert_expiry);
                       const hasExpired = dlStatus.status === 'expired' || hazStatus.status === 'expired';
@@ -458,6 +571,13 @@ const PlantInchargePortal = () => {
                                 <p className="text-xs text-slate-400">Vehicle</p>
                                 <p className="text-sm text-slate-700 truncate">{drv.allocated_vehicle || '—'}</p>
                               </div>
+                              {plantData?.plant_names?.length > 1 && plantFilter === 'all' && drv.plant && (
+                                <div className="hidden sm:block">
+                                  <span className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-blue-50 text-blue-700 border border-blue-200 truncate max-w-[120px]">
+                                    {drv.plant}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                             <Button
                               size="sm"
@@ -475,7 +595,8 @@ const PlantInchargePortal = () => {
                   </div>
                 )}
               </>
-            )}
+              );
+            })()}
 
           </div>
         </main>

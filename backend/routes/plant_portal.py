@@ -29,6 +29,20 @@ async def get_my_plant(current_user: dict = Depends(get_current_user)):
     vehicle_count = await db.vehicles.count_documents({"plant": {"$in": plant_names}})
     driver_count = await db.drivers.count_documents({"plant": {"$in": plant_names}})
 
+    # Per-plant vehicle and driver counts
+    per_plant_stats = {}
+    for pn in plant_names:
+        per_plant_stats[pn] = {
+            "vehicle_count": await db.vehicles.count_documents({"plant": pn}),
+            "driver_count": await db.drivers.count_documents({"plant": pn}),
+        }
+
+    # Enrich plant_infos with per-plant counts
+    for pi in plant_infos:
+        stats = per_plant_stats.get(pi.get("plant_name"), {})
+        pi["vehicle_count"] = stats.get("vehicle_count", 0)
+        pi["driver_count"] = stats.get("driver_count", 0)
+
     return {
         "plant": plant_infos[0] if plant_infos else None,
         "plants": plant_infos,
@@ -37,6 +51,7 @@ async def get_my_plant(current_user: dict = Depends(get_current_user)):
         "user": {k: v for k, v in user_info.items() if k != "password_hash"},
         "vehicle_count": vehicle_count,
         "driver_count": driver_count,
+        "per_plant_stats": per_plant_stats,
     }
 
 

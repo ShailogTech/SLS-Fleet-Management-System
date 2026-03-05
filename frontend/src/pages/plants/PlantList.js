@@ -4,7 +4,8 @@ import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Plus, MapPin, Building, Phone, ArrowLeft, Truck, Eye, User, Users } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Plus, MapPin, Building, Phone, ArrowLeft, Truck, Eye, User, Users, Edit2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import TruckLoader from '../../components/common/TruckLoader';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
@@ -35,6 +36,10 @@ const PlantList = () => {
   const [loadingPlantData, setLoadingPlantData] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedDriverId, setSelectedDriverId] = useState(null);
+  const [editingIncharge, setEditingIncharge] = useState(false);
+  const [inchargeUsers, setInchargeUsers] = useState([]);
+  const [selectedInchargeId, setSelectedInchargeId] = useState('');
+  const [savingIncharge, setSavingIncharge] = useState(false);
 
   useEffect(() => {
     fetchPlants();
@@ -100,6 +105,49 @@ const PlantList = () => {
     setPlantIncharge(null);
     setPlantVehicles([]);
     setPlantDrivers([]);
+    setEditingIncharge(false);
+    setSelectedInchargeId('');
+  };
+
+  const handleStartEditIncharge = async () => {
+    try {
+      const res = await api.get('/users');
+      setInchargeUsers(res.data.filter(u => u.role === 'plant_incharge' && u.status === 'active'));
+    } catch { /* ignore */ }
+    setSelectedInchargeId(plantIncharge?.id || '');
+    setEditingIncharge(true);
+  };
+
+  const handleSaveIncharge = async () => {
+    if (!viewPlantData) return;
+    setSavingIncharge(true);
+    try {
+      // Update plant record with new plant_incharge_id
+      await api.put(`/plants/${viewPlantData.id}`, {
+        plant_name: viewPlantData.plant_name,
+        plant_type: viewPlantData.plant_type,
+        city: viewPlantData.city,
+        state: viewPlantData.state,
+        contact_phone: viewPlantData.contact_phone || null,
+        contact_email: viewPlantData.contact_email || null,
+        plant_incharge_id: selectedInchargeId || null,
+      });
+      // Also update the user's plant field so portal works
+      if (selectedInchargeId) {
+        const inchargeUser = inchargeUsers.find(u => u.id === selectedInchargeId);
+        if (inchargeUser && !inchargeUser.plant) {
+          await api.put(`/users/${selectedInchargeId}`, { plant: viewPlantData.plant_name });
+        }
+      }
+      toast.success('Plant incharge updated');
+      setEditingIncharge(false);
+      // Refresh the view
+      handleViewPlant(viewPlantData);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update incharge');
+    } finally {
+      setSavingIncharge(false);
+    }
   };
 
   const canCreate = ['admin', 'superuser'].includes(user?.role);
@@ -287,11 +335,58 @@ const PlantList = () => {
             <div className="space-y-6 mt-4">
               {/* Plant Incharge */}
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  Plant Incharge
-                </h3>
-                {plantIncharge ? (
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Plant Incharge
+                  </h3>
+                  {canCreate && !editingIncharge && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 h-7 px-2"
+                      onClick={handleStartEditIncharge}
+                    >
+                      <Edit2 className="h-3 w-3 mr-1" />
+                      {plantIncharge ? 'Change' : 'Assign'}
+                    </Button>
+                  )}
+                </div>
+
+                {editingIncharge ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Select value={selectedInchargeId} onValueChange={setSelectedInchargeId}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Select plant incharge" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {inchargeUsers.map(u => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.name} ({u.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      size="icon"
+                      className="bg-blue-600 hover:bg-blue-700 h-9 w-9 shrink-0"
+                      disabled={savingIncharge}
+                      onClick={handleSaveIncharge}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-9 w-9 shrink-0"
+                      onClick={() => setEditingIncharge(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : plantIncharge ? (
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{plantIncharge.name}</p>

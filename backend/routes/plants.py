@@ -68,9 +68,23 @@ async def update_plant(plant_id: str, plant_data: PlantCreate, current_user: dic
     
     update_data = plant_data.model_dump()
     update_data["updated_at"] = datetime.now().isoformat()
-    
+
     await db.plants.update_one({"id": plant_id}, {"$set": update_data})
-    
+
+    # Sync: if plant_incharge_id changed, update the new incharge user's plant field
+    old_incharge_id = existing.get("plant_incharge_id")
+    new_incharge_id = plant_data.plant_incharge_id
+    plant_name = plant_data.plant_name or existing.get("plant_name")
+
+    if new_incharge_id and new_incharge_id != old_incharge_id:
+        # Set new incharge user's plant if not already set
+        incharge_user = await db.users.find_one({"id": new_incharge_id}, {"_id": 0, "plant": 1})
+        if incharge_user and not incharge_user.get("plant"):
+            await db.users.update_one(
+                {"id": new_incharge_id},
+                {"$set": {"plant": plant_name}}
+            )
+
     updated_plant = await db.plants.find_one({"id": plant_id}, {"_id": 0})
     return updated_plant
 
