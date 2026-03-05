@@ -7,11 +7,10 @@ import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
 import {
   CheckCircle, XCircle, RefreshCw, AlertCircle, Truck, User,
-  MessageSquare, FileText, Eye, Download, Send
+  MessageSquare, FileText, Download, Send
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
-import TruckLoader from '../../components/common/TruckLoader';
 
 const ApprovalQueue = () => {
   const { user } = useAuth();
@@ -110,10 +109,6 @@ const ApprovalQueue = () => {
   const approvedCount = approvals.filter(a => a.status === 'approved').length;
   const rejectedCount = approvals.filter(a => a.status === 'rejected').length;
 
-  if (initialLoading) {
-    return <TruckLoader />;
-  }
-
   return (
     <div className="space-y-6" data-testid="approval-queue-page">
       {/* Header */}
@@ -134,49 +129,46 @@ const ApprovalQueue = () => {
         </Button>
       </div>
 
-      {/* Admin read-only notice */}
-      {isAdmin && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-4 flex items-center space-x-3">
-            <Eye className="h-5 w-5 text-blue-600" />
-            <p className="text-sm text-blue-800">
-              As Admin, you can monitor all approvals and add comments/queries to reviewers and Approvers, but cannot take approval actions directly.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-slate-200">
           <CardContent className="p-4">
             <p className="text-sm text-slate-500">Pending Review</p>
-            <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
+            {initialLoading ? <div className="h-8 w-12 bg-slate-200 rounded animate-pulse mt-1" /> : <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>}
           </CardContent>
         </Card>
         <Card className="border-slate-200">
           <CardContent className="p-4">
             <p className="text-sm text-slate-500">Awaiting Approval</p>
-            <p className="text-2xl font-bold text-blue-600">{checkedCount}</p>
+            {initialLoading ? <div className="h-8 w-12 bg-slate-200 rounded animate-pulse mt-1" /> : <p className="text-2xl font-bold text-blue-600">{checkedCount}</p>}
           </CardContent>
         </Card>
         <Card className="border-slate-200">
           <CardContent className="p-4">
             <p className="text-sm text-slate-500">Approved</p>
-            <p className="text-2xl font-bold text-emerald-600">{approvedCount}</p>
+            {initialLoading ? <div className="h-8 w-12 bg-slate-200 rounded animate-pulse mt-1" /> : <p className="text-2xl font-bold text-emerald-600">{approvedCount}</p>}
           </CardContent>
         </Card>
         <Card className="border-slate-200">
           <CardContent className="p-4">
             <p className="text-sm text-slate-500">Rejected</p>
-            <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>
+            {initialLoading ? <div className="h-8 w-12 bg-slate-200 rounded animate-pulse mt-1" /> : <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>}
           </CardContent>
         </Card>
       </div>
 
       {/* Approvals List */}
       <div className="space-y-4">
-        {approvals.map((approval) => (
+        {initialLoading && [1, 2, 3].map(i => (
+          <Card key={i} className="border-slate-200">
+            <CardContent className="p-6 space-y-3">
+              <div className="h-5 w-48 bg-slate-200 rounded animate-pulse" />
+              <div className="h-4 w-32 bg-slate-100 rounded animate-pulse" />
+              <div className="h-4 w-64 bg-slate-100 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+        ))}
+        {!initialLoading && approvals.map((approval) => (
           <Card key={approval.id} className="border-slate-200" data-testid={`approval-card-${approval.id}`}>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -406,7 +398,7 @@ const ApprovalQueue = () => {
           </Card>
         ))}
 
-        {approvals.length === 0 && (
+        {!initialLoading && approvals.length === 0 && (
           <Card className="border-slate-200">
             <CardContent className="py-12 text-center text-slate-500">
               <CheckCircle className="h-12 w-12 mx-auto mb-3 text-slate-300" />

@@ -5,7 +5,6 @@ import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Truck, Users, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import TruckLoader from '../../components/common/TruckLoader';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -36,10 +35,6 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
-  if (loading) {
-    return <TruckLoader />;
-  }
 
   const metrics = [
     {
@@ -88,7 +83,11 @@ const Dashboard = () => {
                 <div className="dash-metric-icon">
                   <Icon className="dash-metric-icon-svg" />
                 </div>
-                <p className="dash-metric-value">{metric.value}</p>
+                {loading ? (
+                  <div className="h-8 w-16 bg-slate-200 rounded animate-pulse mx-auto mt-1" />
+                ) : (
+                  <p className="dash-metric-value">{metric.value}</p>
+                )}
                 <p className="dash-metric-title">{metric.title}</p>
               </div>
             </div>
@@ -96,7 +95,7 @@ const Dashboard = () => {
         })}
       </div>
 
-      {alerts.length > 0 && (
+      {!loading && alerts.length > 0 && (
         <Card className="border-slate-200">
           <CardHeader>
             <CardTitle className="flex items-center text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
