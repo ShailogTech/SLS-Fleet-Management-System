@@ -25,10 +25,14 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return { success: true, user: userData };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || 'Login failed' 
-      };
+      const detail = error.response?.data?.detail;
+      let message = 'Login failed';
+      if (typeof detail === 'string') {
+        message = detail;
+      } else if (Array.isArray(detail)) {
+        message = detail.map(d => d.msg || String(d)).join(', ');
+      }
+      return { success: false, error: message };
     }
   };
 
