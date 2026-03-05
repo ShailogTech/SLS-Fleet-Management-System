@@ -10,7 +10,7 @@ import asyncio
 import certifi
 from pathlib import Path
 
-from routes import auth, vehicles, drivers, tenders, approvals, dashboard, users, documents, driver_portal, plant_portal, plants, stoppages, chatbot
+from routes import auth, vehicles, drivers, tenders, approvals, dashboard, users, documents, driver_portal, plant_portal, plants, stoppages, chatbot, personal_vehicles
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env', override=False)
@@ -123,6 +123,7 @@ api_router.include_router(plant_portal.router)
 api_router.include_router(plants.router)
 api_router.include_router(stoppages.router)
 api_router.include_router(chatbot.router)
+api_router.include_router(personal_vehicles.router)
 
 @api_router.get("/health")
 async def health_check():

@@ -16,7 +16,8 @@ import {
   MapPin,
   ClipboardList,
   UserCircle,
-  CalendarDays
+  CalendarDays,
+  Car
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -56,6 +57,12 @@ const Sidebar = () => {
       href: '/signup-requests',
       icon: UserPlus,
       roles: ['admin', 'superuser', 'approver']
+    },
+    {
+      name: 'Personal Vehicles',
+      href: '/personal-vehicles',
+      icon: Car,
+      roles: ['superuser']
     },
     {
       name: 'Users',

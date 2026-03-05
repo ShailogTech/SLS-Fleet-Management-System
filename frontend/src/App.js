@@ -27,6 +27,7 @@ import AlertCenter from './pages/alerts/AlertCenter';
 import Reports from './pages/reports/Reports';
 import SignupRequests from './pages/admin/SignupRequests';
 import ExpiryCalendar from './pages/calendar/ExpiryCalendar';
+import PersonalVehicleList from './pages/personal-vehicles/PersonalVehicleList';
 import './App.css';
 
 // Component to handle role-based default routing
@@ -112,6 +113,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['maker', 'admin', 'superuser', 'office_incharge', 'records_incharge']}>
                   <MySubmissions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="personal-vehicles"
+              element={
+                <ProtectedRoute allowedRoles={['superuser']}>
+                  <PersonalVehicleList />
                 </ProtectedRoute>
               }
             />
