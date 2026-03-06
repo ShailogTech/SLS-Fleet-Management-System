@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import api from '../../utils/api';
@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { toast } from 'sonner';
 import {
   ArrowLeft, ArrowRight, CheckCircle, Upload, FileText, X, Truck,
@@ -35,6 +36,20 @@ const VehicleForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [createdVehicleId, setCreatedVehicleId] = useState(null);
 
+  const [plants, setPlants] = useState([]);
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      try {
+        const response = await api.get('/plants');
+        setPlants(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch plants:', error);
+      }
+    };
+    fetchPlants();
+  }, []);
+
   const [formData, setFormData] = useState({
     vehicle_no: '', owner_name: '', capacity: '', reg_date: '', make: '',
     chassis_no: '', engine_no: '', rto: '', plant: '', phone: '',
@@ -46,6 +61,16 @@ const VehicleForm = () => {
   });
 
   const handleChange = (field, value) => {
+    // Words only fields - no numbers allowed
+    const wordsOnlyFields = ['owner_name', 'make', 'vehicle_type', 'rto'];
+    if (wordsOnlyFields.includes(field)) {
+      if (/[0-9]/.test(value)) return;
+    }
+    // Phone - digits only, max 10
+    if (field === 'phone') {
+      if (/[^0-9]/.test(value)) return;
+      if (value.length > 10) return;
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -308,11 +333,22 @@ const VehicleForm = () => {
               </div>
               <div>
                 <Label>Plant</Label>
-                <Input value={formData.plant} onChange={e => handleChange('plant', e.target.value)} data-testid="plant-input" />
+                <Select value={formData.plant} onValueChange={val => handleChange('plant', val)} data-testid="plant-input">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a plant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plants.map((p) => (
+                      <SelectItem key={p.id} value={p.plant_name}>
+                        {p.plant_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Contact Phone</Label>
-                <Input value={formData.phone} onChange={e => handleChange('phone', e.target.value)} data-testid="phone-input" />
+                <Input value={formData.phone} onChange={e => handleChange('phone', e.target.value)} maxLength={10} inputMode="numeric" placeholder="10-digit number" data-testid="phone-input" />
               </div>
             </div>
 

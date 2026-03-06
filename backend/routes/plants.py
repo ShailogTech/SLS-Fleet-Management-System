@@ -88,6 +88,20 @@ async def update_plant(plant_id: str, plant_data: PlantCreate, current_user: dic
     updated_plant = await db.plants.find_one({"id": plant_id}, {"_id": 0})
     return updated_plant
 
+@router.delete("/{plant_id}")
+async def delete_plant(plant_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    user_role = current_user.get("role")
+    if user_role not in ["admin", "superuser"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    existing = await db.plants.find_one({"id": plant_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    await db.plants.delete_one({"id": plant_id})
+    return {"message": "Plant deleted successfully"}
+
 @router.get("/stats/vehicles")
 async def get_plant_vehicle_stats(current_user: dict = Depends(get_current_user)):
     db = get_db()
