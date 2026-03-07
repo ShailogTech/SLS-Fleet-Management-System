@@ -1,0 +1,5 @@
+MONGO_URL=mongodb+srv://jaisaikishoreb_db_user:gG92Pn0sxwJlrwB6@cluster0.7boo4ke.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+DB_NAME=sls_fleet_db
+JWT_SECRET_KEY=sls-fleet-dev-secret-key-2024
+CORS_ORIGINS=http://localhost:3000
+GEMINI_API_KEY=AIzaSyBEKgAKo0YrlCBJWaHSVShkwTAVRjIaxu4
