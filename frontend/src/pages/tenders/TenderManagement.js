@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Plus, Edit2, Calendar, FileText, Building, Truck, Eye, Search, RefreshCw, X, Check, AlertTriangle, ArrowLeft, ArrowRightLeft } from 'lucide-react';
+import { Plus, Edit2, Calendar, FileText, Building, Truck, Eye, Search, RefreshCw, X, Check, AlertTriangle, ArrowLeft, ArrowRight, ArrowRightLeft } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
@@ -50,6 +50,7 @@ const TenderManagement = () => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [editingTender, setEditingTender] = useState(null);
+  const [activeTab, setActiveTab] = useState('basic');
   const [selectedTender, setSelectedTender] = useState(null);
   
   const [formData, setFormData] = useState({
@@ -377,6 +378,7 @@ const TenderManagement = () => {
 
   const openNewTenderModal = () => {
     resetForm();
+    setActiveTab('basic');
     setIsFormModalOpen(true);
   };
 
@@ -638,7 +640,7 @@ const TenderManagement = () => {
             <DialogTitle>{editingTender ? 'Edit Tender' : 'Add New Tender'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Tabs defaultValue="basic">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="financial">Financial</TabsTrigger>
@@ -669,14 +671,16 @@ const TenderManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="client">Client *</Label>
-                    <Input
-                      id="client"
-                      value={formData.client}
-                      onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                      required
-                      placeholder="e.g., HPCL, BPCL, IOCL"
-                      data-testid="client-input"
-                    />
+                    <Select value={formData.client} onValueChange={(val) => setFormData({ ...formData, client: val })} data-testid="client-input">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select client" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="HPCL">HPCL</SelectItem>
+                        <SelectItem value="BPCL">BPCL</SelectItem>
+                        <SelectItem value="IOCL">IOCL</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="contract_type">Contract Type</Label>
@@ -748,8 +752,14 @@ const TenderManagement = () => {
                     />
                   </div>
                 </div>
+                <div className="flex justify-end pt-4 border-t border-slate-200">
+                  <Button type="button" onClick={() => setActiveTab('financial')} className="bg-slate-900 hover:bg-slate-800">
+                    Next
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
               </TabsContent>
-              
+
               <TabsContent value="financial" className="space-y-4 pt-4">
                 <div>
                   <h3 className="text-sm font-semibold text-slate-900 mb-3">Security Deposit (SD)</h3>
@@ -818,8 +828,18 @@ const TenderManagement = () => {
                     </div>
                   </div>
                 </div>
+                <div className="flex justify-between pt-4 border-t border-slate-200">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab('basic')}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button type="button" onClick={() => setActiveTab('vehicles')} className="bg-slate-900 hover:bg-slate-800">
+                    Next
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
               </TabsContent>
-              
+
               <TabsContent value="vehicles" className="space-y-4 pt-4">
                 {/* Assigned Vehicles */}
                 <div>
@@ -920,6 +940,12 @@ const TenderManagement = () => {
                     })()}
                   </div>
                 </div>
+                <div className="flex justify-start pt-4 border-t border-slate-200">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab('financial')}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
 
@@ -927,9 +953,16 @@ const TenderManagement = () => {
               <Button type="button" variant="outline" onClick={() => setIsFormModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-slate-900 hover:bg-slate-800" data-testid="save-tender-btn">
-                {editingTender ? 'Update Tender' : 'Create Tender'}
-              </Button>
+              {activeTab === 'vehicles' && (
+                <Button
+                  type="submit"
+                  className="bg-slate-900 hover:bg-slate-800"
+                  disabled={!editingTender && (!formData.assigned_vehicles || formData.assigned_vehicles.length === 0)}
+                  data-testid="save-tender-btn"
+                >
+                  {editingTender ? 'Update Tender' : 'Create Tender'}
+                </Button>
+              )}
             </div>
           </form>
         </DialogContent>
@@ -1367,7 +1400,16 @@ const TenderManagement = () => {
                         </div>
                         <div>
                           <Label>Client *</Label>
-                          <Input value={newTenderForm.client} onChange={(e) => setNewTenderForm(prev => ({ ...prev, client: e.target.value }))} placeholder="e.g., HPCL, BPCL, IOCL" className="mt-1" />
+                          <Select value={newTenderForm.client} onValueChange={(val) => setNewTenderForm(prev => ({ ...prev, client: val }))}>
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select client" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="HPCL">HPCL</SelectItem>
+                              <SelectItem value="BPCL">BPCL</SelectItem>
+                              <SelectItem value="IOCL">IOCL</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label>Contract Type</Label>

@@ -348,7 +348,7 @@ const VehicleForm = () => {
               </div>
               <div>
                 <Label>Contact Phone</Label>
-                <Input value={formData.phone} onChange={e => handleChange('phone', e.target.value)} maxLength={10} inputMode="numeric" placeholder="10-digit number" data-testid="phone-input" />
+                <Input value={formData.phone} onChange={e => handleChange('phone', e.target.value.replace(/[^0-9]/g, ''))} maxLength={10} inputMode="numeric" placeholder="10-digit number" data-testid="phone-input" />
               </div>
             </div>
 

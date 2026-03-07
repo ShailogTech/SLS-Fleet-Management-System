@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import api from '../../utils/api';
@@ -36,7 +36,20 @@ const DriverForm = () => {
     dl_expiry: '', hazardous_cert_expiry: '', plant: '',
   });
 
+  const [plants, setPlants] = useState([]);
   const [docFiles, setDocFiles] = useState({});
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      try {
+        const res = await api.get('/plants');
+        setPlants(res.data);
+      } catch (err) {
+        console.error('Failed to fetch plants:', err);
+      }
+    };
+    fetchPlants();
+  }, []);
   const [uploadingDoc, setUploadingDoc] = useState(null);
   const [uploadedDocs, setUploadedDocs] = useState({});
 
@@ -225,7 +238,7 @@ const DriverForm = () => {
               </div>
               <div>
                 <Label>Phone *</Label>
-                <Input value={formData.phone} onChange={e => handleChange('phone', e.target.value)} data-testid="driver-phone-input" />
+                <Input value={formData.phone} onChange={e => handleChange('phone', e.target.value.replace(/[^0-9]/g, ''))} maxLength={10} data-testid="driver-phone-input" />
               </div>
               <div>
                 <Label>DL Number *</Label>
@@ -233,7 +246,17 @@ const DriverForm = () => {
               </div>
               <div>
                 <Label>Plant</Label>
-                <Input value={formData.plant} onChange={e => handleChange('plant', e.target.value)} placeholder="e.g., MRPL HPCL" data-testid="driver-plant-input" />
+                <select
+                  value={formData.plant}
+                  onChange={e => handleChange('plant', e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  data-testid="driver-plant-input"
+                >
+                  <option value="">Select Plant</option>
+                  {plants.map(p => (
+                    <option key={p.id || p.plant_name} value={p.plant_name}>{p.plant_name}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="flex justify-end mt-6 pt-4 border-t border-slate-200">
