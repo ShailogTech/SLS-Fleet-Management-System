@@ -5,9 +5,10 @@ import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
 import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import {
   CheckCircle, XCircle, RefreshCw, AlertCircle, Truck, User,
-  MessageSquare, FileText, Download, Send
+  MessageSquare, FileText, Download, Send, Filter
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
@@ -20,6 +21,10 @@ const ApprovalQueue = () => {
   const [processing, setProcessing] = useState(null);
   const [commentText, setCommentText] = useState({});
   const [showCommentFor, setShowCommentFor] = useState(null);
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const statusOrder = { pending: 0, checked: 1, rejected: 2, approved: 3 };
 
   useEffect(() => {
     fetchApprovals(true);
@@ -33,7 +38,9 @@ const ApprovalQueue = () => {
     if (showSpinner) setInitialLoading(true);
     try {
       const response = await api.get('/approvals/queue');
-      setApprovals(Array.isArray(response.data) ? response.data : []);
+      const data = Array.isArray(response.data) ? response.data : [];
+      data.sort((a, b) => (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4));
+      setApprovals(data);
     } catch (error) {
       console.error('Failed to load approvals:', error);
       if (showSpinner) toast.error(error.response?.data?.detail || 'Failed to load approvals');
@@ -44,9 +51,13 @@ const ApprovalQueue = () => {
   };
 
   const updateLocalApproval = (approvalId, newStatus) => {
-    setApprovals(prev => prev.map(a =>
-      a.id === approvalId ? { ...a, status: newStatus } : a
-    ));
+    setApprovals(prev => {
+      const updated = prev.map(a =>
+        a.id === approvalId ? { ...a, status: newStatus } : a
+      );
+      updated.sort((a, b) => (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4));
+      return updated;
+    });
   };
 
   const handleCheck = async (approvalId, action, comment) => {
@@ -157,6 +168,39 @@ const ApprovalQueue = () => {
         </Card>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <Filter className="h-4 w-4 text-slate-400" />
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Entity Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="vehicle">Vehicles</SelectItem>
+            <SelectItem value="driver">Drivers</SelectItem>
+            <SelectItem value="profile_edit">Profile Edits</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="checked">Checked</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+        {(typeFilter !== 'all' || statusFilter !== 'all') && (
+          <Button variant="ghost" size="sm" onClick={() => { setTypeFilter('all'); setStatusFilter('all'); }}>
+            Clear filters
+          </Button>
+        )}
+      </div>
+
       {/* Approvals List */}
       <div className="space-y-4">
         {initialLoading && [1, 2, 3].map(i => (
@@ -168,21 +212,30 @@ const ApprovalQueue = () => {
             </CardContent>
           </Card>
         ))}
-        {!initialLoading && approvals.map((approval) => (
+        {!initialLoading && approvals
+          .filter(a => typeFilter === 'all' || a.entity_type === typeFilter)
+          .filter(a => statusFilter === 'all' || a.status === statusFilter)
+          .map((approval) => (
           <Card key={approval.id} className="border-slate-200" data-testid={`approval-card-${approval.id}`}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg ${approval.entity_type === 'vehicle' ? 'bg-blue-100' : 'bg-purple-100'}`}>
+                  <div className={`p-2 rounded-lg ${
+                    approval.entity_type === 'vehicle' ? 'bg-blue-100' :
+                    approval.entity_type === 'profile_edit' ? 'bg-amber-100' : 'bg-purple-100'
+                  }`}>
                     {approval.entity_type === 'vehicle' ? (
                       <Truck className="h-5 w-5 text-blue-600" />
+                    ) : approval.entity_type === 'profile_edit' ? (
+                      <FileText className="h-5 w-5 text-amber-600" />
                     ) : (
                       <User className="h-5 w-5 text-purple-600" />
                     )}
                   </div>
                   <div>
                     <CardTitle className="text-lg">
-                      {approval.entity_type.toUpperCase()}: {approval.entity_data?.vehicle_no || approval.entity_data?.name || 'Record Not Found'}
+                      {approval.entity_type === 'profile_edit' ? 'PROFILE EDIT' : (approval.entity_type || 'UNKNOWN').toUpperCase()}:{' '}
+                      {approval.entity_data?.vehicle_no || approval.entity_data?.user_name || approval.entity_data?.name || 'Record Not Found'}
                     </CardTitle>
                     {!approval.entity_data && (
                       <p className="text-xs text-amber-600 flex items-center mt-1">
@@ -218,7 +271,42 @@ const ApprovalQueue = () => {
                       </div>
                     </>
                   )}
+                  {approval.entity_type === 'driver' && approval.entity_data && (
+                    <>
+                      <div>
+                        <span className="text-slate-500">Employee ID</span>
+                        <p className="font-medium text-slate-900">{approval.entity_data.emp_id || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Plant</span>
+                        <p className="font-medium text-slate-900">{approval.entity_data.plant || 'N/A'}</p>
+                      </div>
+                    </>
+                  )}
+                  {approval.entity_type === 'profile_edit' && approval.entity_data && (
+                    <div className="col-span-2">
+                      <span className="text-slate-500">Role</span>
+                      <p className="font-medium text-slate-900 capitalize">{approval.entity_data.user_role || 'N/A'}</p>
+                    </div>
+                  )}
                 </div>
+                {/* Profile edit: show requested changes */}
+                {approval.entity_type === 'profile_edit' && approval.entity_data?.requested_data && (
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">Requested Changes</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {Object.entries(approval.entity_data.requested_data).map(([key, val]) => (
+                        <div key={key}>
+                          <span className="text-slate-500 capitalize">{key.replace(/_/g, ' ')}</span>
+                          <p className="font-medium text-slate-900">
+                            <span className="line-through text-slate-400 mr-2">{approval.entity_data.current_data?.[key] || '—'}</span>
+                            → {val}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Attached Documents */}
                 {approval.documents && approval.documents.length > 0 && (
@@ -398,15 +486,22 @@ const ApprovalQueue = () => {
           </Card>
         ))}
 
-        {!initialLoading && approvals.length === 0 && (
+        {!initialLoading && approvals
+          .filter(a => typeFilter === 'all' || a.entity_type === typeFilter)
+          .filter(a => statusFilter === 'all' || a.status === statusFilter)
+          .length === 0 && (
           <Card className="border-slate-200">
             <CardContent className="py-12 text-center text-slate-500">
               <CheckCircle className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-              <p className="font-medium">No pending approvals</p>
+              <p className="font-medium">No approvals found</p>
               <p className="text-sm mt-1">
-                {isReviewer && 'No items waiting for your review'}
-                {isApprover && 'No items waiting for your approval'}
-                {isAdmin && 'All items have been processed'}
+                {(typeFilter !== 'all' || statusFilter !== 'all') ? 'Try adjusting your filters' : (
+                  <>
+                    {isReviewer && 'No items waiting for your review'}
+                    {isApprover && 'No items waiting for your approval'}
+                    {isAdmin && 'All items have been processed'}
+                  </>
+                )}
               </p>
             </CardContent>
           </Card>

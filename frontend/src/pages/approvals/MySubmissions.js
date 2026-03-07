@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { 
-  Clock, CheckCircle, XCircle, RefreshCw, Truck, User, 
-  ArrowRight, FileText, Eye, AlertCircle
+  Clock, CheckCircle, XCircle, RefreshCw, Truck, User,
+  ArrowRight, FileText, Eye, AlertCircle, MessageSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
 import TruckLoader from '../../components/common/TruckLoader';
@@ -207,9 +207,14 @@ const MySubmissions = () => {
                 <div className="flex items-start justify-between">
                   {/* Left side - Entity info */}
                   <div className="flex items-start space-x-4">
-                    <div className={`p-3 rounded-lg ${submission.entity_type === 'vehicle' ? 'bg-blue-100' : 'bg-purple-100'}`}>
+                    <div className={`p-3 rounded-lg ${
+                      submission.entity_type === 'vehicle' ? 'bg-blue-100' :
+                      submission.entity_type === 'profile_edit' ? 'bg-amber-100' : 'bg-purple-100'
+                    }`}>
                       {submission.entity_type === 'vehicle' ? (
                         <Truck className="h-6 w-6 text-blue-600" />
+                      ) : submission.entity_type === 'profile_edit' ? (
+                        <FileText className="h-6 w-6 text-amber-600" />
                       ) : (
                         <User className="h-6 w-6 text-purple-600" />
                       )}
@@ -217,8 +222,8 @@ const MySubmissions = () => {
                     <div>
                       <div className="flex items-center space-x-2">
                         <h3 className="text-lg font-semibold text-slate-900">
-                          {submission.entity_type === 'vehicle' ? 'Vehicle' : 'Driver'}: {' '}
-                          {submission.entity_data?.vehicle_no || submission.entity_data?.name || 'N/A'}
+                          {submission.entity_type === 'vehicle' ? 'Vehicle' : submission.entity_type === 'profile_edit' ? 'Profile Edit' : 'Driver'}:{' '}
+                          {submission.entity_data?.vehicle_no || submission.entity_data?.user_name || submission.entity_data?.name || 'N/A'}
                         </h3>
                         {!submission.entity_data && (
                           <span className="text-xs text-amber-600 flex items-center">
@@ -229,9 +234,11 @@ const MySubmissions = () => {
                       </div>
                       {submission.entity_data && (
                         <p className="text-sm text-slate-500 mt-1">
-                          {submission.entity_type === 'vehicle' 
+                          {submission.entity_type === 'vehicle'
                             ? `${submission.entity_data.make || ''} - ${submission.entity_data.owner_name || ''}`
-                            : `${submission.entity_data.emp_id || ''} - ${submission.entity_data.phone || ''}`
+                            : submission.entity_type === 'profile_edit'
+                              ? `Requested changes to profile`
+                              : `${submission.entity_data.emp_id || ''} - ${submission.entity_data.phone || ''}`
                           }
                         </p>
                       )}
@@ -325,8 +332,88 @@ const MySubmissions = () => {
                   </div>
                 </div>
 
+                {/* Profile Edit: Requested Changes */}
+                {submission.entity_type === 'profile_edit' && submission.entity_data?.requested_data && (
+                  <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">Requested Changes</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {Object.entries(submission.entity_data.requested_data).map(([key, val]) => (
+                        <div key={key}>
+                          <span className="text-slate-500 capitalize">{key.replace(/_/g, ' ')}</span>
+                          <p className="font-medium text-slate-900">
+                            <span className="line-through text-slate-400 mr-2">{submission.entity_data.current_data?.[key] || '—'}</span>
+                            → {val}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Comments / Feedback Section */}
+                {(submission.checker_comment || submission.approver_comment || (submission.admin_comments && submission.admin_comments.length > 0)) && (
+                  <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
+                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center">
+                      <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                      Review Comments
+                    </p>
+
+                    {/* Checker comment */}
+                    {submission.checker_comment && (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-blue-700">Reviewer</span>
+                          {submission.checker_action_at && (
+                            <span className="text-xs text-blue-500">{new Date(submission.checker_action_at).toLocaleString()}</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-blue-800">{submission.checker_comment}</p>
+                      </div>
+                    )}
+
+                    {/* Approver comment */}
+                    {submission.approver_comment && (
+                      <div className={`p-3 rounded-lg border ${
+                        submission.status === 'approved'
+                          ? 'bg-emerald-50 border-emerald-200'
+                          : 'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-xs font-semibold ${submission.status === 'approved' ? 'text-emerald-700' : 'text-red-700'}`}>
+                            Approver
+                          </span>
+                          {submission.approver_action_at && (
+                            <span className={`text-xs ${submission.status === 'approved' ? 'text-emerald-500' : 'text-red-500'}`}>
+                              {new Date(submission.approver_action_at).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-sm ${submission.status === 'approved' ? 'text-emerald-800' : 'text-red-800'}`}>
+                          {submission.approver_comment}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Admin comments */}
+                    {submission.admin_comments && submission.admin_comments.length > 0 && (
+                      <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <p className="text-xs font-semibold text-slate-600 mb-2">Admin Queries</p>
+                        {submission.admin_comments.map((c, i) => (
+                          <div key={i} className="text-sm text-slate-700 mb-1.5 flex items-start space-x-2">
+                            <MessageSquare className="h-3 w-3 mt-0.5 text-slate-400 flex-shrink-0" />
+                            <div>
+                              <span className="font-medium">{c.by_name}:</span> {c.comment}
+                              <span className="text-xs text-slate-400 ml-2">{new Date(c.created_at).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* View Button */}
-                {submission.entity_data && (
+                {submission.entity_data && submission.entity_type !== 'profile_edit' && (
                   <div className="mt-4 pt-4 border-t border-slate-200 flex justify-end">
                     <Button
                       variant="outline"

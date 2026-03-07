@@ -28,50 +28,64 @@ async def get_approval_queue(current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
 
     try:
-        if user_role in ["checker", "operational_manager"]:
-            approvals = await get_db().approvals.find({"status": "pending"}, {"_id": 0}).to_list(1000)
-        elif user_role == "approver":
-            approvals = await get_db().approvals.find({"status": "checked"}, {"_id": 0}).to_list(1000)
-        elif user_role in ["admin", "superuser"]:
+        if user_role in ["checker", "operational_manager", "approver", "admin", "superuser"]:
             approvals = await get_db().approvals.find({}, {"_id": 0}).to_list(1000)
         else:
             raise HTTPException(status_code=403, detail="Insufficient permissions")
 
+        # Batch: collect all IDs by type
+        db = get_db()
+        vehicle_ids, driver_ids, profile_edit_ids, submitter_ids = set(), set(), set(), set()
+        entity_keys = []  # (entity_type, entity_id) for doc lookup
+        for a in approvals:
+            eid = a.get("entity_id")
+            etype = a.get("entity_type")
+            if etype == "vehicle" and eid: vehicle_ids.add(eid)
+            elif etype == "driver" and eid: driver_ids.add(eid)
+            elif etype == "profile_edit" and eid: profile_edit_ids.add(eid)
+            if eid and etype: entity_keys.append((etype, eid))
+            if a.get("submitted_by"): submitter_ids.add(a["submitted_by"])
+
+        # Batch fetch entities
+        vehicles_map, drivers_map, edits_map, users_map = {}, {}, {}, {}
+        if vehicle_ids:
+            docs = await db.vehicles.find({"id": {"$in": list(vehicle_ids)}}, {"_id": 0}).to_list(1000)
+            vehicles_map = {d["id"]: d for d in docs}
+        if driver_ids:
+            docs = await db.drivers.find({"id": {"$in": list(driver_ids)}}, {"_id": 0}).to_list(1000)
+            drivers_map = {d["id"]: d for d in docs}
+        if profile_edit_ids:
+            docs = await db.profile_edits.find({"id": {"$in": list(profile_edit_ids)}}, {"_id": 0}).to_list(1000)
+            edits_map = {d["id"]: d for d in docs}
+        if submitter_ids:
+            docs = await db.users.find({"id": {"$in": list(submitter_ids)}}, {"_id": 0, "password_hash": 0}).to_list(1000)
+            users_map = {d["id"]: d for d in docs}
+
+        # Batch fetch documents
+        all_entity_ids = list(vehicle_ids | driver_ids | profile_edit_ids)
+        docs_map = {}
+        if all_entity_ids:
+            all_docs = await db.documents.find({"entity_id": {"$in": all_entity_ids}}, {"_id": 0}).to_list(5000)
+            for doc in all_docs:
+                key = (doc.get("entity_type"), doc.get("entity_id"))
+                docs_map.setdefault(key, []).append(doc)
+
+        # Build result
         result = []
         for approval in approvals:
-            try:
-                entity_data = None
-                if approval.get("entity_type") == "vehicle":
-                    entity_data = await get_db().vehicles.find_one({"id": approval["entity_id"]}, {"_id": 0})
-                elif approval.get("entity_type") == "driver":
-                    entity_data = await get_db().drivers.find_one({"id": approval["entity_id"]}, {"_id": 0})
-                elif approval.get("entity_type") == "profile_edit":
-                    entity_data = await get_db().profile_edits.find_one({"id": approval["entity_id"]}, {"_id": 0})
+            eid = approval.get("entity_id")
+            etype = approval.get("entity_type")
+            if etype == "vehicle": entity_data = vehicles_map.get(eid)
+            elif etype == "driver": entity_data = drivers_map.get(eid)
+            elif etype == "profile_edit": entity_data = edits_map.get(eid)
+            else: entity_data = None
 
-                submitter = None
-                if approval.get("submitted_by"):
-                    submitter = await get_db().users.find_one({"id": approval["submitted_by"]}, {"_id": 0, "password_hash": 0})
-
-                # Fetch uploaded documents for this entity
-                documents = await get_db().documents.find(
-                    {"entity_type": approval.get("entity_type"), "entity_id": approval.get("entity_id")},
-                    {"_id": 0}
-                ).to_list(50)
-
-                result.append({
-                    **approval,
-                    "entity_data": entity_data,
-                    "submitter": submitter,
-                    "documents": documents
-                })
-            except Exception as e:
-                logger.error(f"Error enriching approval {approval.get('id')}: {str(e)}")
-                result.append({
-                    **approval,
-                    "entity_data": None,
-                    "submitter": None,
-                    "documents": []
-                })
+            result.append({
+                **approval,
+                "entity_data": entity_data,
+                "submitter": users_map.get(approval.get("submitted_by")),
+                "documents": docs_map.get((etype, eid), [])
+            })
 
         return result
     except HTTPException:

@@ -82,6 +82,7 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
 
   useEffect(() => {
     if (isOpen && driverId) {
+      setIsEditing(false);
       fetchDriverDetails();
       fetchVehicles();
       fetchUploadedDocs();
@@ -171,32 +172,7 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
                 <p className="text-sm text-slate-500">Employee ID: {driver.emp_id}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <StatusBadge status={driver.status} />
-              {canEdit && !isEditing && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => setIsEditing(true)}
-                  data-testid="edit-driver-btn"
-                >
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-              )}
-              {isEditing && (
-                <>
-                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
-                    <X className="h-4 w-4 mr-1" />
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleSave} data-testid="save-driver-btn">
-                    <Save className="h-4 w-4 mr-1" />
-                    Save
-                  </Button>
-                </>
-              )}
-            </div>
+            <StatusBadge status={driver.status} />
           </div>
         </DialogHeader>
 
@@ -276,17 +252,10 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
               </div>
               <div>
                 <Label className="text-slate-500">Plant</Label>
-                {isEditing ? (
-                  <Input
-                    value={editData.plant || ''}
-                    onChange={(e) => setEditData({ ...editData, plant: e.target.value })}
-                  />
-                ) : (
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-1 text-slate-400" />
-                    <span className="font-medium text-slate-900">{driver.plant || 'Not Assigned'}</span>
-                  </div>
-                )}
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-1 text-slate-400" />
+                  <span className="font-medium text-slate-900">{driver.plant || 'Not Assigned'}</span>
+                </div>
               </div>
               <div>
                 <Label className="text-slate-500">DL Expiry Date</Label>
@@ -511,6 +480,28 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
         </Tabs>
 
         <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 mt-4">
+          {canEdit && !isEditing && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              data-testid="edit-driver-btn"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          )}
+          {isEditing && (
+            <>
+              <Button variant="outline" onClick={() => { setIsEditing(false); setEditData(driver); }}>
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+              <Button onClick={handleSave} className="bg-slate-900 hover:bg-slate-800" data-testid="save-driver-btn">
+                <Save className="h-4 w-4 mr-1" />
+                Save
+              </Button>
+            </>
+          )}
           <Button variant="outline" onClick={onClose} data-testid="close-modal-btn">
             Close
           </Button>

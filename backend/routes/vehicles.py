@@ -66,7 +66,9 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depen
 
     vehicle = Vehicle(**vehicle_data.model_dump())
     vehicle.submitted_by = current_user["sub"]
-    vehicle.status = "pending"
+    # Admin/superuser bypass approval - directly active
+    is_admin = user_role in ["admin", "superuser"]
+    vehicle.status = "active" if is_admin else "pending"
     
     vehicle_doc = vehicle.model_dump()
     vehicle_doc["created_at"] = vehicle_doc["created_at"].isoformat()
@@ -80,13 +82,15 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depen
     
     await get_db().vehicles.insert_one(vehicle_doc)
     
-    from models.approval import Approval
-    approval = Approval(entity_type="vehicle", entity_id=vehicle.id, submitted_by=current_user["sub"])
-    approval_doc = approval.model_dump()
-    approval_doc["created_at"] = approval_doc["created_at"].isoformat()
-    approval_doc["updated_at"] = approval_doc["updated_at"].isoformat()
-    await get_db().approvals.insert_one(approval_doc)
-    
+    # Only create approval record for non-admin users
+    if not is_admin:
+        from models.approval import Approval
+        approval = Approval(entity_type="vehicle", entity_id=vehicle.id, submitted_by=current_user["sub"])
+        approval_doc = approval.model_dump()
+        approval_doc["created_at"] = approval_doc["created_at"].isoformat()
+        approval_doc["updated_at"] = approval_doc["updated_at"].isoformat()
+        await get_db().approvals.insert_one(approval_doc)
+
     return vehicle
 
 @router.put("/{identifier}")
@@ -252,7 +256,26 @@ async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depend
     # Always set plant (even if None, to clear old value)
     update_data["plant"] = new_plant or None
 
-    await get_db().vehicles.update_one({"id": vehicle["id"]}, {"$set": update_data})
+    # Record shift history entry
+    shift_entry = {
+        "date": datetime.now().isoformat(),
+        "old_vehicle_no": old_vehicle_no,
+        "new_vehicle_no": new_vehicle_no,
+        "old_tender": old_tender_name,
+        "new_tender": new_tender_name,
+        "old_plant": vehicle.get("plant"),
+        "new_plant": new_plant,
+        "noc_applied": bool(body.get("noc_applied")),
+        "noc_obtained": bool(body.get("noc_obtained")),
+        "loe_obtained": bool(body.get("loe_obtained")),
+        "shifted_by": current_user.get("sub"),
+        "shifted_by_name": current_user.get("name", "Unknown"),
+    }
+
+    await get_db().vehicles.update_one(
+        {"id": vehicle["id"]},
+        {"$set": update_data, "$push": {"shift_history": shift_entry}}
+    )
 
     # 1. Remove old vehicle_no from old tender's assigned_vehicles
     if old_tender_name:

@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button';
 import {
   Truck, User, Phone, Eye,
   CheckCircle, Clock, AlertTriangle,
-  RefreshCw, Menu, X, UserCircle, Users, Building
+  RefreshCw, Menu, X, UserCircle, Users, Building, MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
@@ -90,6 +90,7 @@ const PlantInchargePortal = () => {
 
   const sidebarItems = [
     { id: 'plant', name: 'My Plant', icon: Building },
+    ...(plantData?.plants?.length > 1 ? [{ id: 'plants', name: 'Plants', icon: MapPin }] : []),
     { id: 'vehicles', name: 'Vehicles', icon: Truck },
     { id: 'drivers', name: 'Drivers', icon: Users },
   ];
@@ -357,6 +358,92 @@ const PlantInchargePortal = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </>
+            )}
+
+            {/* ========== PLANTS SECTION (multi-plant only) ========== */}
+            {activeSection === 'plants' && plantData?.plants?.length > 1 && (
+              <>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    My Plants ({plantData.plants.length})
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {plantData.plants.map((p) => (
+                    <Card key={p.id || p.plant_name} className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="bg-blue-100 p-2 rounded-lg">
+                              <Building className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-base">{p.plant_name}</CardTitle>
+                              <p className="text-xs text-slate-500">{p.plant_type || 'N/A'}</p>
+                            </div>
+                          </div>
+                          <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                            p.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {p.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {/* Location */}
+                        <div className="flex items-center space-x-2 text-sm text-slate-600">
+                          <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                          <span>{[p.city, p.state].filter(Boolean).join(', ') || 'Location not set'}</span>
+                        </div>
+
+                        {/* Contact */}
+                        {(p.contact_phone || p.contact_email) && (
+                          <div className="space-y-1">
+                            {p.contact_phone && (
+                              <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                <Phone className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                <span>{p.contact_phone}</span>
+                              </div>
+                            )}
+                            {p.contact_email && (
+                              <div className="text-sm text-slate-600 pl-6">{p.contact_email}</div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                          <div
+                            className="p-2 bg-emerald-50 rounded-lg cursor-pointer hover:bg-emerald-100 transition-colors"
+                            onClick={() => { setPlantFilter(p.plant_name); setActiveSection('vehicles'); }}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Truck className="h-4 w-4 text-emerald-600" />
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase">Vehicles</p>
+                                <p className="text-lg font-bold text-emerald-700">{p.vehicle_count || 0}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className="p-2 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors"
+                            onClick={() => { setPlantFilter(p.plant_name); setActiveSection('drivers'); }}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Users className="h-4 w-4 text-purple-600" />
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase">Drivers</p>
+                                <p className="text-lg font-bold text-purple-700">{p.driver_count || 0}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </>
             )}
 

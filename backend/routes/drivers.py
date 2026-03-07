@@ -102,8 +102,11 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
     
     driver = Driver(**driver_data.model_dump())
     driver.submitted_by = current_user["sub"]
-    driver.status = "pending"
-    
+
+    # Admin/superuser bypass approval — directly active
+    is_admin = user_role in ["admin", "superuser"]
+    driver.status = "active" if is_admin else "pending"
+
     driver_doc = driver.model_dump()
     driver_doc["created_at"] = driver_doc["created_at"].isoformat()
     driver_doc["updated_at"] = driver_doc["updated_at"].isoformat()
@@ -111,7 +114,7 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
         driver_doc["dl_expiry"] = driver_doc["dl_expiry"].isoformat()
     if driver_doc.get("hazardous_cert_expiry"):
         driver_doc["hazardous_cert_expiry"] = driver_doc["hazardous_cert_expiry"].isoformat()
-    
+
     await get_db().drivers.insert_one(driver_doc)
 
     # Auto-create user account for the driver
@@ -140,17 +143,19 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
     except Exception as e:
         logger.error(f"Failed to auto-create user for driver {driver_data.name}: {e}")
 
-    from models.approval import Approval
-    approval = Approval(entity_type="driver", entity_id=driver.id, submitted_by=current_user["sub"])
-    approval_doc = approval.model_dump()
-    approval_doc["created_at"] = approval_doc["created_at"].isoformat()
-    approval_doc["updated_at"] = approval_doc["updated_at"].isoformat()
-    await get_db().approvals.insert_one(approval_doc)
+    # Only create approval record for non-admin users
+    if not is_admin:
+        from models.approval import Approval
+        approval = Approval(entity_type="driver", entity_id=driver.id, submitted_by=current_user["sub"])
+        approval_doc = approval.model_dump()
+        approval_doc["created_at"] = approval_doc["created_at"].isoformat()
+        approval_doc["updated_at"] = approval_doc["updated_at"].isoformat()
+        await get_db().approvals.insert_one(approval_doc)
 
     return driver
 
 @router.put("/{driver_id}")
-async def update_driver(driver_id: str, driver_data: DriverCreate, current_user: dict = Depends(get_current_user)):
+async def update_driver(driver_id: str, driver_data: dict, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
     if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
@@ -159,15 +164,20 @@ async def update_driver(driver_id: str, driver_data: DriverCreate, current_user:
     if not existing:
         raise HTTPException(status_code=404, detail="Driver not found")
     
-    update_data = driver_data.model_dump()
+    allowed = {"name", "emp_id", "phone", "alternate_phone", "email", "dl_no",
+               "dl_expiry", "hazardous_cert_expiry", "plant", "allocated_vehicle", "status"}
+    update_data = {k: v for k, v in driver_data.items() if k in allowed}
     update_data["updated_at"] = datetime.now().isoformat()
-    if update_data.get("dl_expiry"):
-        update_data["dl_expiry"] = update_data["dl_expiry"].isoformat()
-    if update_data.get("hazardous_cert_expiry"):
-        update_data["hazardous_cert_expiry"] = update_data["hazardous_cert_expiry"].isoformat()
     
     await get_db().drivers.update_one({"id": driver_id}, {"$set": update_data})
     
+    # Sync status to driver user account
+    if "status" in update_data and existing.get("emp_id"):
+        await get_db().users.update_one(
+            {"emp_id": existing["emp_id"], "role": "driver"},
+            {"$set": {"status": update_data["status"]}}
+        )
+
     updated_driver = await get_db().drivers.find_one({"id": driver_id}, {"_id": 0})
     return updated_driver
 

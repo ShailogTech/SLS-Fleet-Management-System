@@ -96,11 +96,25 @@ const TenderManagement = () => {
     setFilteredTenders(filtered);
   }, [searchTerm, statusFilter, tenders]);
 
+  const getEffectiveStatus = (tender) => {
+    const effectiveEnd = tender.extension_end_date || tender.contract_validity || tender.end_date;
+    if (effectiveEnd) {
+      const end = new Date(effectiveEnd);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (end < today) return 'expired';
+    }
+    return tender.status;
+  };
+
   const fetchTenders = async () => {
     try {
       const response = await api.get('/tenders');
-      setTenders(response.data);
-      setFilteredTenders(response.data);
+      const enriched = response.data.map(t => ({
+        ...t,
+        status: getEffectiveStatus(t),
+      }));
+      setTenders(enriched);
     } catch (error) {
       toast.error('Failed to load tenders');
     } finally {

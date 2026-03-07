@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   Truck, User, FileText, Calendar, MapPin, Edit2, Save, X,
-  AlertTriangle, CheckCircle, Clock, UserPlus, Eye, Upload
+  AlertTriangle, CheckCircle, Clock, UserPlus, Eye, Upload, ArrowRightLeft
 } from 'lucide-react';
 
 const VEHICLE_TYPES = [
@@ -551,11 +551,80 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
           </TabsContent>
 
           <TabsContent value="history" className="pt-4">
-            <div className="text-center py-8 text-slate-500">
-              <Clock className="h-12 w-12 mx-auto mb-2 text-slate-300" />
-              <p>Vehicle history will be displayed here</p>
-              <p className="text-sm mt-1">Assignment changes, maintenance records, trips</p>
-            </div>
+            {vehicle.shift_history && vehicle.shift_history.length > 0 ? (
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+                  Shift History ({vehicle.shift_history.length})
+                </p>
+                {[...vehicle.shift_history].reverse().map((entry, idx) => (
+                  <div key={idx} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-bold text-slate-900">
+                          {entry.old_vehicle_no} → {entry.new_vehicle_no}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        {new Date(entry.date).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                      {entry.old_plant !== entry.new_plant && (
+                        <div>
+                          <p className="text-[10px] text-slate-500 uppercase">Plant</p>
+                          <p className="text-slate-700">
+                            <span className="text-slate-400">{entry.old_plant || '—'}</span>
+                            {' → '}
+                            <span className="font-medium">{entry.new_plant || '—'}</span>
+                          </p>
+                        </div>
+                      )}
+                      {entry.old_tender !== entry.new_tender && (
+                        <div>
+                          <p className="text-[10px] text-slate-500 uppercase">Tender</p>
+                          <p className="text-slate-700">
+                            <span className="text-slate-400">{entry.old_tender || '—'}</span>
+                            {' → '}
+                            <span className="font-medium">{entry.new_tender || '—'}</span>
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase">Shifted By</p>
+                        <p className="font-medium text-slate-700">{entry.shifted_by_name || 'Unknown'}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-slate-200">
+                      {entry.noc_applied && (
+                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 text-blue-700">
+                          NOC Applied
+                        </span>
+                      )}
+                      {entry.noc_obtained && (
+                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700">
+                          NOC Obtained
+                        </span>
+                      )}
+                      {entry.loe_obtained && (
+                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700">
+                          LOE Obtained
+                        </span>
+                      )}
+                      {!entry.noc_applied && !entry.noc_obtained && !entry.loe_obtained && (
+                        <span className="text-[10px] text-slate-400">No NOC/LOE flags</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-500">
+                <Clock className="h-12 w-12 mx-auto mb-2 text-slate-300" />
+                <p>No shift history recorded</p>
+                <p className="text-sm mt-1">Shift/renumber events will appear here</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
