@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Plus, MapPin, Building, Phone, ArrowLeft, Truck, Eye, User, Users, Edit2, Check, X, Trash2 } from 'lucide-react';
+import { Plus, MapPin, Building, Phone, ArrowLeft, Truck, Eye, User, Users, Edit2, Check, X, Trash2, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import TruckLoader from '../../components/common/TruckLoader';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
@@ -40,6 +40,8 @@ const PlantList = () => {
   const [inchargeUsers, setInchargeUsers] = useState([]);
   const [selectedInchargeId, setSelectedInchargeId] = useState('');
   const [savingIncharge, setSavingIncharge] = useState(false);
+  const [addingVehicle, setAddingVehicle] = useState(false);
+  const [unassignedVehicles, setUnassignedVehicles] = useState([]);
 
   useEffect(() => {
     fetchPlants();
@@ -107,6 +109,8 @@ const PlantList = () => {
     setPlantDrivers([]);
     setEditingIncharge(false);
     setSelectedInchargeId('');
+    setAddingVehicle(false);
+    setUnassignedVehicles([]);
   };
 
   const handleStartEditIncharge = async () => {
@@ -147,6 +151,30 @@ const PlantList = () => {
       toast.error(error.response?.data?.detail || 'Failed to update incharge');
     } finally {
       setSavingIncharge(false);
+    }
+  };
+
+  const handleStartAddVehicle = async () => {
+    try {
+      const res = await api.get('/vehicles');
+      setUnassignedVehicles(res.data.filter(v => !v.plant));
+    } catch { /* ignore */ }
+    setAddingVehicle(true);
+  };
+
+  const handleAssignVehicle = async (vehicleId) => {
+    if (!viewPlantData) return;
+    try {
+      await api.post(`/plants/${viewPlantData.id}/assign-vehicles`, {
+        vehicle_ids: [vehicleId],
+      });
+      toast.success('Vehicle assigned to plant');
+      setAddingVehicle(false);
+      setUnassignedVehicles([]);
+      handleViewPlant(viewPlantData);
+      fetchStats();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to assign vehicle');
     }
   };
 
@@ -431,13 +459,56 @@ const PlantList = () => {
 
               {/* Vehicles */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
-                  <Truck className="h-4 w-4 mr-2" />
-                  Vehicles ({plantVehicles.length})
-                </h3>
-                {plantVehicles.length === 0 ? (
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center">
+                    <Truck className="h-4 w-4 mr-2" />
+                    Vehicles ({plantVehicles.length})
+                  </h3>
+                  {canCreate && !addingVehicle && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 h-7 px-2"
+                      onClick={handleStartAddVehicle}
+                    >
+                      <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                      Add Vehicle
+                    </Button>
+                  )}
+                </div>
+
+                {addingVehicle && (
+                  <div className="flex items-center gap-2 mb-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="flex-1">
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value) handleAssignVehicle(e.target.value);
+                        }}
+                        className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <option value="">Select an unassigned vehicle...</option>
+                        {unassignedVehicles.map(v => (
+                          <option key={v.id} value={v.id}>
+                            {v.vehicle_no} {v.make ? `— ${v.make}` : ''} {v.capacity ? `| ${v.capacity}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-9 w-9 shrink-0"
+                      onClick={() => { setAddingVehicle(false); setUnassignedVehicles([]); }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {plantVehicles.length === 0 && !addingVehicle ? (
                   <p className="text-sm text-slate-400 italic">No vehicles at this plant</p>
-                ) : (
+                ) : null}
+                {plantVehicles.length > 0 && (
                   <div className="space-y-2">
                     {plantVehicles.map((veh) => (
                       <div

@@ -102,6 +102,40 @@ async def delete_plant(plant_id: str, current_user: dict = Depends(get_current_u
     await db.plants.delete_one({"id": plant_id})
     return {"message": "Plant deleted successfully"}
 
+@router.post("/{plant_id}/assign-vehicles")
+async def assign_vehicles_to_plant(plant_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Assign one or more vehicles to a plant by setting their plant field."""
+    db = get_db()
+    user_role = current_user.get("role")
+    if user_role not in ["admin", "superuser"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    plant = await db.plants.find_one({"id": plant_id}, {"_id": 0})
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    vehicle_ids = body.get("vehicle_ids", [])
+    if not vehicle_ids:
+        raise HTTPException(status_code=400, detail="No vehicles provided")
+
+    plant_name = plant["plant_name"]
+    result = await db.vehicles.update_many(
+        {"id": {"$in": vehicle_ids}},
+        {"$set": {"plant": plant_name, "updated_at": datetime.now().isoformat()}}
+    )
+
+    # Also sync drivers assigned to these vehicles
+    vehicles = await db.vehicles.find({"id": {"$in": vehicle_ids}}, {"_id": 0, "assigned_driver_id": 1}).to_list(1000)
+    driver_ids = [v["assigned_driver_id"] for v in vehicles if v.get("assigned_driver_id")]
+    if driver_ids:
+        await db.drivers.update_many(
+            {"id": {"$in": driver_ids}},
+            {"$set": {"plant": plant_name, "updated_at": datetime.now().isoformat()}}
+        )
+
+    return {"message": f"{result.modified_count} vehicle(s) assigned to {plant_name}"}
+
+
 @router.get("/stats/vehicles")
 async def get_plant_vehicle_stats(current_user: dict = Depends(get_current_user)):
     db = get_db()

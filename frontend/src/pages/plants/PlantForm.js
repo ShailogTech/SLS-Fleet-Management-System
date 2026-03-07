@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Building, Save } from 'lucide-react';
+import { ArrowLeft, Building, Save, Truck, X } from 'lucide-react';
 
 const PLANT_TYPES = ['HPCL', 'IOCL', 'BPCL'];
 
@@ -14,6 +14,8 @@ const PlantForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [inchargeUsers, setInchargeUsers] = useState([]);
+  const [allVehicles, setAllVehicles] = useState([]);
+  const [selectedVehicleIds, setSelectedVehicleIds] = useState([]);
   const [formData, setFormData] = useState({
     plant_name: '',
     plant_type: '',
@@ -25,16 +27,19 @@ const PlantForm = () => {
   });
 
   useEffect(() => {
-    const fetchInchargeUsers = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get('/users');
-        const available = res.data.filter(
+        const [usersRes, vehiclesRes] = await Promise.all([
+          api.get('/users'),
+          api.get('/vehicles'),
+        ]);
+        setInchargeUsers(usersRes.data.filter(
           u => u.role === 'plant_incharge' && u.status === 'active'
-        );
-        setInchargeUsers(available);
+        ));
+        setAllVehicles(vehiclesRes.data.filter(v => !v.plant));
       } catch { /* ignore */ }
     };
-    fetchInchargeUsers();
+    fetchData();
   }, []);
 
   const handleChange = (field, value) => {
@@ -56,7 +61,17 @@ const PlantForm = () => {
       if (!payload.contact_email) delete payload.contact_email;
       if (!payload.plant_incharge_id) delete payload.plant_incharge_id;
 
-      await api.post('/plants', payload);
+      const plantRes = await api.post('/plants', payload);
+      // Assign selected vehicles to this plant
+      if (selectedVehicleIds.length > 0 && plantRes.data?.id) {
+        try {
+          await api.post(`/plants/${plantRes.data.id}/assign-vehicles`, {
+            vehicle_ids: selectedVehicleIds,
+          });
+        } catch {
+          toast.error('Plant created but failed to assign some vehicles');
+        }
+      }
       toast.success('Plant created successfully');
       navigate('/plants');
     } catch (error) {
@@ -174,6 +189,57 @@ const PlantForm = () => {
                   ))}
                 </select>
               </div>
+            </div>
+
+            {/* Assign Vehicles */}
+            <div className="space-y-2 pt-2">
+              <Label className="flex items-center">
+                <Truck className="h-4 w-4 mr-2 text-slate-500" />
+                Assign Vehicles (unassigned only)
+              </Label>
+              <select
+                onChange={(e) => {
+                  const id = e.target.value;
+                  if (id && !selectedVehicleIds.includes(id)) {
+                    setSelectedVehicleIds(prev => [...prev, id]);
+                  }
+                  e.target.value = '';
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Select vehicles to add...</option>
+                {allVehicles
+                  .filter(v => !selectedVehicleIds.includes(v.id))
+                  .map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.vehicle_no} {v.make ? `— ${v.make}` : ''} {v.capacity ? `| ${v.capacity}` : ''}
+                    </option>
+                  ))
+                }
+              </select>
+              {selectedVehicleIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedVehicleIds.map(id => {
+                    const v = allVehicles.find(veh => veh.id === id);
+                    return (
+                      <span
+                        key={id}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"
+                      >
+                        <Truck className="h-3 w-3" />
+                        {v?.vehicle_no || id}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedVehicleIds(prev => prev.filter(vid => vid !== id))}
+                          className="ml-0.5 hover:text-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t">
