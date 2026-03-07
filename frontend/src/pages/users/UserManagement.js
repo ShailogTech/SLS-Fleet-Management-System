@@ -131,6 +131,17 @@ const UserManagement = () => {
     }
   };
 
+  const handleDelete = async (user) => {
+    if (!window.confirm(`Are you sure you want to delete "${user.name}"? This action cannot be undone.`)) return;
+    try {
+      await api.delete(`/users/${user.id}`);
+      toast.success('User deleted successfully');
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete user');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       email: '',
@@ -344,6 +355,15 @@ const UserManagement = () => {
                           data-testid={`toggle-user-${user.id}`}
                         >
                           {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDelete(user)}
+                          data-testid={`delete-user-${user.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>

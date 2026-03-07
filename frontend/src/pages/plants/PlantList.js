@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Plus, MapPin, Building, Phone, ArrowLeft, Truck, Eye, User, Users, Edit2, Check, X } from 'lucide-react';
+import { Plus, MapPin, Building, Phone, ArrowLeft, Truck, Eye, User, Users, Edit2, Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import TruckLoader from '../../components/common/TruckLoader';
 import VehicleDetailModal from '../../components/modals/VehicleDetailModal';
@@ -147,6 +147,19 @@ const PlantList = () => {
       toast.error(error.response?.data?.detail || 'Failed to update incharge');
     } finally {
       setSavingIncharge(false);
+    }
+  };
+
+  const handleDeletePlant = async (e, plant) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete "${plant.plant_name}"?`)) return;
+    try {
+      await api.delete(`/plants/${plant.id}`);
+      toast.success('Plant deleted successfully');
+      fetchPlants();
+      fetchStats();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete plant');
     }
   };
 
@@ -298,15 +311,27 @@ const PlantList = () => {
                       </div>
                     </div>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full mt-3"
-                      onClick={() => handleViewPlant(plant)}
-                    >
-                      <Eye className="h-4 w-4 mr-1.5" />
-                      View Vehicles & Drivers
-                    </Button>
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleViewPlant(plant)}
+                      >
+                        <Eye className="h-4 w-4 mr-1.5" />
+                        View Vehicles & Drivers
+                      </Button>
+                      {canCreate && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                          onClick={(e) => handleDeletePlant(e, plant)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
