@@ -309,7 +309,7 @@ const UserProfile = () => {
                 </div>
                 <div>
                   <Label>Phone</Label>
-                  <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} data-testid="edit-phone-input" />
+                  <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value.replace(/[^0-9]/g, '') }))} maxLength={10} data-testid="edit-phone-input" />
                 </div>
                 <div>
                   <Label>Employee ID</Label>

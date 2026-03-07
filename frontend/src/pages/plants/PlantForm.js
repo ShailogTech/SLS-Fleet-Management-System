@@ -144,7 +144,8 @@ const PlantForm = () => {
                 <Input
                   id="contact_phone"
                   value={formData.contact_phone}
-                  onChange={(e) => handleChange('contact_phone', e.target.value)}
+                  onChange={(e) => handleChange('contact_phone', e.target.value.replace(/[^0-9]/g, ''))}
+                  maxLength={10}
                   placeholder="Enter phone number"
                 />
               </div>

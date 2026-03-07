@@ -212,7 +212,8 @@ const UserManagement = () => {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9]/g, '') })}
+                    maxLength={10}
                     required
                     data-testid="user-phone-input"
                   />

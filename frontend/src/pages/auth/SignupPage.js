@@ -253,7 +253,7 @@ const SignupPage = () => {
                     name="signup-phone-field"
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => handleChange({ target: { name: 'phone', value: e.target.value } })}
+                    onChange={(e) => handleChange({ target: { name: 'phone', value: e.target.value.replace(/[^0-9]/g, '') } })}
                     required
                     placeholder="Enter your phone number"
                     autoComplete="new-password"
