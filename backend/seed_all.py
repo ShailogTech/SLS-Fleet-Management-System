@@ -520,16 +520,20 @@ def main():
     #  Insert into MongoDB (clears ALL collections first)
     # ═══════════════════════════════════════════════════════
     print("\nClearing all collections...")
-    for coll in ["vehicles", "drivers", "users", "plants", "tenders", "approvals", "documents", "profile_edits", "signup_requests", "photos"]:
+    for coll in ["vehicles", "drivers", "users", "plants", "tenders", "approvals", "documents", "profile_edits", "signup_requests", "photos", "stoppages", "personal_vehicles"]:
         db[coll].delete_many({})
         print(f"  Cleared {coll}")
 
-    # Drop unique index on engine_no (CSV has duplicates)
-    try:
-        db.vehicles.drop_index("engine_no_1")
-        print("  Dropped engine_no unique index")
-    except Exception:
-        pass
+    # Drop ALL custom indexes to avoid Atlas conflicts on re-seed
+    for coll_name in ["vehicles", "drivers", "users", "plants", "tenders", "documents"]:
+        try:
+            indexes = db[coll_name].index_information()
+            for idx_name in list(indexes.keys()):
+                if idx_name != "_id_":
+                    db[coll_name].drop_index(idx_name)
+                    print(f"  Dropped index {idx_name} on {coll_name}")
+        except Exception as e:
+            print(f"  (index cleanup on {coll_name}: {e})")
 
     # Insert role-based users first
     db.users.insert_many(role_user_docs)
@@ -565,12 +569,25 @@ def main():
         db.documents.insert_many(documents)
     print(f"  Inserted {len(documents)} documents")
 
+    # Re-create indexes that the app expects
+    print("\n  Recreating indexes...")
+    try:
+        db.vehicles.create_index("engine_no", unique=True, sparse=True)
+        print("    Created engine_no unique sparse index on vehicles")
+    except Exception as e:
+        print(f"    engine_no index: {e}")
+    try:
+        db.documents.create_index([("entity_type", 1), ("entity_id", 1)])
+        print("    Created entity_type+entity_id index on documents")
+    except Exception as e:
+        print(f"    documents index: {e}")
+
     # ═══════════════════════════════════════════════════════
     #  Verify
     # ═══════════════════════════════════════════════════════
     print(f"\n{'='*50}")
     print(f"  FINAL DB COUNTS:")
-    for coll in ["vehicles", "drivers", "users", "plants", "tenders", "approvals", "documents", "profile_edits", "signup_requests", "photos"]:
+    for coll in ["vehicles", "drivers", "users", "plants", "tenders", "approvals", "documents", "profile_edits", "signup_requests", "photos", "stoppages", "personal_vehicles"]:
         count = db[coll].count_documents({})
         print(f"  {coll:20s} {count}")
     print(f"{'='*50}")
