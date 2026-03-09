@@ -93,7 +93,9 @@ frontend/node_modules/.cache/default-development/0.pack
 plan.md
 
 # Test case spreadsheets
-SLS_Fleet_Test_Cases.xlsx
+SLT_Fleet_Test_Cases.xlsx
+phase 1 text case .xlsx
+conversation-2026-02-25-143122.txt
 
 # Claude memory
 .claude/
