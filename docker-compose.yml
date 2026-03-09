@@ -6,4 +6,7 @@ services:
       - "127.0.0.1:8000:8000"
     env_file:
       - ./backend/.env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: unless-stopped
