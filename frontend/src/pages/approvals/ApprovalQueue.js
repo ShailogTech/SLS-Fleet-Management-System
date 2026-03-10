@@ -123,20 +123,20 @@ const ApprovalQueue = () => {
   return (
     <div className="space-y-6" data-testid="approval-queue-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Approval Queue
           </h1>
-          <p className="text-slate-600 mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
             {isAdmin && 'Monitoring approval workflow (read-only)'}
             {isChecker && 'Review and verify submitted applications'}
             {isOperationalManager && 'Review and verify submitted applications'}
             {isApprover && 'Review checked applications for final approval'}
           </p>
         </div>
-        <Button variant="outline" onClick={() => fetchApprovals(false)} data-testid="refresh-btn">
-          <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+        <Button variant="outline" size="sm" onClick={() => fetchApprovals(false)} data-testid="refresh-btn">
+          <RefreshCw className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 
@@ -218,7 +218,7 @@ const ApprovalQueue = () => {
           .map((approval) => (
           <Card key={approval.id} className="border-slate-200" data-testid={`approval-card-${approval.id}`}>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
                   <div className={`p-2 rounded-lg ${
                     approval.entity_type === 'vehicle' ? 'bg-blue-100' :
@@ -381,23 +381,24 @@ const ApprovalQueue = () => {
                       className="text-sm"
                       data-testid={`checker-comment-${approval.id}`}
                     />
-                    <div className="flex space-x-3">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                       <Button
                         onClick={() => handleCheck(approval.id, 'approve', commentText[approval.id])}
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
                         disabled={processing === approval.id}
                         data-testid={`check-approve-${approval.id}`}
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        {processing === approval.id ? 'Processing...' : 'Verify & Forward to Approver'}
+                        <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                        {processing === approval.id ? 'Processing...' : 'Verify & Forward'}
                       </Button>
                       <Button
                         onClick={() => handleCheck(approval.id, 'reject', commentText[approval.id])}
                         variant="destructive"
+                        className="text-xs sm:text-sm"
                         disabled={processing === approval.id}
                         data-testid={`check-reject-${approval.id}`}
                       >
-                        <XCircle className="h-4 w-4 mr-2" />
+                        <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
                         Return to Maker
                       </Button>
                     </div>
@@ -414,23 +415,24 @@ const ApprovalQueue = () => {
                       className="text-sm"
                       data-testid={`approver-comment-${approval.id}`}
                     />
-                    <div className="flex space-x-3">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                       <Button
                         onClick={() => handleApprove(approval.id, 'approve', commentText[approval.id])}
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
                         disabled={processing === approval.id}
                         data-testid={`final-approve-${approval.id}`}
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        {processing === approval.id ? 'Processing...' : 'Final Approve & Publish'}
+                        <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                        {processing === approval.id ? 'Processing...' : 'Approve & Publish'}
                       </Button>
                       <Button
                         onClick={() => handleApprove(approval.id, 'reject', commentText[approval.id])}
                         variant="destructive"
+                        className="text-xs sm:text-sm"
                         disabled={processing === approval.id}
                         data-testid={`final-reject-${approval.id}`}
                       >
-                        <XCircle className="h-4 w-4 mr-2" />
+                        <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
                         Reject
                       </Button>
                     </div>

@@ -216,18 +216,18 @@ const PlantList = () => {
 
   return (
     <div className="space-y-6" data-testid="plant-list-page">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           {selectedType && (
             <Button variant="ghost" onClick={() => setSelectedType(null)} className="p-2">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
               {selectedType ? `${selectedType} Plants` : 'Plants & Locations'}
             </h1>
-            <p className="text-slate-600 mt-1">
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
               {selectedType
                 ? `${filteredPlants.length} plant${filteredPlants.length !== 1 ? 's' : ''} under ${selectedType}`
                 : 'Manage plant locations across operations'}
@@ -236,9 +236,9 @@ const PlantList = () => {
         </div>
         {canCreate && (
           <Link to="/plants/new">
-            <Button className="bg-slate-900 hover:bg-slate-800" data-testid="add-plant-btn">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Plant
+            <Button size="sm" className="bg-slate-900 hover:bg-slate-800" data-testid="add-plant-btn">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Plant</span>
             </Button>
           </Link>
         )}

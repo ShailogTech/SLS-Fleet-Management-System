@@ -42,16 +42,16 @@ const Reports = () => {
   return (
     <div className="space-y-6" data-testid="reports-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Reports & Analytics
           </h1>
-          <p className="text-slate-600 mt-1">Generate and view fleet performance reports</p>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">Generate and view fleet performance reports</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Select value={reportType} onValueChange={setReportType}>
-            <SelectTrigger className="w-[180px]" data-testid="report-type-select">
+            <SelectTrigger className="w-[140px] sm:w-[180px]" data-testid="report-type-select">
               <SelectValue placeholder="Report Type" />
             </SelectTrigger>
             <SelectContent>
@@ -61,9 +61,9 @@ const Reports = () => {
               <SelectItem value="documents">Document Status</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={generateReport} className="bg-slate-900 hover:bg-slate-800" data-testid="generate-report-btn">
-            <Download className="h-4 w-4 mr-2" />
-            Generate Report
+          <Button size="sm" onClick={generateReport} className="bg-slate-900 hover:bg-slate-800" data-testid="generate-report-btn">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Generate Report</span>
           </Button>
         </div>
       </div>

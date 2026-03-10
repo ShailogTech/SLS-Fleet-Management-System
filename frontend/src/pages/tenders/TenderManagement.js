@@ -409,22 +409,22 @@ const TenderManagement = () => {
   return (
     <div className="space-y-6" data-testid="tender-management-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Tender & Contract Management
           </h1>
-          <p className="text-slate-600 mt-1">Manage tenders, contracts, and vehicle assignments</p>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">Manage tenders, contracts, and vehicle assignments</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={fetchTenders} data-testid="refresh-btn">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <Button variant="outline" size="sm" onClick={fetchTenders} data-testid="refresh-btn">
+            <RefreshCw className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           {canCreate && (
-            <Button onClick={openNewTenderModal} className="bg-slate-900 hover:bg-slate-800" data-testid="add-tender-btn">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Tender
+            <Button size="sm" onClick={openNewTenderModal} className="bg-slate-900 hover:bg-slate-800" data-testid="add-tender-btn">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Tender</span>
             </Button>
           )}
         </div>
@@ -494,7 +494,7 @@ const TenderManagement = () => {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px]" data-testid="status-filter">
+          <SelectTrigger className="w-full sm:w-[140px]" data-testid="status-filter">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -648,7 +648,7 @@ const TenderManagement = () => {
               </TabsList>
               
               <TabsContent value="basic" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="tender_name">Tender Name *</Label>
                     <Input
@@ -763,7 +763,7 @@ const TenderManagement = () => {
               <TabsContent value="financial" className="space-y-4 pt-4">
                 <div>
                   <h3 className="text-sm font-semibold text-slate-900 mb-3">Security Deposit (SD)</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="sd_number">SD Number</Label>
                       <Input
@@ -797,7 +797,7 @@ const TenderManagement = () => {
 
                 <div>
                   <h3 className="text-sm font-semibold text-slate-900 mb-3">Bank Guarantee (BG)</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="bg_number">BG Number</Label>
                       <Input
@@ -991,7 +991,7 @@ const TenderManagement = () => {
                 </TabsList>
 
                 <TabsContent value="details" className="pt-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-slate-500">Client</Label>
                       <p className="font-medium text-slate-900">{selectedTender.client}</p>
@@ -1022,7 +1022,7 @@ const TenderManagement = () => {
                 <TabsContent value="financial" className="pt-4 space-y-4">
                   <div className="p-4 bg-slate-50 rounded-lg">
                     <h3 className="font-semibold text-slate-900 mb-3">Security Deposit</h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <Label className="text-slate-500">SD Number</Label>
                         <p className="font-medium text-slate-900">{selectedTender.sd_number || 'N/A'}</p>
@@ -1042,7 +1042,7 @@ const TenderManagement = () => {
 
                   <div className="p-4 bg-slate-50 rounded-lg">
                     <h3 className="font-semibold text-slate-900 mb-3">Bank Guarantee</h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <Label className="text-slate-500">BG Number</Label>
                         <p className="font-medium text-slate-900">{selectedTender.bg_number || 'N/A'}</p>
@@ -1389,7 +1389,7 @@ const TenderManagement = () => {
                     </TabsList>
 
                     <TabsContent value="basic" className="space-y-3 pt-4">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <Label>Tender Name *</Label>
                           <Input value={newTenderForm.tender_name} onChange={(e) => setNewTenderForm(prev => ({ ...prev, tender_name: e.target.value }))} className="mt-1" />
@@ -1434,7 +1434,7 @@ const TenderManagement = () => {
                     <TabsContent value="financial" className="space-y-4 pt-4">
                       <div>
                         <h3 className="text-sm font-semibold text-slate-900 mb-3">Security Deposit (SD)</h3>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div><Label>SD Number</Label><Input value={newTenderForm.sd_number} onChange={(e) => setNewTenderForm(prev => ({ ...prev, sd_number: e.target.value }))} className="mt-1" /></div>
                           <div><Label>SD Amount</Label><Input value={newTenderForm.sd_value} onChange={(e) => setNewTenderForm(prev => ({ ...prev, sd_value: e.target.value }))} placeholder="₹" className="mt-1" /></div>
                           <div><Label>SD Bank</Label><Input value={newTenderForm.sd_bank} onChange={(e) => setNewTenderForm(prev => ({ ...prev, sd_bank: e.target.value }))} className="mt-1" /></div>
@@ -1442,7 +1442,7 @@ const TenderManagement = () => {
                       </div>
                       <div>
                         <h3 className="text-sm font-semibold text-slate-900 mb-3">Bank Guarantee (BG)</h3>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div><Label>BG Number</Label><Input value={newTenderForm.bg_number} onChange={(e) => setNewTenderForm(prev => ({ ...prev, bg_number: e.target.value }))} className="mt-1" /></div>
                           <div><Label>BG Amount</Label><Input value={newTenderForm.bg_value} onChange={(e) => setNewTenderForm(prev => ({ ...prev, bg_value: e.target.value }))} placeholder="₹" className="mt-1" /></div>
                           <div><Label>BG Bank</Label><Input value={newTenderForm.bg_bank} onChange={(e) => setNewTenderForm(prev => ({ ...prev, bg_bank: e.target.value }))} className="mt-1" /></div>
@@ -1508,7 +1508,7 @@ const TenderManagement = () => {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label>Plant Name *</Label>
                         <Input value={newPlantForm.plant_name} onChange={(e) => setNewPlantForm(prev => ({ ...prev, plant_name: e.target.value }))} placeholder="Enter plant name" className="mt-1" />

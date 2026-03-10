@@ -55,25 +55,25 @@ const StoppageList = () => {
 
   return (
     <div className="space-y-6" data-testid="stoppage-list-page">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Vehicle Stoppages
           </h1>
-          <p className="text-slate-600 mt-1">Track and manage vehicle downtime</p>
+          <p className="text-sm sm:text-base text-slate-600 mt-1">Track and manage vehicle downtime</p>
         </div>
         {canCreate && (
           <Link to="/stoppages/new">
-            <Button className="bg-slate-900 hover:bg-slate-800" data-testid="add-stoppage-btn">
-              <Plus className="h-4 w-4 mr-2" />
-              Report Stoppage
+            <Button size="sm" className="bg-slate-900 hover:bg-slate-800" data-testid="add-stoppage-btn">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Report Stoppage</span>
             </Button>
           </Link>
         )}
       </div>
 
       {analytics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           <Card className="border-slate-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
