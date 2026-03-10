@@ -111,16 +111,16 @@ const MySubmissions = () => {
   return (
     <div className="space-y-6" data-testid="my-submissions-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             My Submissions
           </h1>
-          <p className="text-slate-600 mt-1">Track the status of your submitted approvals</p>
+          <p className="text-sm sm:text-base text-slate-600 mt-1">Track the status of your submitted approvals</p>
         </div>
         <Button variant="outline" onClick={fetchMySubmissions} data-testid="refresh-btn">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          <RefreshCw className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 

@@ -14,7 +14,7 @@ const Header = () => {
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-10" data-testid="header">
-      <div className="flex items-center justify-between h-16 pl-14 pr-4 sm:pr-6 lg:pl-8 lg:pr-8">
+      <div className="flex items-center justify-between h-14 sm:h-16 pl-14 pr-2 sm:pr-6 lg:pl-8 lg:pr-8">
         <div className="flex-1 min-w-0">
           <h2 className="text-base sm:text-xl font-bold text-slate-900 truncate" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Fleet Management System

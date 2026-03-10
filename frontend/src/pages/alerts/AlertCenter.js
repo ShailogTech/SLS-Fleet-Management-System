@@ -121,16 +121,16 @@ const AlertCenter = () => {
   return (
     <div className="space-y-6" data-testid="alert-center-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Alert Center
           </h1>
-          <p className="text-slate-600 mt-1">Monitor critical notifications and document expiries</p>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">Monitor critical notifications and document expiries</p>
         </div>
-        <Button variant="outline" onClick={fetchAlerts} data-testid="refresh-btn">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+        <Button variant="outline" size="sm" onClick={fetchAlerts} data-testid="refresh-btn">
+          <RefreshCw className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 
@@ -210,7 +210,7 @@ const AlertCenter = () => {
           />
         </div>
         <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="w-[140px]" data-testid="severity-filter">
+          <SelectTrigger className="w-full sm:w-[140px]" data-testid="severity-filter">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -220,7 +220,7 @@ const AlertCenter = () => {
           </SelectContent>
         </Select>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[140px]" data-testid="type-filter">
+          <SelectTrigger className="w-full sm:w-[140px]" data-testid="type-filter">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>

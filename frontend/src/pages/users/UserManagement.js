@@ -165,12 +165,12 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6" data-testid="user-management-page">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             User Management
           </h1>
-          <p className="text-slate-600 mt-1">Manage system users and roles</p>
+          <p className="text-sm sm:text-base text-slate-600 mt-1">Manage system users and roles</p>
         </div>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
@@ -293,9 +293,9 @@ const UserManagement = () => {
 
       <Card className="border-slate-200">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle>Users ({filteredUsers.length})</CardTitle>
-            <div className="relative w-64">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 type="text"
@@ -309,7 +309,41 @@ const UserManagement = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {filteredUsers.map((user) => (
+              <div key={user.id} className="py-4 first:pt-0 last:pb-0" data-testid={`user-row-${user.id}`}>
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{user.name}</p>
+                    <p className="text-xs text-slate-500">{user.email}</p>
+                  </div>
+                  <StatusBadge status={user.status} />
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                    {ROLES.find(r => r.value === user.role)?.label || user.role}
+                  </span>
+                  {user.plant && <span className="text-xs text-slate-500">{user.plant}</span>}
+                  <span className="text-xs text-slate-500">{user.phone}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleEdit(user)}>
+                    <Edit2 className="h-3 w-3 mr-1" /> Edit
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleStatusToggle(user.id, user.status)}>
+                    {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(user)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
@@ -324,7 +358,7 @@ const UserManagement = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50" data-testid={`user-row-${user.id}`}>
+                  <tr key={user.id} className="hover:bg-slate-50" data-testid={`user-row-desktop-${user.id}`}>
                     <td className="px-6 py-4 text-sm font-medium text-slate-900">{user.name}</td>
                     <td className="px-6 py-4 text-sm text-slate-700">{user.email}</td>
                     <td className="px-6 py-4 text-sm text-slate-700">{user.phone}</td>
@@ -333,37 +367,17 @@ const UserManagement = () => {
                         {ROLES.find(r => r.value === user.role)?.label || user.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-700">
-                      {user.plant || '—'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={user.status} />
-                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-700">{user.plant || '—'}</td>
+                    <td className="px-6 py-4"><StatusBadge status={user.status} /></td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(user)}
-                          data-testid={`edit-user-${user.id}`}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(user)} data-testid={`edit-user-${user.id}`}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleStatusToggle(user.id, user.status)}
-                          data-testid={`toggle-user-${user.id}`}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => handleStatusToggle(user.id, user.status)} data-testid={`toggle-user-${user.id}`}>
                           {user.status === 'active' ? 'Deactivate' : 'Activate'}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleDelete(user)}
-                          data-testid={`delete-user-${user.id}`}
-                        >
+                        <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(user)} data-testid={`delete-user-${user.id}`}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

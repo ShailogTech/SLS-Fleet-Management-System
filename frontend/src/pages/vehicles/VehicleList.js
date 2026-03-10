@@ -242,23 +242,23 @@ const VehicleList = () => {
   return (
     <div className="space-y-6" data-testid="vehicle-list-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Vehicles
           </h1>
-          <p className="text-slate-600 mt-1">Manage your fleet vehicles</p>
+          <p className="text-sm sm:text-base text-slate-600 mt-1">Manage your fleet vehicles</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={fetchVehicles} data-testid="refresh-btn">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <Button variant="outline" size="sm" onClick={fetchVehicles} data-testid="refresh-btn" className="sm:size-default">
+            <RefreshCw className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           {canCreate && (
             <Link to="/vehicles/new">
-              <Button className="bg-slate-900 hover:bg-slate-800" data-testid="add-vehicle-btn">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Vehicle
+              <Button size="sm" className="bg-slate-900 hover:bg-slate-800 sm:size-default" data-testid="add-vehicle-btn">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Vehicle</span>
               </Button>
             </Link>
           )}
@@ -320,9 +320,9 @@ const VehicleList = () => {
                 data-testid="vehicle-search-input"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]" data-testid="status-filter">
+                <SelectTrigger className="w-full sm:w-[140px]" data-testid="status-filter">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -335,7 +335,7 @@ const VehicleList = () => {
                 </SelectContent>
               </Select>
               <Select value={plantFilter} onValueChange={setPlantFilter}>
-                <SelectTrigger className="w-[160px]" data-testid="plant-filter">
+                <SelectTrigger className="w-full sm:w-[160px]" data-testid="plant-filter">
                   <SelectValue placeholder="Plant" />
                 </SelectTrigger>
                 <SelectContent>
@@ -351,35 +351,72 @@ const VehicleList = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredVehicles.map((vehicle) => (
+            <div
+              key={vehicle.engine_no || vehicle.id}
+              className="p-4 hover:bg-slate-50 transition-colors cursor-pointer"
+              onClick={() => handleViewVehicle(vehicle.engine_no)}
+              data-testid={`vehicle-row-${vehicle.engine_no}`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{vehicle.vehicle_no}</p>
+                  <p className="text-xs text-slate-500 font-mono">{vehicle.engine_no || '-'}</p>
+                </div>
+                <StatusBadge status={vehicle.status} />
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600 mb-3">
+                <div><span className="text-slate-400">Owner:</span> {vehicle.owner_name}</div>
+                <div><span className="text-slate-400">Make:</span> {vehicle.make}</div>
+                <div><span className="text-slate-400">Driver:</span> {vehicle.assigned_driver_name || '—'}</div>
+                <div><span className="text-slate-400">Plant:</span> {vehicle.plant || '-'}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-8 text-xs"
+                  onClick={(e) => { e.stopPropagation(); handleViewVehicle(vehicle.engine_no); }}
+                >
+                  <Eye className="h-3 w-3 mr-1" /> View
+                </Button>
+                {canShift && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-8 text-xs"
+                    onClick={(e) => { e.stopPropagation(); handleOpenShift(vehicle); }}
+                  >
+                    <ArrowRightLeft className="h-3 w-3 mr-1" /> Shift
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+          {filteredVehicles.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+              <Truck className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+              <p className="font-medium">No vehicles found</p>
+              <p className="text-sm mt-1">Try adjusting your search or filters</p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Vehicle No
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Engine No
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Owner
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Make
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Driver
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Plant
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Vehicle No</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Engine No</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Owner</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Make</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Driver</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Plant</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
@@ -388,55 +425,23 @@ const VehicleList = () => {
                   key={vehicle.engine_no || vehicle.id}
                   className="hover:bg-slate-50 transition-colors cursor-pointer"
                   onClick={() => handleViewVehicle(vehicle.engine_no)}
-                  data-testid={`vehicle-row-${vehicle.engine_no}`}
+                  data-testid={`vehicle-row-desktop-${vehicle.engine_no}`}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                    {vehicle.vehicle_no}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono">
-                    {vehicle.engine_no || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                    {vehicle.owner_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                    {vehicle.make}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                    {vehicle.assigned_driver_name || <span className="text-slate-400">—</span>}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                    {vehicle.plant || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={vehicle.status} />
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{vehicle.vehicle_no}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono">{vehicle.engine_no || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{vehicle.owner_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{vehicle.make}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{vehicle.assigned_driver_name || <span className="text-slate-400">—</span>}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{vehicle.plant || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={vehicle.status} /></td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewVehicle(vehicle.engine_no);
-                        }}
-                        data-testid={`view-vehicle-${vehicle.engine_no}`}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleViewVehicle(vehicle.engine_no); }} data-testid={`view-vehicle-${vehicle.engine_no}`}>
+                        <Eye className="h-4 w-4 mr-2" /> View
                       </Button>
                       {canShift && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenShift(vehicle);
-                          }}
-                          data-testid={`shift-vehicle-${vehicle.engine_no}`}
-                        >
-                          <ArrowRightLeft className="h-4 w-4 mr-2" />
-                          Shift
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleOpenShift(vehicle); }} data-testid={`shift-vehicle-${vehicle.engine_no}`}>
+                          <ArrowRightLeft className="h-4 w-4 mr-2" /> Shift
                         </Button>
                       )}
                     </div>
@@ -445,7 +450,6 @@ const VehicleList = () => {
               ))}
             </tbody>
           </table>
-
           {filteredVehicles.length === 0 && (
             <div className="text-center py-12 text-slate-500">
               <Truck className="h-12 w-12 mx-auto mb-3 text-slate-300" />
@@ -627,7 +631,7 @@ const VehicleList = () => {
                   </TabsList>
 
                   <TabsContent value="basic" className="space-y-3 pt-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <Label>Tender Name *</Label>
                         <Input
@@ -695,7 +699,7 @@ const VehicleList = () => {
                   <TabsContent value="financial" className="space-y-4 pt-4">
                     <div>
                       <h3 className="text-sm font-semibold text-slate-900 mb-3">Security Deposit (SD)</h3>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <Label>SD Number</Label>
                           <Input
@@ -725,7 +729,7 @@ const VehicleList = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold text-slate-900 mb-3">Bank Guarantee (BG)</h3>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <Label>BG Number</Label>
                           <Input
@@ -831,7 +835,7 @@ const VehicleList = () => {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>Plant Name *</Label>
                       <Input

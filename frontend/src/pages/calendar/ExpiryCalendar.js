@@ -95,16 +95,16 @@ const ExpiryCalendar = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Document Expiry Calendar
           </h1>
-          <p className="text-slate-600 mt-1">Visual overview of document expiry dates across your fleet</p>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">Visual overview of document expiry dates across your fleet</p>
         </div>
         <Button variant="outline" onClick={fetchCalendarData}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          <RefreshCw className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 

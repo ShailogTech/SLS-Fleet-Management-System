@@ -62,10 +62,10 @@ const Dashboard = () => {
   return (
     <div className="space-y-6" data-testid="dashboard-page">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900" style={{ fontFamily: 'Chivo, sans-serif' }}>
           Welcome back, {user?.name}
         </h1>
-        <p className="text-slate-600 mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <p className="text-sm sm:text-base text-slate-600 mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
           Here's what's happening with your fleet today.
         </p>
       </div>

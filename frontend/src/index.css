@@ -978,3 +978,57 @@ h1, h2, h3, h4, h5, h6 {
 .logout-btn:active {
   transform: translate(2px, 2px);
 }
+
+/* ========== Mobile Responsive Utilities ========== */
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure all content respects viewport width */
+#root {
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Mobile-friendly touch targets */
+@media (max-width: 640px) {
+  button, a, [role="button"] {
+    min-height: 36px;
+  }
+
+  /* Reduce padding on mobile for more content space */
+  .dash-metric-card {
+    padding: 12px;
+  }
+
+  .dash-metric-value {
+    font-size: 1.5rem;
+  }
+
+  /* Hide logout text animation on mobile */
+  .logout-btn .logout-btn-text {
+    display: none;
+  }
+
+  .logout-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .logout-btn .logout-btn-sign {
+    width: 100%;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  /* Make dialogs full-width on small screens */
+  [role="dialog"] > div {
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px;
+  }
+}
