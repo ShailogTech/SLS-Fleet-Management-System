@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
 const Chatbot = () => {
   const { user } = useAuth();
@@ -43,7 +41,7 @@ const Chatbot = () => {
         content: m.content
       }));
 
-      const res = await axios.post(`${BACKEND_URL}/api/chatbot/chat`, {
+      const res = await api.post('/chatbot/chat', {
         message: text,
         history
       });

@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime, timezone
+from collections import defaultdict
+import time
 import uuid
 from models.user import UserCreate, UserLogin, User, UserResponse
 from utils.jwt import create_access_token, get_password_hash, verify_password
@@ -13,6 +15,19 @@ def get_db():
     from server import db
     return db
 
+# Simple in-memory rate limiter
+_rate_limit_store = defaultdict(list)
+_RATE_LIMIT_MAX = 5       # max attempts
+_RATE_LIMIT_WINDOW = 60   # per 60 seconds
+
+def _check_rate_limit(client_ip: str):
+    now = time.time()
+    # Clean old entries
+    _rate_limit_store[client_ip] = [t for t in _rate_limit_store[client_ip] if now - t < _RATE_LIMIT_WINDOW]
+    if len(_rate_limit_store[client_ip]) >= _RATE_LIMIT_MAX:
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+    _rate_limit_store[client_ip].append(now)
+
 class SignupRequest(BaseModel):
     name: str
     email: EmailStr
@@ -20,7 +35,8 @@ class SignupRequest(BaseModel):
     password: str
 
 @router.post("/signup-request")
-async def signup_request(data: SignupRequest):
+async def signup_request(data: SignupRequest, request: Request):
+    _check_rate_limit(request.client.host)
     """Submit a signup request that goes to admin/approver for role assignment"""
     if len(data.password) < 6 or len(data.password) > 20:
         raise HTTPException(status_code=400, detail="Password must be between 6 and 20 characters")
@@ -171,9 +187,10 @@ async def register(user_data: UserCreate):
     return {"message": "User registered successfully", "user_id": user.id}
 
 @router.post("/login")
-async def login(credentials: UserLogin):
+async def login(credentials: UserLogin, request: Request):
     import logging
     logger = logging.getLogger(__name__)
+    _check_rate_limit(request.client.host)
     try:
         db = get_db()
         user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
@@ -205,7 +222,7 @@ async def login(credentials: UserLogin):
         raise
     except Exception as e:
         logger.error(f"Login error: {type(e).__name__}: {e}")
-        raise HTTPException(status_code=500, detail=f"Login failed: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed. Please try again.")
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):

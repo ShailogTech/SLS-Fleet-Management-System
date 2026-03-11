@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 mongo_url = os.environ['MONGO_URL']
 logger.info(f"Connecting to MongoDB (host masked)")
-client = AsyncIOMotorClient(mongo_url, tlsAllowInvalidCertificates=True)
+client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
 db = client[os.environ.get('DB_NAME', 'sls_fleet_db')]
 
 
@@ -34,6 +35,7 @@ async def seed_admin():
         if not admin_exists:
             from utils.jwt import get_password_hash
             from models.user import User
+            admin_password = os.environ.get("ADMIN_DEFAULT_PASSWORD", "Dstzr2FwjtK0ntSa")
             admin_user = User(
                 email="admin@sls.com",
                 name="Super Admin",
@@ -42,10 +44,10 @@ async def seed_admin():
                 status="active"
             )
             admin_doc = admin_user.model_dump()
-            admin_doc["password_hash"] = get_password_hash("Dstzr2FwjtK0ntSa")
+            admin_doc["password_hash"] = get_password_hash(admin_password)
             admin_doc["created_at"] = admin_doc["created_at"].isoformat()
             await db.users.insert_one(admin_doc)
-            logger.info("Default admin user created: admin@sls.com")
+            logger.info("Default admin user created")
     except Exception as e:
         logger.error(f"Failed to seed admin user: {e}")
 
@@ -68,42 +70,53 @@ async def lifespan(app):
 
 app = FastAPI(title="SLTS Fleet Management API", version="1.0.0", lifespan=lifespan)
 
+
+# ---------------------------------------------------------------------------
+# Security headers middleware
+# ---------------------------------------------------------------------------
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+
 # ---------------------------------------------------------------------------
 # CORS configuration
 # ---------------------------------------------------------------------------
-# CORS_ORIGINS should be a comma-separated list of allowed origins, e.g.
-#   https://fleet-management-eight-gilt.vercel.app,https://other-domain.com
-# A wildcard "*" is supported for quick local dev but credentials will still
-# work because we explicitly list it. For production always list exact origins.
-# ---------------------------------------------------------------------------
-raw_origins = os.environ.get('CORS_ORIGINS', '*')
+raw_origins = os.environ.get('CORS_ORIGINS', 'https://slts.group,http://localhost:3000')
 cors_origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
 logger.info(f"CORS allowed origins: {cors_origins}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
 # ---------------------------------------------------------------------------
 # Global exception handler — ensures CORS headers are present even on 500s
-# Without this, a 500 error response may lack the Access-Control-Allow-Origin
-# header, causing the browser to report a CORS error instead of the real error.
 # ---------------------------------------------------------------------------
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {type(exc).__name__}: {exc}")
+    origin = request.headers.get("origin", "")
+    allow_origin = origin if origin in cors_origins else cors_origins[0] if cors_origins else ""
     return JSONResponse(
         status_code=500,
-        content={"detail": f"Internal Server Error: {type(exc).__name__}: {str(exc)}"},
+        content={"detail": "Internal Server Error"},
         headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Origin": allow_origin,
         },
     )
 

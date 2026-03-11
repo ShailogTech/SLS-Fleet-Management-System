@@ -27,7 +27,8 @@ def get_db():
     from server import db
     return db
 
-ALLOWED_EXTENSIONS = {'.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'}
+ALLOWED_EXTENSIONS = {'.pdf', '.jpg', '.jpeg', '.png'}
+MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
 
 
 async def _sync_vehicle_expiry(db, entity_id: str, document_type: str, expiry_date: str):
@@ -198,7 +199,7 @@ async def save_document_metadata_json(
         raise
     except Exception as e:
         logger.error(f"Save metadata error: {e}")
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        return JSONResponse(status_code=500, content={"detail": "Failed to save metadata. Please try again."})
 
 
 @router.post("/{doc_id}/attach")
@@ -217,6 +218,8 @@ async def attach_file_to_document(
         raise HTTPException(status_code=400, detail="File type not allowed. Use PDF, JPG, or PNG.")
 
     content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Max 25MB.")
 
     await db.documents.update_one({"id": doc_id}, {"$set": {
         "filename": file.filename,
@@ -246,9 +249,11 @@ async def upload_document(
     try:
         file_ext = Path(file.filename).suffix.lower()
         if file_ext not in ALLOWED_EXTENSIONS:
-            raise HTTPException(status_code=400, detail="File type not allowed")
+            raise HTTPException(status_code=400, detail="File type not allowed. Use PDF, JPG, or PNG.")
 
         content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File too large. Max 25MB.")
         db = get_db()
 
         # Dedup: if a document with same entity_type + entity_id + document_type exists, update it
@@ -315,14 +320,13 @@ async def upload_document(
         logger.error(f"Upload error: {e}")
         return JSONResponse(
             status_code=500,
-            content={"detail": f"Upload failed: {str(e)}"},
-            headers={"Access-Control-Allow-Origin": "*"},
+            content={"detail": "Upload failed. Please try again."},
         )
 
 
 @router.get("/file/{filename}")
-async def serve_document_file(filename: str):
-    """Serve document file from MongoDB."""
+async def serve_document_file(filename: str, current_user: dict = Depends(get_current_user)):
+    """Serve document file from MongoDB (authenticated)."""
     doc_id = filename.rsplit('.', 1)[0] if '.' in filename else filename
     db = get_db()
     doc = await db.documents.find_one({"id": doc_id})

@@ -27,11 +27,16 @@ async def get_drivers(
 ):
     db = get_db()
     query = {}
+    VALID_STATUSES = {"active", "inactive", "pending", "rejected", "blacklisted"}
     if status:
+        if status not in VALID_STATUSES:
+            raise HTTPException(status_code=400, detail="Invalid status filter")
         query["status"] = status
     if plant:
+        if not isinstance(plant, str) or len(plant) > 100:
+            raise HTTPException(status_code=400, detail="Invalid plant filter")
         query["plant"] = plant
-    
+
     user_role = current_user.get("role")
     if user_role == "driver":
         user_info = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
@@ -139,7 +144,7 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
             "created_at": datetime.now().isoformat(),
         }
         await get_db().users.insert_one(user_doc)
-        logger.info(f"Auto-created user {email} / {password} for driver {name_raw}")
+        logger.info(f"Auto-created user {email} for driver {name_raw}")
     except Exception as e:
         logger.error(f"Failed to auto-create user for driver {driver_data.name}: {e}")
 

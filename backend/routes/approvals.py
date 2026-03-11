@@ -13,6 +13,8 @@ from typing import Optional
 import logging
 import uuid
 
+ALLOWED_ENTITY_TYPES = {"vehicle": "vehicles", "driver": "drivers", "profile_edit": "profile_edits"}
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/approvals", tags=["Approvals"])
@@ -92,7 +94,7 @@ async def get_approval_queue(current_user: dict = Depends(get_current_user)):
         raise
     except Exception as e:
         logger.error(f"Error fetching approval queue: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error loading approvals: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error loading approvals. Please try again.")
 
 
 @router.get("/my-submissions")
@@ -151,17 +153,14 @@ async def check_approval(approval_id: str, action: ApprovalAction, current_user:
         update_data["status"] = "checked"
     elif action.action == "reject":
         update_data["status"] = "rejected"
-        collection_name = f"{approval['entity_type']}s"
-        if collection_name != "profile_edits":
-            await get_db()[collection_name].update_one(
-                {"id": approval["entity_id"]},
-                {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
-            )
-        else:
-            await get_db().profile_edits.update_one(
-                {"id": approval["entity_id"]},
-                {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
-            )
+        entity_type = approval.get("entity_type")
+        collection_name = ALLOWED_ENTITY_TYPES.get(entity_type)
+        if not collection_name:
+            raise HTTPException(status_code=400, detail="Invalid entity type")
+        await get_db()[collection_name].update_one(
+            {"id": approval["entity_id"]},
+            {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
+        )
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
@@ -191,21 +190,24 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
         "updated_at": datetime.now().isoformat()
     }
 
+    entity_type = approval.get("entity_type")
+    collection_name = ALLOWED_ENTITY_TYPES.get(entity_type)
+    if not collection_name:
+        raise HTTPException(status_code=400, detail="Invalid entity type")
+
     if action.action == "approve":
         update_data["status"] = "approved"
-        collection_name = f"{approval['entity_type']}s"
-        if collection_name != "profile_edits":
+        if entity_type != "profile_edit":
             await get_db()[collection_name].update_one(
                 {"id": approval["entity_id"]},
                 {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
             )
             # Auto-create or activate user account for approved driver
-            if approval["entity_type"] == "driver":
+            if entity_type == "driver":
                 try:
                     db = get_db()
                     driver_doc = await db.drivers.find_one({"id": approval["entity_id"]}, {"_id": 0})
                     if driver_doc:
-                        # Check if user already exists by emp_id
                         existing_user = await db.users.find_one({"emp_id": driver_doc.get("emp_id")}, {"_id": 0})
                         if existing_user:
                             await db.users.update_one(
@@ -213,7 +215,6 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
                                 {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
                             )
                         else:
-                            # Auto-create user account for this driver
                             driver_name = driver_doc.get("name", "driver")
                             first_name = driver_name.split()[0].lower() if driver_name else "driver"
                             base_email = f"{first_name}@slts.com"
@@ -246,17 +247,10 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
             )
     elif action.action == "reject":
         update_data["status"] = "rejected"
-        collection_name = f"{approval['entity_type']}s"
-        if collection_name != "profile_edits":
-            await get_db()[collection_name].update_one(
-                {"id": approval["entity_id"]},
-                {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
-            )
-        else:
-            await get_db().profile_edits.update_one(
-                {"id": approval["entity_id"]},
-                {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
-            )
+        await get_db()[collection_name].update_one(
+            {"id": approval["entity_id"]},
+            {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
+        )
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 

@@ -21,11 +21,16 @@ async def get_vehicles(
     current_user: dict = Depends(get_current_user)
 ):
     query = {}
+    VALID_STATUSES = {"active", "inactive", "pending", "rejected"}
     if status:
+        if status not in VALID_STATUSES:
+            raise HTTPException(status_code=400, detail="Invalid status filter")
         query["status"] = status
     if plant:
+        if not isinstance(plant, str) or len(plant) > 100:
+            raise HTTPException(status_code=400, detail="Invalid plant filter")
         query["plant"] = plant
-    
+
     user_role = current_user.get("role")
     if user_role == "plant_incharge":
         user_info = await get_db().users.find_one({"id": current_user["sub"]}, {"_id": 0})
