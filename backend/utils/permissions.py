@@ -4,6 +4,15 @@ from .jwt import decode_access_token
 
 security = HTTPBearer()
 
+# In-memory token blacklist (cleared on restart — acceptable for this scale)
+_blacklisted_tokens = set()
+
+def blacklist_token(token: str):
+    _blacklisted_tokens.add(token)
+
+def is_token_blacklisted(token: str) -> bool:
+    return token in _blacklisted_tokens
+
 ROLE_HIERARCHY = {
     "superuser": 10,
     "admin": 9,
@@ -21,6 +30,12 @@ ROLE_HIERARCHY = {
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
+    if is_token_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     payload = decode_access_token(token)
     if payload is None:
         raise HTTPException(

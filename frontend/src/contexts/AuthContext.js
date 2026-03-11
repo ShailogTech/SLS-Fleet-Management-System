@@ -70,7 +70,12 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Proceed with local logout even if server call fails
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);

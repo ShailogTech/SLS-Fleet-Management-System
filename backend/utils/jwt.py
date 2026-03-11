@@ -4,12 +4,17 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Load .env file
 ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / '.env')
 
 SECRET_KEY = os.environ["JWT_SECRET_KEY"]
+if len(SECRET_KEY) < 32:
+    logger.warning("JWT_SECRET_KEY is too short (<32 chars). Use a strong random key in production.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 

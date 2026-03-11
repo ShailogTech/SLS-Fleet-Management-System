@@ -7,7 +7,7 @@ import time
 import uuid
 from models.user import UserCreate, UserLogin, User, UserResponse
 from utils.jwt import create_access_token, get_password_hash, verify_password
-from utils.permissions import get_current_user
+from utils.permissions import get_current_user, blacklist_token
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -223,6 +223,15 @@ async def login(credentials: UserLogin, request: Request):
     except Exception as e:
         logger.error(f"Login error: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail="Login failed. Please try again.")
+
+@router.post("/logout")
+async def logout(request: Request, current_user: dict = Depends(get_current_user)):
+    """Invalidate the current token server-side."""
+    auth_header = request.headers.get("authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+    if token:
+        blacklist_token(token)
+    return {"message": "Logged out successfully"}
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
