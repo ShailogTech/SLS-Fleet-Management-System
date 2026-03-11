@@ -14,7 +14,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 users_data = [
-    {"email": "admin@sls.com", "name": "Super Admin", "phone": "9999999999", "role": "superuser", "password": "admin123"},
+    {"email": "admin@sls.com", "name": "Super Admin", "phone": "9999999999", "role": "superuser", "password": "Dstzr2FwjtK0ntSa"},
     {"email": "maker@sls.com", "name": "John Maker", "phone": "9876543210", "role": "maker", "password": "maker123"},
     {"email": "checker@sls.com", "name": "Sarah Checker", "phone": "9876543211", "role": "checker", "password": "checker123"},
     {"email": "approver@sls.com", "name": "Mike Approver", "phone": "9876543212", "role": "approver", "password": "approver123"},

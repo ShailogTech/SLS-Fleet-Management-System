@@ -10,7 +10,7 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_CREDS = {"email": "admin@sls.com", "password": "admin123"}
+ADMIN_CREDS = {"email": "admin@sls.com", "password": "Dstzr2FwjtK0ntSa"}
 MAKER_CREDS = {"email": "maker@sls.com", "password": "maker123"}
 CHECKER_CREDS = {"email": "checker@sls.com", "password": "checker123"}
 APPROVER_CREDS = {"email": "approver@sls.com", "password": "approver123"}

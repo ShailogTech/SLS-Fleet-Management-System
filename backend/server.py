@@ -42,10 +42,10 @@ async def seed_admin():
                 status="active"
             )
             admin_doc = admin_user.model_dump()
-            admin_doc["password_hash"] = get_password_hash("admin123")
+            admin_doc["password_hash"] = get_password_hash("Dstzr2FwjtK0ntSa")
             admin_doc["created_at"] = admin_doc["created_at"].isoformat()
             await db.users.insert_one(admin_doc)
-            logger.info("Default admin user created: admin@sls.com / admin123")
+            logger.info("Default admin user created: admin@sls.com")
     except Exception as e:
         logger.error(f"Failed to seed admin user: {e}")
 

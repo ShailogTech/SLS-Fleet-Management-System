@@ -10,7 +10,7 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_CREDS = {"email": "admin@sls.com", "password": "admin123"}
+ADMIN_CREDS = {"email": "admin@sls.com", "password": "Dstzr2FwjtK0ntSa"}
 DRIVER_CREDS = {"email": "driver1@sls.com", "password": "driver123"}
 
 # Test signup data

@@ -14,7 +14,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 TEST_CREDS = {
-    "admin": {"email": "admin@sls.com", "password": "admin123"},
+    "admin": {"email": "admin@sls.com", "password": "Dstzr2FwjtK0ntSa"},
     "maker": {"email": "maker@sls.com", "password": "maker123"},
     "checker": {"email": "checker@sls.com", "password": "checker123"},
     "approver": {"email": "approver@sls.com", "password": "approver123"},
