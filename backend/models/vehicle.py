@@ -11,11 +11,14 @@ class VehicleDocuments(BaseModel):
     puc_expiry: Optional[date] = None
     permit_expiry: Optional[date] = None
     national_permit_expiry: Optional[date] = None
+    cll_addition_expiry: Optional[date] = None
+    temp_permit_expiry: Optional[date] = None
 
 class VehicleBase(BaseModel):
     vehicle_no: str
     owner_name: str
-    capacity: Optional[str] = None
+    concern: Optional[str] = None
+    wheels: Optional[str] = None
     reg_date: Optional[date] = None
     make: str
     chassis_no: Optional[str] = None

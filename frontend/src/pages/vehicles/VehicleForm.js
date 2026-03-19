@@ -21,7 +21,16 @@ const REQUIRED_DOCUMENTS = [
   { key: 'puc', label: 'PUC Certificate', required: true },
   { key: 'permit', label: 'Permit', required: false },
   { key: 'national_permit', label: 'National Permit', required: false },
+  { key: 'cll_addition', label: 'CLL Addition', required: false },
+  { key: 'temp_permit', label: 'Temp Permit', required: false },
 ];
+
+const CONCERN_OPTIONS = [
+  'Taurus Carrier', 'Taurus Tanker', 'Commet Carrier', 'Commet Tanker',
+  'Company', 'Personal', 'Service', 'Other'
+];
+
+const WHEELS_OPTIONS = ['2', '4', '8', '16'];
 
 const STEPS = [
   { id: 1, title: 'Vehicle Details', icon: Truck },
@@ -51,18 +60,19 @@ const VehicleForm = () => {
   }, []);
 
   const [formData, setFormData] = useState({
-    vehicle_no: '', owner_name: '', capacity: '', reg_date: '', make: '',
+    vehicle_no: '', owner_name: '', concern: '', wheels: '', reg_date: '', make: '',
     chassis_no: '', engine_no: '', rto: '', plant: '', phone: '',
     vehicle_type: '',
     documents: {
       rc_expiry: '', insurance_expiry: '', fitness_expiry: '',
-      tax_expiry: '', puc_expiry: '', permit_expiry: '', national_permit_expiry: ''
+      tax_expiry: '', puc_expiry: '', permit_expiry: '', national_permit_expiry: '',
+      cll_addition_expiry: '', temp_permit_expiry: ''
     }
   });
 
   const handleChange = (field, value) => {
     // Words only fields - no numbers allowed
-    const wordsOnlyFields = ['owner_name', 'make', 'vehicle_type', 'rto'];
+    const wordsOnlyFields = ['owner_name', 'make', 'rto'];
     if (wordsOnlyFields.includes(field)) {
       if (/[0-9]/.test(value)) return;
     }
@@ -89,7 +99,8 @@ const VehicleForm = () => {
     const expiryMap = {
       rc: 'rc_expiry', insurance: 'insurance_expiry', fitness: 'fitness_expiry',
       tax: 'tax_expiry', puc: 'puc_expiry', permit: 'permit_expiry',
-      national_permit: 'national_permit_expiry'
+      national_permit: 'national_permit_expiry',
+      cll_addition: 'cll_addition_expiry', temp_permit: 'temp_permit_expiry'
     };
     if (expiryMap[docKey]) {
       setFormData(prev => ({
@@ -122,7 +133,7 @@ const VehicleForm = () => {
       const cleanedData = { ...formData };
       
       // Convert empty strings to null for top-level optional fields
-      ['capacity', 'reg_date', 'chassis_no', 'rto', 'plant', 'phone', 'vehicle_type'].forEach(field => {
+      ['concern', 'wheels', 'reg_date', 'chassis_no', 'rto', 'plant', 'phone', 'vehicle_type'].forEach(field => {
         if (cleanedData[field] === '') cleanedData[field] = null;
       });
       
@@ -308,16 +319,38 @@ const VehicleForm = () => {
                 <Input value={formData.make} onChange={e => handleChange('make', e.target.value)} placeholder="e.g., ASHOK LEYLAND" data-testid="make-input" />
               </div>
               <div>
+                <Label>Concern</Label>
+                <Input value={formData.concern} onChange={e => handleChange('concern', e.target.value)} placeholder="e.g., Company name" data-testid="concern-input" />
+              </div>
+              <div>
                 <Label>Vehicle Type</Label>
-                <Input value={formData.vehicle_type} onChange={e => handleChange('vehicle_type', e.target.value)} placeholder="e.g., Tanker, Truck" data-testid="vehicle-type-input" />
+                <Select value={formData.vehicle_type} onValueChange={val => handleChange('vehicle_type', val)} data-testid="vehicle-type-input">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vehicle type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONCERN_OPTIONS.map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Engine Number *</Label>
                 <Input value={formData.engine_no} onChange={e => handleChange('engine_no', e.target.value)} placeholder="e.g., KCEZ419373" data-testid="engine-no-input" />
               </div>
               <div>
-                <Label>Capacity</Label>
-                <Input value={formData.capacity} onChange={e => handleChange('capacity', e.target.value)} placeholder="e.g., 6X2" data-testid="capacity-input" />
+                <Label>Wheels</Label>
+                <Select value={formData.wheels} onValueChange={val => handleChange('wheels', val)} data-testid="wheels-input">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select wheels" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WHEELS_OPTIONS.map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Registration Date</Label>
@@ -426,7 +459,9 @@ const VehicleForm = () => {
                       ['Engine No', formData.engine_no],
                       ['Owner', formData.owner_name],
                       ['Make', formData.make],
-                      ['Type', formData.vehicle_type || 'N/A'],
+                      ['Concern', formData.concern || 'N/A'],
+                      ['Vehicle Type', formData.vehicle_type || 'N/A'],
+                      ['Wheels', formData.wheels || 'N/A'],
                       ['Plant', formData.plant || 'N/A'],
                       ['RTO', formData.rto || 'N/A'],
                     ].map(([label, val]) => (

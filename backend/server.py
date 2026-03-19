@@ -91,7 +91,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 # ---------------------------------------------------------------------------
 # CORS configuration
 # ---------------------------------------------------------------------------
-raw_origins = os.environ.get('CORS_ORIGINS', 'https://slts.group,http://localhost:3000')
+raw_origins = os.environ.get('CORS_ORIGINS', 'https://slts.group,http://localhost:3000,https://sls-fleet-management-system.vercel.app,https://sls-fleet-management-system-backend.onrender.com')
 cors_origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
 logger.info(f"CORS allowed origins: {cors_origins}")
 

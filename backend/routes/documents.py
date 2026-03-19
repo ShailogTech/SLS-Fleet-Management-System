@@ -41,6 +41,8 @@ async def _sync_vehicle_expiry(db, entity_id: str, document_type: str, expiry_da
         "puc": "puc_expiry", "pollution": "puc_expiry",
         "permit": "permit_expiry",
         "national_permit": "national_permit_expiry", "np": "national_permit_expiry",
+        "cll_addition": "cll_addition_expiry",
+        "temp_permit": "temp_permit_expiry",
     }
     doc_key = doc_type_map.get(document_type.lower())
     if doc_key:
