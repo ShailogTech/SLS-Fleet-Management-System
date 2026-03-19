@@ -91,16 +91,19 @@ app.add_middleware(SecurityHeadersMiddleware)
 # ---------------------------------------------------------------------------
 # CORS configuration
 # ---------------------------------------------------------------------------
-raw_origins = os.environ.get('CORS_ORIGINS', 'https://slts.group,http://localhost:3000,https://sls-fleet-management-system.vercel.app,https://sls-fleet-management-system-backend.onrender.com')
-cors_origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
+raw_origins = os.environ.get('CORS_ORIGINS', 'https://slts.group,http://localhost:3000,https://sls-fleet-management-system.vercel.app')
+if raw_origins.strip() == '*':
+    cors_origins = ["*"]
+else:
+    cors_origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
 logger.info(f"CORS allowed origins: {cors_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -111,7 +114,10 @@ app.add_middleware(
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {type(exc).__name__}: {exc}")
     origin = request.headers.get("origin", "")
-    allow_origin = origin if origin in cors_origins else cors_origins[0] if cors_origins else ""
+    if "*" in cors_origins:
+        allow_origin = "*"
+    else:
+        allow_origin = origin if origin in cors_origins else cors_origins[0] if cors_origins else ""
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal Server Error"},
