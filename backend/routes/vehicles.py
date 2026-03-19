@@ -6,6 +6,7 @@ def get_db():
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.vehicle import Vehicle, VehicleCreate
 from utils.permissions import get_current_user
+from utils.time_helpers import now_ist
 from typing import List, Optional
 import os
 from datetime import datetime
@@ -116,7 +117,7 @@ async def update_vehicle(identifier: str, vehicle_data: VehicleCreate, current_u
             raise HTTPException(status_code=400, detail="Engine number already exists. Each vehicle must have a unique engine number.")
 
     update_data = vehicle_data.model_dump()
-    update_data["updated_at"] = datetime.now().isoformat()
+    update_data["updated_at"] = now_ist()
     if update_data.get("reg_date"):
         update_data["reg_date"] = update_data["reg_date"].isoformat()
     if update_data.get("documents"):
@@ -133,7 +134,7 @@ async def update_vehicle(identifier: str, vehicle_data: VehicleCreate, current_u
     if new_plant and new_plant != old_plant and assigned_driver_id:
         await get_db().drivers.update_one(
             {"id": assigned_driver_id},
-            {"$set": {"plant": new_plant, "updated_at": datetime.now().isoformat()}}
+            {"$set": {"plant": new_plant, "updated_at": now_ist()}}
         )
 
     updated_vehicle = await get_db().vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -160,11 +161,11 @@ async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: di
         if old_driver_id:
             await db.drivers.update_one(
                 {"id": old_driver_id},
-                {"$set": {"allocated_vehicle": None, "updated_at": datetime.now().isoformat()}}
+                {"$set": {"allocated_vehicle": None, "updated_at": now_ist()}}
             )
         await db.vehicles.update_one(
             {"id": vehicle["id"]},
-            {"$set": {"assigned_driver_id": None, "assigned_driver_name": None, "updated_at": datetime.now().isoformat()}}
+            {"$set": {"assigned_driver_id": None, "assigned_driver_name": None, "updated_at": now_ist()}}
         )
         return {"message": "Driver unassigned from vehicle"}
 
@@ -178,7 +179,7 @@ async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: di
     if old_driver_id and old_driver_id != driver_id:
         await db.drivers.update_one(
             {"id": old_driver_id},
-            {"$set": {"allocated_vehicle": None, "updated_at": datetime.now().isoformat()}}
+            {"$set": {"allocated_vehicle": None, "updated_at": now_ist()}}
         )
 
     # Clear old vehicle's assigned_driver if this driver was assigned to a different vehicle
@@ -186,7 +187,7 @@ async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: di
     if old_vehicle_no and old_vehicle_no != vehicle.get("vehicle_no"):
         await db.vehicles.update_one(
             {"vehicle_no": old_vehicle_no},
-            {"$set": {"assigned_driver_id": None, "assigned_driver_name": None, "updated_at": datetime.now().isoformat()}}
+            {"$set": {"assigned_driver_id": None, "assigned_driver_name": None, "updated_at": now_ist()}}
         )
 
     # Update vehicle with new driver
@@ -195,14 +196,14 @@ async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: di
         {"$set": {
             "assigned_driver_id": driver_id,
             "assigned_driver_name": driver.get("name"),
-            "updated_at": datetime.now().isoformat()
+            "updated_at": now_ist()
         }}
     )
 
     # Update driver with new vehicle and sync plant
     driver_update = {
         "allocated_vehicle": vehicle.get("vehicle_no"),
-        "updated_at": datetime.now().isoformat()
+        "updated_at": now_ist()
     }
     if vehicle.get("plant"):
         driver_update["plant"] = vehicle["plant"]
@@ -240,7 +241,7 @@ async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depend
         "noc_obtained": bool(body.get("noc_obtained")),
         "loe_obtained": bool(body.get("loe_obtained")),
         "vehicle_no": new_vehicle_no,
-        "updated_at": datetime.now().isoformat(),
+        "updated_at": now_ist(),
     }
 
     # Look up the new tender to get full details
@@ -263,7 +264,7 @@ async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depend
 
     # Record shift history entry
     shift_entry = {
-        "date": datetime.now().isoformat(),
+        "date": now_ist(),
         "old_vehicle_no": old_vehicle_no,
         "new_vehicle_no": new_vehicle_no,
         "old_tender": old_tender_name,
@@ -300,7 +301,7 @@ async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depend
     if vehicle.get("assigned_driver_id"):
         driver_update = {
             "allocated_vehicle": new_vehicle_no,
-            "updated_at": datetime.now().isoformat()
+            "updated_at": now_ist()
         }
         if new_plant:
             driver_update["plant"] = new_plant

@@ -88,6 +88,20 @@ const ApprovalQueue = () => {
     }
   };
 
+  const handleAdminAction = async (approvalId, action, comment) => {
+    setProcessing(approvalId);
+    try {
+      await api.post(`/approvals/${approvalId}/admin-action`, { action, comment });
+      toast.success(action === 'approve' ? 'Directly approved by Admin' : 'Rejected by Admin');
+      updateLocalApproval(approvalId, action === 'approve' ? 'approved' : 'rejected');
+      fetchApprovals(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Action failed');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   const handleAdminComment = async (approvalId) => {
     const text = commentText[approvalId];
     if (!text?.trim()) {
@@ -129,7 +143,7 @@ const ApprovalQueue = () => {
             Approval Queue
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            {isAdmin && 'Monitoring approval workflow (read-only)'}
+            {isAdmin && 'Direct approve/reject or monitor approval workflow'}
             {isChecker && 'Review and verify submitted applications'}
             {isOperationalManager && 'Review and verify submitted applications'}
             {isApprover && 'Review checked applications for final approval'}
@@ -340,6 +354,21 @@ const ApprovalQueue = () => {
                   </div>
                 )}
 
+                {/* Admin direct action info */}
+                {approval.admin_approved_by && (
+                  <div className={`p-3 rounded-lg text-sm ${approval.status === 'approved' ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                    <span className={`font-medium ${approval.status === 'approved' ? 'text-emerald-700' : 'text-red-700'}`}>
+                      {approval.status === 'approved' ? 'Directly Approved' : 'Rejected'} by {approval.admin_approved_by_name || 'Admin'}
+                    </span>
+                    <span className={`ml-2 ${approval.status === 'approved' ? 'text-emerald-600' : 'text-red-600'}`}>
+                      on {new Date(approval.admin_action_at).toLocaleString()}
+                    </span>
+                    {approval.admin_action_comment && (
+                      <p className={`mt-1 text-xs ${approval.status === 'approved' ? 'text-emerald-600' : 'text-red-600'}`}>Comment: {approval.admin_action_comment}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Approver info */}
                 {approval.approver_id && (
                   <div className={`p-3 rounded-lg text-sm ${approval.status === 'approved' ? 'bg-emerald-50' : 'bg-red-50'}`}>
@@ -439,36 +468,46 @@ const ApprovalQueue = () => {
                   </div>
                 )}
 
-                {/* Admin Comment Box */}
+                {/* Admin Actions — Direct Approve/Reject + Comment */}
                 {isAdmin && approval.status !== 'approved' && approval.status !== 'rejected' && (
-                  <div className="pt-4 border-t border-slate-200">
-                    {showCommentFor === approval.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          placeholder="Add query or comment for reviewer/approver..."
-                          value={commentText[approval.id] || ''}
-                          onChange={e => setCommentText(prev => ({ ...prev, [approval.id]: e.target.value }))}
-                          className="text-sm"
-                          data-testid={`admin-comment-input-${approval.id}`}
-                        />
-                        <div className="flex space-x-2">
-                          <Button size="sm" onClick={() => handleAdminComment(approval.id)} data-testid={`admin-send-comment-${approval.id}`}>
-                            <Send className="h-3 w-3 mr-1" /> Send Query
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setShowCommentFor(null)}>Cancel</Button>
-                        </div>
-                      </div>
-                    ) : (
+                  <div className="pt-4 border-t border-slate-200 space-y-3">
+                    <Textarea
+                      placeholder="Add comment (optional)..."
+                      value={commentText[approval.id] || ''}
+                      onChange={e => setCommentText(prev => ({ ...prev, [approval.id]: e.target.value }))}
+                      className="text-sm"
+                      data-testid={`admin-comment-input-${approval.id}`}
+                    />
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                      <Button
+                        onClick={() => handleAdminAction(approval.id, 'approve', commentText[approval.id])}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
+                        disabled={processing === approval.id}
+                        data-testid={`admin-approve-${approval.id}`}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                        {processing === approval.id ? 'Processing...' : 'Direct Approve'}
+                      </Button>
+                      <Button
+                        onClick={() => handleAdminAction(approval.id, 'reject', commentText[approval.id])}
+                        variant="destructive"
+                        className="text-xs sm:text-sm"
+                        disabled={processing === approval.id}
+                        data-testid={`admin-reject-${approval.id}`}
+                      >
+                        <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                        Reject
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowCommentFor(approval.id)}
-                        data-testid={`admin-add-comment-${approval.id}`}
+                        onClick={() => handleAdminComment(approval.id)}
+                        disabled={!commentText[approval.id]?.trim()}
+                        data-testid={`admin-send-comment-${approval.id}`}
                       >
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Add Query / Comment
+                        <Send className="h-3 w-3 mr-1" /> Send Query Only
                       </Button>
-                    )}
+                    </div>
                   </div>
                 )}
 

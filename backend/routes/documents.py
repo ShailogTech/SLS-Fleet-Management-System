@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from utils.permissions import get_current_user
+from utils.time_helpers import now_ist
 from typing import Optional
 from datetime import datetime
 import uuid
@@ -91,7 +92,7 @@ async def create_document_metadata(
         {"_id": 0}
     )
     if existing:
-        update_fields = {"updated_at": datetime.now().isoformat()}
+        update_fields = {"updated_at": now_ist()}
         if document_number: update_fields["document_number"] = document_number
         if issue_date: update_fields["issue_date"] = issue_date
         if expiry_date: update_fields["expiry_date"] = expiry_date
@@ -120,8 +121,8 @@ async def create_document_metadata(
         "file_path": None,
         "file_url": None,
         "uploaded_by": current_user["sub"],
-        "created_at": datetime.now().isoformat(),
-        "updated_at": datetime.now().isoformat(),
+        "created_at": now_ist(),
+        "updated_at": now_ist(),
         "status": "pending_upload"
     }
 
@@ -154,7 +155,7 @@ async def save_document_metadata_json(
             {"_id": 0}
         )
         if existing:
-            update_fields = {"updated_at": datetime.now().isoformat()}
+            update_fields = {"updated_at": now_ist()}
             if body.document_number: update_fields["document_number"] = body.document_number
             if body.issue_date: update_fields["issue_date"] = body.issue_date
             if body.expiry_date: update_fields["expiry_date"] = body.expiry_date
@@ -183,8 +184,8 @@ async def save_document_metadata_json(
             "file_path": None,
             "file_url": None,
             "uploaded_by": current_user["sub"],
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": now_ist(),
+            "updated_at": now_ist(),
             "status": "pending_upload"
         }
 
@@ -229,7 +230,7 @@ async def attach_file_to_document(
         "file_content_b64": base64.b64encode(content).decode('utf-8'),
         "file_content_type": file.content_type or "application/octet-stream",
         "status": "uploaded",
-        "updated_at": datetime.now().isoformat()
+        "updated_at": now_ist()
     }})
 
     updated = await db.documents.find_one({"id": doc_id}, {"_id": 0, "file_content_b64": 0})
@@ -275,7 +276,7 @@ async def upload_document(
                 "file_content_b64": base64.b64encode(content).decode('utf-8'),
                 "file_content_type": file.content_type or "application/octet-stream",
                 "status": "uploaded",
-                "updated_at": datetime.now().isoformat()
+                "updated_at": now_ist()
             }})
             updated = await db.documents.find_one({"id": file_id}, {"_id": 0, "file_content_b64": 0})
 
@@ -301,8 +302,8 @@ async def upload_document(
             "file_content_b64": base64.b64encode(content).decode('utf-8'),
             "file_content_type": file.content_type or "application/octet-stream",
             "uploaded_by": current_user["sub"],
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": now_ist(),
+            "updated_at": now_ist(),
             "status": "uploaded"
         }
 

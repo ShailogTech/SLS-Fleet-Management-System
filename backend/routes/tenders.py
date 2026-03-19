@@ -6,6 +6,7 @@ def get_db():
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.tender import Tender, TenderCreate
 from utils.permissions import get_current_user
+from utils.time_helpers import now_ist
 from typing import List
 import os
 from datetime import datetime
@@ -56,7 +57,7 @@ async def create_tender(tender_data: TenderCreate, current_user: dict = Depends(
                 "tender_no": tender.tender_no,
                 "tender_name": tender.tender_name,
                 "plant": tender.plant or None,
-                "updated_at": datetime.now().isoformat()
+                "updated_at": now_ist()
             }}
         )
 
@@ -73,7 +74,7 @@ async def update_tender(tender_id: str, tender_data: TenderCreate, current_user:
         raise HTTPException(status_code=404, detail="Tender not found")
     
     update_data = tender_data.model_dump()
-    update_data["updated_at"] = datetime.now().isoformat()
+    update_data["updated_at"] = now_ist()
     update_data["start_date"] = update_data["start_date"].isoformat()
     update_data["end_date"] = update_data["end_date"].isoformat()
     if update_data.get("contract_validity"):
@@ -94,7 +95,7 @@ async def update_tender(tender_id: str, tender_data: TenderCreate, current_user:
     if removed:
         await get_db().vehicles.update_many(
             {"vehicle_no": {"$in": list(removed)}},
-            {"$set": {"tender": None, "tender_no": None, "tender_name": None, "updated_at": datetime.now().isoformat()}}
+            {"$set": {"tender": None, "tender_no": None, "tender_name": None, "updated_at": now_ist()}}
         )
     if added:
         await get_db().vehicles.update_many(
@@ -104,7 +105,7 @@ async def update_tender(tender_id: str, tender_data: TenderCreate, current_user:
                 "tender_no": tender_no,
                 "tender_name": tender_name,
                 "plant": plant or None,
-                "updated_at": datetime.now().isoformat()
+                "updated_at": now_ist()
             }}
         )
 
@@ -126,7 +127,7 @@ async def delete_tender(tender_id: str, current_user: dict = Depends(get_current
     if assigned:
         await get_db().vehicles.update_many(
             {"vehicle_no": {"$in": assigned}},
-            {"$set": {"tender": None, "tender_no": None, "tender_name": None, "updated_at": datetime.now().isoformat()}}
+            {"$set": {"tender": None, "tender_no": None, "tender_name": None, "updated_at": now_ist()}}
         )
 
     await get_db().tenders.delete_one({"id": tender_id})

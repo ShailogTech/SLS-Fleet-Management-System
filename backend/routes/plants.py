@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.plant import Plant, PlantCreate
 from utils.permissions import get_current_user
+from utils.time_helpers import now_ist
 from typing import List
 import os
 from datetime import datetime
@@ -67,7 +68,7 @@ async def update_plant(plant_id: str, plant_data: PlantCreate, current_user: dic
         raise HTTPException(status_code=404, detail="Plant not found")
     
     update_data = plant_data.model_dump()
-    update_data["updated_at"] = datetime.now().isoformat()
+    update_data["updated_at"] = now_ist()
 
     await db.plants.update_one({"id": plant_id}, {"$set": update_data})
 
@@ -121,7 +122,7 @@ async def assign_vehicles_to_plant(plant_id: str, body: dict, current_user: dict
     plant_name = plant["plant_name"]
     result = await db.vehicles.update_many(
         {"id": {"$in": vehicle_ids}},
-        {"$set": {"plant": plant_name, "updated_at": datetime.now().isoformat()}}
+        {"$set": {"plant": plant_name, "updated_at": now_ist()}}
     )
 
     # Also sync drivers assigned to these vehicles
@@ -130,7 +131,7 @@ async def assign_vehicles_to_plant(plant_id: str, body: dict, current_user: dict
     if driver_ids:
         await db.drivers.update_many(
             {"id": {"$in": driver_ids}},
-            {"$set": {"plant": plant_name, "updated_at": datetime.now().isoformat()}}
+            {"$set": {"plant": plant_name, "updated_at": now_ist()}}
         )
 
     return {"message": f"{result.modified_count} vehicle(s) assigned to {plant_name}"}

@@ -7,6 +7,7 @@ def get_db():
 from models.user import UserCreate, User, UserResponse
 from utils.jwt import get_password_hash
 from utils.permissions import get_current_user
+from utils.time_helpers import now_ist
 from typing import List, Optional
 from datetime import datetime
 from pathlib import Path
@@ -62,7 +63,7 @@ async def update_my_profile(data: dict, current_user: dict = Depends(get_current
         "current_data": {k: user.get(k) for k in changes},
         "requested_data": changes,
         "status": "pending",
-        "created_at": datetime.now().isoformat(),
+        "created_at": now_ist(),
         "reviewed_by": None,
         "reviewed_at": None,
         "reviewer_comment": None,
@@ -104,7 +105,7 @@ async def upload_profile_photo(
             "filename": filename,
             "content_b64": base64.b64encode(content).decode('utf-8'),
             "content_type": file.content_type or "image/jpeg",
-            "updated_at": datetime.now().isoformat()
+            "updated_at": now_ist()
         }},
         upsert=True
     )
@@ -179,11 +180,11 @@ async def approve_profile_edit(edit_id: str, current_user: dict = Depends(get_cu
     await db.users.update_one({"id": edit["user_id"]}, {"$set": edit["requested_data"]})
     await db.profile_edits.update_one(
         {"id": edit_id},
-        {"$set": {"status": "approved", "reviewed_by": current_user["sub"], "reviewed_at": datetime.now().isoformat()}}
+        {"$set": {"status": "approved", "reviewed_by": current_user["sub"], "reviewed_at": now_ist()}}
     )
     await db.approvals.update_one(
         {"entity_type": "profile_edit", "entity_id": edit_id},
-        {"$set": {"status": "approved", "updated_at": datetime.now().isoformat()}}
+        {"$set": {"status": "approved", "updated_at": now_ist()}}
     )
 
     return {"message": "Profile edit approved and applied"}
@@ -203,11 +204,11 @@ async def reject_profile_edit(edit_id: str, current_user: dict = Depends(get_cur
 
     await db.profile_edits.update_one(
         {"id": edit_id},
-        {"$set": {"status": "rejected", "reviewed_by": current_user["sub"], "reviewed_at": datetime.now().isoformat()}}
+        {"$set": {"status": "rejected", "reviewed_by": current_user["sub"], "reviewed_at": now_ist()}}
     )
     await db.approvals.update_one(
         {"entity_type": "profile_edit", "entity_id": edit_id},
-        {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
+        {"$set": {"status": "rejected", "updated_at": now_ist()}}
     )
 
     return {"message": "Profile edit rejected"}

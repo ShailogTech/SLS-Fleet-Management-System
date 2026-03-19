@@ -6,6 +6,7 @@ def get_db():
 from models.approval import Approval, ApprovalAction
 from utils.permissions import get_current_user
 from utils.jwt import get_password_hash
+from utils.time_helpers import now_ist
 from typing import List
 from datetime import datetime
 from pydantic import BaseModel
@@ -145,8 +146,8 @@ async def check_approval(approval_id: str, action: ApprovalAction, current_user:
     update_data = {
         "checker_id": current_user["sub"],
         "checker_comment": action.comment,
-        "checker_action_at": datetime.now().isoformat(),
-        "updated_at": datetime.now().isoformat()
+        "checker_action_at": now_ist(),
+        "updated_at": now_ist()
     }
 
     if action.action == "approve":
@@ -159,7 +160,7 @@ async def check_approval(approval_id: str, action: ApprovalAction, current_user:
             raise HTTPException(status_code=400, detail="Invalid entity type")
         await get_db()[collection_name].update_one(
             {"id": approval["entity_id"]},
-            {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
+            {"$set": {"status": "rejected", "updated_at": now_ist()}}
         )
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
@@ -186,8 +187,8 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
     update_data = {
         "approver_id": current_user["sub"],
         "approver_comment": action.comment,
-        "approver_action_at": datetime.now().isoformat(),
-        "updated_at": datetime.now().isoformat()
+        "approver_action_at": now_ist(),
+        "updated_at": now_ist()
     }
 
     entity_type = approval.get("entity_type")
@@ -200,7 +201,7 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
         if entity_type != "profile_edit":
             await get_db()[collection_name].update_one(
                 {"id": approval["entity_id"]},
-                {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
+                {"$set": {"status": "active", "updated_at": now_ist()}}
             )
             # Auto-create or activate user account for approved driver
             if entity_type == "driver":
@@ -212,7 +213,7 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
                         if existing_user:
                             await db.users.update_one(
                                 {"id": existing_user["id"]},
-                                {"$set": {"status": "active", "updated_at": datetime.now().isoformat()}}
+                                {"$set": {"status": "active", "updated_at": now_ist()}}
                             )
                         else:
                             driver_name = driver_doc.get("name", "driver")
@@ -234,7 +235,7 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
                                 "emp_id": driver_doc.get("emp_id"),
                                 "phone": driver_doc.get("phone"),
                                 "status": "active",
-                                "created_at": datetime.now().isoformat(),
+                                "created_at": now_ist(),
                             }
                             await db.users.insert_one(user_doc)
                             logger.info(f"Auto-created user {email} for driver {driver_name}")
@@ -243,19 +244,111 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
         else:
             await get_db().profile_edits.update_one(
                 {"id": approval["entity_id"]},
-                {"$set": {"status": "approved", "updated_at": datetime.now().isoformat()}}
+                {"$set": {"status": "approved", "updated_at": now_ist()}}
             )
     elif action.action == "reject":
         update_data["status"] = "rejected"
         await get_db()[collection_name].update_one(
             {"id": approval["entity_id"]},
-            {"$set": {"status": "rejected", "updated_at": datetime.now().isoformat()}}
+            {"$set": {"status": "rejected", "updated_at": now_ist()}}
         )
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
     await get_db().approvals.update_one({"id": approval_id}, {"$set": update_data})
     updated_approval = await get_db().approvals.find_one({"id": approval_id}, {"_id": 0})
+    return updated_approval
+
+
+@router.post("/{approval_id}/admin-action")
+async def admin_direct_action(approval_id: str, action: ApprovalAction, current_user: dict = Depends(get_current_user)):
+    """Admin/superuser can directly approve or reject, bypassing checker→approver flow."""
+    user_role = current_user.get("role")
+    if user_role not in ["admin", "superuser"]:
+        raise HTTPException(status_code=403, detail="Only admin/superuser can perform direct actions")
+
+    approval = await get_db().approvals.find_one({"id": approval_id}, {"_id": 0})
+    if not approval:
+        raise HTTPException(status_code=404, detail="Approval not found")
+
+    if approval["status"] in ["approved", "rejected"]:
+        raise HTTPException(status_code=400, detail="Approval already finalized")
+
+    entity_type = approval.get("entity_type")
+    collection_name = ALLOWED_ENTITY_TYPES.get(entity_type)
+    if not collection_name:
+        raise HTTPException(status_code=400, detail="Invalid entity type")
+
+    # Fetch admin user name for display
+    db = get_db()
+    admin_user = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0, "name": 1})
+    admin_name = admin_user.get("name", "Admin") if admin_user else "Admin"
+
+    update_data = {
+        "admin_approved_by": current_user["sub"],
+        "admin_approved_by_name": admin_name,
+        "admin_action_at": now_ist(),
+        "admin_action_comment": action.comment,
+        "updated_at": now_ist()
+    }
+
+    if action.action == "approve":
+        update_data["status"] = "approved"
+        if entity_type != "profile_edit":
+            await db[collection_name].update_one(
+                {"id": approval["entity_id"]},
+                {"$set": {"status": "active", "updated_at": now_ist()}}
+            )
+            # Auto-create or activate user account for approved driver
+            if entity_type == "driver":
+                try:
+                    driver_doc = await db.drivers.find_one({"id": approval["entity_id"]}, {"_id": 0})
+                    if driver_doc:
+                        existing_user = await db.users.find_one({"emp_id": driver_doc.get("emp_id")}, {"_id": 0})
+                        if existing_user:
+                            await db.users.update_one(
+                                {"id": existing_user["id"]},
+                                {"$set": {"status": "active", "updated_at": now_ist()}}
+                            )
+                        else:
+                            driver_name = driver_doc.get("name", "driver")
+                            first_name = driver_name.split()[0].lower() if driver_name else "driver"
+                            email = f"{first_name}@slts.com"
+                            counter = 1
+                            while await db.users.find_one({"email": email}):
+                                email = f"{first_name}{counter}@slts.com"
+                                counter += 1
+                            user_doc = {
+                                "id": str(uuid.uuid4()),
+                                "name": driver_name,
+                                "email": email,
+                                "password_hash": get_password_hash(f"{first_name}123"),
+                                "role": "driver",
+                                "emp_id": driver_doc.get("emp_id"),
+                                "phone": driver_doc.get("phone"),
+                                "status": "active",
+                                "created_at": now_ist(),
+                            }
+                            await db.users.insert_one(user_doc)
+                            logger.info(f"Auto-created user {email} for driver {driver_name}")
+                except Exception as e:
+                    logger.error(f"Failed to create/activate user for driver: {str(e)}")
+        else:
+            await db.profile_edits.update_one(
+                {"id": approval["entity_id"]},
+                {"$set": {"status": "approved", "updated_at": now_ist()}}
+            )
+    elif action.action == "reject":
+        update_data["status"] = "rejected"
+        await db[collection_name].update_one(
+            {"id": approval["entity_id"]},
+            {"$set": {"status": "rejected", "updated_at": now_ist()}}
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    await db.approvals.update_one({"id": approval_id}, {"$set": update_data})
+    updated_approval = await db.approvals.find_one({"id": approval_id}, {"_id": 0})
     return updated_approval
 
 
@@ -276,14 +369,14 @@ async def add_admin_comment(approval_id: str, data: AdminComment, current_user: 
         "role": user_role,
         "comment": data.comment,
         "target_role": data.target_role,
-        "created_at": datetime.now().isoformat()
+        "created_at": now_ist()
     }
 
     await get_db().approvals.update_one(
         {"id": approval_id},
         {
             "$push": {"admin_comments": comment_entry},
-            "$set": {"updated_at": datetime.now().isoformat()}
+            "$set": {"updated_at": now_ist()}
         }
     )
 

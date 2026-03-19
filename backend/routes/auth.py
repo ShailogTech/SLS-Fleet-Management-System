@@ -8,6 +8,7 @@ import uuid
 from models.user import UserCreate, UserLogin, User, UserResponse
 from utils.jwt import create_access_token, get_password_hash, verify_password
 from utils.permissions import get_current_user, blacklist_token
+from utils.time_helpers import now_ist
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

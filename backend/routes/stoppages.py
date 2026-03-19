@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.stoppage import Stoppage, StoppageCreate, StoppageUpdate
 from utils.permissions import get_current_user
+from utils.time_helpers import now_ist
 from typing import List, Optional
 from datetime import datetime, date
 import os
@@ -62,7 +63,7 @@ async def create_stoppage(stoppage_data: StoppageCreate, current_user: dict = De
     
     await db.vehicles.update_one(
         {"id": stoppage_data.vehicle_id},
-        {"$set": {"vehicle_status": "stopped", "updated_at": datetime.now().isoformat()}}
+        {"$set": {"vehicle_status": "stopped", "updated_at": now_ist()}}
     )
     
     return stoppage
@@ -79,7 +80,7 @@ async def update_stoppage(stoppage_id: str, update_data: StoppageUpdate, current
         raise HTTPException(status_code=404, detail="Stoppage not found")
     
     update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-    update_dict["updated_at"] = datetime.now().isoformat()
+    update_dict["updated_at"] = now_ist()
     
     if update_data.actual_resume_date:
         update_dict["actual_resume_date"] = update_data.actual_resume_date.isoformat()
@@ -91,7 +92,7 @@ async def update_stoppage(stoppage_id: str, update_data: StoppageUpdate, current
     if update_data.status == "resumed":
         await db.vehicles.update_one(
             {"id": existing["vehicle_id"]},
-            {"$set": {"vehicle_status": "active", "updated_at": datetime.now().isoformat()}}
+            {"$set": {"vehicle_status": "active", "updated_at": now_ist()}}
         )
     
     await db.stoppages.update_one({"id": stoppage_id}, {"$set": update_dict})
