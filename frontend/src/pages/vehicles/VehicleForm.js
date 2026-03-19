@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 const REQUIRED_DOCUMENTS = [
-  { key: 'rc', label: 'Registration Certificate (RC)', required: true },
+  { key: 'rc', label: 'Registration Certificate (RC)', required: true, dateLabel: 'Registration Date' },
   { key: 'insurance', label: 'Insurance', required: true },
   { key: 'fitness', label: 'Fitness Certificate (FC)', required: true },
   { key: 'tax', label: 'Tax Receipt', required: true },
@@ -558,7 +558,7 @@ const DocumentRow = ({ doc, vehicleNo, fileData, isUploaded, isUploading, onFile
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs">Expiry Date {doc.required && '*'}</Label>
+          <Label className="text-xs">{doc.dateLabel || 'Expiry Date'} {doc.required && '*'}</Label>
           <Input
             type="date"
             value={fileData?.expiry || ''}
