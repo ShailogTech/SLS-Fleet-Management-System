@@ -328,8 +328,8 @@ async def upload_document(
 
 
 @router.get("/file/{filename}")
-async def serve_document_file(filename: str, current_user: dict = Depends(get_current_user)):
-    """Serve document file from MongoDB (authenticated)."""
+async def serve_document_file(filename: str):
+    """Serve document file from MongoDB. No auth required — URLs contain unguessable UUIDs."""
     doc_id = filename.rsplit('.', 1)[0] if '.' in filename else filename
     db = get_db()
     doc = await db.documents.find_one({"id": doc_id})

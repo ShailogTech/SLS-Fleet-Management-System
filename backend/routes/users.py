@@ -142,7 +142,7 @@ async def remove_profile_photo(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/photo/{filename}")
-async def serve_photo(filename: str, current_user: dict = Depends(get_current_user)):
+async def serve_photo(filename: str):
     db = get_db()
     # Extract user_id from filename (filename is userId.ext)
     user_id = filename.rsplit('.', 1)[0] if '.' in filename else filename
