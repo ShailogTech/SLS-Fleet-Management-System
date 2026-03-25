@@ -100,8 +100,14 @@ async def get_approval_queue(current_user: dict = Depends(get_current_user)):
 
 @router.get("/my-submissions")
 async def get_my_submissions(current_user: dict = Depends(get_current_user)):
+    user_role = current_user.get("role")
+    # Admin/superuser see ALL submissions; others see only their own
+    if user_role in ["admin", "superuser"]:
+        query = {}
+    else:
+        query = {"submitted_by": current_user["sub"]}
     submissions = await get_db().approvals.find(
-        {"submitted_by": current_user["sub"]},
+        query,
         {"_id": 0}
     ).sort("created_at", -1).to_list(1000)
 
