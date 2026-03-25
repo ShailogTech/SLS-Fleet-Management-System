@@ -359,13 +359,18 @@ async def add_admin_comment(approval_id: str, data: AdminComment, current_user: 
     if user_role not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Only admin can add comments")
 
-    approval = await get_db().approvals.find_one({"id": approval_id}, {"_id": 0})
+    db = get_db()
+    approval = await db.approvals.find_one({"id": approval_id}, {"_id": 0})
     if not approval:
         raise HTTPException(status_code=404, detail="Approval not found")
 
+    # Fetch actual user name from DB since JWT doesn't contain name
+    admin_user = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0, "name": 1})
+    admin_name = admin_user.get("name", "Admin") if admin_user else "Admin"
+
     comment_entry = {
         "by": current_user["sub"],
-        "by_name": current_user.get("name", "Admin"),
+        "by_name": admin_name,
         "role": user_role,
         "comment": data.comment,
         "target_role": data.target_role,

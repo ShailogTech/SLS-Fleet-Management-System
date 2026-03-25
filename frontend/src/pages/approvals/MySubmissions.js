@@ -323,9 +323,11 @@ const MySubmissions = () => {
                         {submission.status === 'rejected' ? 'Rejected' : 'Approved'}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {submission.approver_action_at 
-                          ? new Date(submission.approver_action_at).toLocaleDateString()
-                          : 'Pending'
+                        {submission.admin_action_at
+                          ? new Date(submission.admin_action_at).toLocaleDateString()
+                          : submission.approver_action_at
+                            ? new Date(submission.approver_action_at).toLocaleDateString()
+                            : 'Pending'
                         }
                       </p>
                     </div>
@@ -390,6 +392,29 @@ const MySubmissions = () => {
                         </div>
                         <p className={`text-sm ${submission.status === 'approved' ? 'text-emerald-800' : 'text-red-800'}`}>
                           {submission.approver_comment}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Admin direct action comment */}
+                    {submission.admin_action_comment && (
+                      <div className={`p-3 rounded-lg border ${
+                        submission.status === 'approved'
+                          ? 'bg-emerald-50 border-emerald-200'
+                          : 'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-xs font-semibold ${submission.status === 'approved' ? 'text-emerald-700' : 'text-red-700'}`}>
+                            {submission.status === 'approved' ? 'Directly Approved' : 'Rejected'} by {submission.admin_approved_by_name || 'Admin'}
+                          </span>
+                          {submission.admin_action_at && (
+                            <span className={`text-xs ${submission.status === 'approved' ? 'text-emerald-500' : 'text-red-500'}`}>
+                              {new Date(submission.admin_action_at).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-sm ${submission.status === 'approved' ? 'text-emerald-800' : 'text-red-800'}`}>
+                          {submission.admin_action_comment}
                         </p>
                       </div>
                     )}
