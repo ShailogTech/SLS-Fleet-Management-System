@@ -119,7 +119,8 @@ const VehicleForm = () => {
   };
 
   // Step 1 validation
-  const isStep1Valid = formData.vehicle_no && formData.owner_name && formData.make && formData.engine_no;
+  const isPersonalType = formData.vehicle_type === 'Personal';
+  const isStep1Valid = formData.vehicle_no && formData.owner_name && formData.make && (isPersonalType || formData.engine_no);
 
   // Step 2: Check if required docs have at least expiry set
   const requiredDocsWithExpiry = REQUIRED_DOCUMENTS.filter(d => d.required).every(
@@ -152,6 +153,24 @@ const VehicleForm = () => {
         cleanedData.documents = hasValidDoc ? cleanedDocs : null;
       }
       
+      // Route to personal vehicles if vehicle type is Personal
+      const isPersonal = cleanedData.vehicle_type === 'Personal';
+      if (isPersonal) {
+        const personalData = {
+          vehicle_no: cleanedData.vehicle_no,
+          owner_name: cleanedData.owner_name,
+          make: cleanedData.make,
+          insurance_expiry: cleanedData.documents?.insurance_expiry || null,
+          rc_expiry: cleanedData.documents?.rc_expiry || null,
+          notes: cleanedData.concern || null,
+        };
+        const response = await api.post('/personal-vehicles', personalData);
+        const vehicleId = response.data.id;
+        setCreatedVehicleId(vehicleId);
+        toast.success('Personal vehicle saved!');
+        return vehicleId;
+      }
+
       const response = await api.post('/vehicles', cleanedData);
       const vehicleId = response.data.id;
       setCreatedVehicleId(vehicleId);
@@ -186,7 +205,8 @@ const VehicleForm = () => {
       setUploadingDoc(doc.key);
       try {
         // Step 1: Save metadata as JSON (avoids multipart issues)
-        const meta = { entity_type: 'vehicle', entity_id: vehId, document_type: doc.key };
+        const entityType = formData.vehicle_type === 'Personal' ? 'personal_vehicle' : 'vehicle';
+        const meta = { entity_type: entityType, entity_id: vehId, document_type: doc.key };
         if (docData.expiry) meta.expiry_date = docData.expiry;
         const metaRes = await api.post('/documents/save-metadata', meta);
         const docId = metaRes.data?.document?.id;
@@ -214,7 +234,8 @@ const VehicleForm = () => {
 
     // Verify saved documents from backend
     try {
-      const res = await api.get(`/documents/vehicle/${vehId}`);
+      const docEntityType = formData.vehicle_type === 'Personal' ? 'personal_vehicle' : 'vehicle';
+      const res = await api.get(`/documents/${docEntityType}/${vehId}`);
       if (res.data?.length > 0) {
         const verified = {};
         res.data.forEach(d => { if (d.document_type) verified[d.document_type] = true; });
@@ -254,8 +275,13 @@ const VehicleForm = () => {
   const handleFinalSubmit = () => {
     if (submitting) return;
     setSubmitting(true);
-    toast.success('Vehicle submitted for approval! Track status in My Submissions.');
-    navigate('/my-submissions');
+    if (isPersonalType) {
+      toast.success('Personal vehicle saved successfully!');
+      navigate('/personal-vehicles');
+    } else {
+      toast.success('Vehicle submitted for approval! Track status in My Submissions.');
+      navigate('/my-submissions');
+    }
   };
 
   return (

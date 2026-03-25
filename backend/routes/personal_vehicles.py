@@ -10,21 +10,21 @@ def get_db():
 router = APIRouter(prefix="/personal-vehicles", tags=["Personal Vehicles"])
 
 
-def require_superuser(current_user: dict):
-    if current_user.get("role") != "superuser":
-        raise HTTPException(status_code=403, detail="Only superuser can access personal vehicles")
+def require_authorized(current_user: dict):
+    if current_user.get("role") not in ["superuser", "admin", "maker", "office_incharge"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
 
 
 @router.get("")
 async def get_personal_vehicles(current_user: dict = Depends(get_current_user)):
-    require_superuser(current_user)
+    require_authorized(current_user)
     vehicles = await get_db().personal_vehicles.find({}, {"_id": 0}).to_list(1000)
     return vehicles
 
 
 @router.post("")
 async def create_personal_vehicle(data: PersonalVehicleCreate, current_user: dict = Depends(get_current_user)):
-    require_superuser(current_user)
+    require_authorized(current_user)
 
     existing = await get_db().personal_vehicles.find_one({"vehicle_no": data.vehicle_no}, {"_id": 0})
     if existing:
@@ -44,7 +44,7 @@ async def create_personal_vehicle(data: PersonalVehicleCreate, current_user: dic
 
 @router.delete("/{vehicle_id}")
 async def delete_personal_vehicle(vehicle_id: str, current_user: dict = Depends(get_current_user)):
-    require_superuser(current_user)
+    require_authorized(current_user)
     result = await get_db().personal_vehicles.delete_one({"id": vehicle_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Vehicle not found")
