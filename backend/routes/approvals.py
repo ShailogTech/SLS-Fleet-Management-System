@@ -111,17 +111,30 @@ async def get_my_submissions(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(1000)
 
+    db = get_db()
+
+    # Batch fetch checker/approver/submitter names
+    user_ids = set()
+    for s in submissions:
+        if s.get("checker_id"): user_ids.add(s["checker_id"])
+        if s.get("approver_id"): user_ids.add(s["approver_id"])
+        if s.get("submitted_by"): user_ids.add(s["submitted_by"])
+    users_map = {}
+    if user_ids:
+        users = await db.users.find({"id": {"$in": list(user_ids)}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+        users_map = {u["id"]: u.get("name", "Unknown") for u in users}
+
     result = []
     for submission in submissions:
         entity_data = None
         if submission.get("entity_type") == "vehicle":
-            entity_data = await get_db().vehicles.find_one({"id": submission["entity_id"]}, {"_id": 0})
+            entity_data = await db.vehicles.find_one({"id": submission["entity_id"]}, {"_id": 0})
         elif submission.get("entity_type") == "driver":
-            entity_data = await get_db().drivers.find_one({"id": submission["entity_id"]}, {"_id": 0})
+            entity_data = await db.drivers.find_one({"id": submission["entity_id"]}, {"_id": 0})
         elif submission.get("entity_type") == "profile_edit":
-            entity_data = await get_db().profile_edits.find_one({"id": submission["entity_id"]}, {"_id": 0})
+            entity_data = await db.profile_edits.find_one({"id": submission["entity_id"]}, {"_id": 0})
 
-        documents = await get_db().documents.find(
+        documents = await db.documents.find(
             {"entity_type": submission.get("entity_type"), "entity_id": submission["entity_id"]},
             {"_id": 0, "file_content_b64": 0}
         ).to_list(50)
@@ -129,7 +142,10 @@ async def get_my_submissions(current_user: dict = Depends(get_current_user)):
         result.append({
             **submission,
             "entity_data": entity_data,
-            "documents": documents
+            "documents": documents,
+            "checker_name": users_map.get(submission.get("checker_id")),
+            "approver_name": users_map.get(submission.get("approver_id")),
+            "submitter_name": users_map.get(submission.get("submitted_by")),
         })
 
     return result

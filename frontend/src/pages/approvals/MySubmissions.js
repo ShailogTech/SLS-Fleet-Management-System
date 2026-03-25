@@ -267,6 +267,7 @@ const MySubmissions = () => {
                         <CheckCircle className="h-5 w-5 text-emerald-600" />
                       </div>
                       <p className="text-xs font-medium text-slate-700 mt-2">Submitted</p>
+                      <p className="text-xs text-slate-500">{submission.submitter_name || 'Unknown'}</p>
                       <p className="text-xs text-slate-400">
                         {new Date(submission.created_at).toLocaleDateString()}
                       </p>
@@ -291,10 +292,11 @@ const MySubmissions = () => {
                           <Clock className="h-5 w-5 text-slate-400" />
                         )}
                       </div>
-                      <p className="text-xs font-medium text-slate-700 mt-2">
+                      <p className="text-xs font-medium text-slate-700 mt-2">Checked</p>
+                      <p className="text-xs text-slate-500">
                         {submission.admin_approved_by && !submission.checker_id
-                          ? `By ${submission.admin_approved_by_name || 'Admin'}`
-                          : 'Checked'}
+                          ? submission.admin_approved_by_name || 'Admin'
+                          : submission.checker_name || (submission.checker_id ? 'Unknown' : '')}
                       </p>
                       <p className="text-xs text-slate-400">
                         {submission.checker_action_at
@@ -311,8 +313,8 @@ const MySubmissions = () => {
                     {/* Step 3: Approved/Rejected */}
                     <div className="flex flex-col items-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        submission.status === 'approved' 
-                          ? 'bg-emerald-100' 
+                        submission.status === 'approved'
+                          ? 'bg-emerald-100'
                           : submission.status === 'rejected'
                             ? 'bg-red-100'
                             : 'bg-slate-100'
@@ -326,9 +328,12 @@ const MySubmissions = () => {
                         )}
                       </div>
                       <p className="text-xs font-medium text-slate-700 mt-2">
-                        {submission.status === 'rejected' ? 'Rejected'
-                          : submission.admin_approved_by ? `Approved`
-                          : 'Approved'}
+                        {submission.status === 'rejected' ? 'Rejected' : 'Approved'}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {submission.admin_approved_by
+                          ? submission.admin_approved_by_name || 'Admin'
+                          : submission.approver_name || (submission.approver_id ? 'Unknown' : '')}
                       </p>
                       <p className="text-xs text-slate-400">
                         {submission.admin_action_at
