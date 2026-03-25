@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import {
   CheckCircle, XCircle, RefreshCw, AlertCircle, Truck, User,
-  MessageSquare, FileText, Download, Send, Filter
+  MessageSquare, FileText, Download, Filter
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRefresh } from '../../contexts/RefreshContext';
@@ -20,7 +20,6 @@ const ApprovalQueue = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
   const [commentText, setCommentText] = useState({});
-  const [showCommentFor, setShowCommentFor] = useState(null);
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -99,26 +98,6 @@ const ApprovalQueue = () => {
       toast.error(error.response?.data?.detail || 'Action failed');
     } finally {
       setProcessing(null);
-    }
-  };
-
-  const handleAdminComment = async (approvalId) => {
-    const text = commentText[approvalId];
-    if (!text?.trim()) {
-      toast.error('Please enter a comment');
-      return;
-    }
-    try {
-      await api.post(`/approvals/${approvalId}/comment`, {
-        comment: text,
-        target_role: null
-      });
-      toast.success('Comment added');
-      setCommentText(prev => ({ ...prev, [approvalId]: '' }));
-      setShowCommentFor(null);
-      fetchApprovals(false);
-    } catch (error) {
-      toast.error('Failed to add comment');
     }
   };
 
@@ -497,15 +476,6 @@ const ApprovalQueue = () => {
                       >
                         <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
                         Reject
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAdminComment(approval.id)}
-                        disabled={!commentText[approval.id]?.trim()}
-                        data-testid={`admin-send-comment-${approval.id}`}
-                      >
-                        <Send className="h-3 w-3 mr-1" /> Send Query Only
                       </Button>
                     </div>
                   </div>

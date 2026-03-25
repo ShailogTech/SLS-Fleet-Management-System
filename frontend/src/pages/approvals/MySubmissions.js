@@ -277,13 +277,13 @@ const MySubmissions = () => {
                     {/* Step 2: Checked */}
                     <div className="flex flex-col items-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        submission.checker_id 
-                          ? 'bg-emerald-100' 
+                        submission.checker_id || submission.admin_approved_by
+                          ? 'bg-emerald-100'
                           : submission.status === 'rejected' && !submission.checker_id
                             ? 'bg-red-100'
                             : 'bg-slate-100'
                       }`}>
-                        {submission.checker_id ? (
+                        {submission.checker_id || submission.admin_approved_by ? (
                           <CheckCircle className="h-5 w-5 text-emerald-600" />
                         ) : submission.status === 'rejected' && !submission.approver_id ? (
                           <XCircle className="h-5 w-5 text-red-600" />
@@ -291,11 +291,17 @@ const MySubmissions = () => {
                           <Clock className="h-5 w-5 text-slate-400" />
                         )}
                       </div>
-                      <p className="text-xs font-medium text-slate-700 mt-2">Checked</p>
+                      <p className="text-xs font-medium text-slate-700 mt-2">
+                        {submission.admin_approved_by && !submission.checker_id
+                          ? `By ${submission.admin_approved_by_name || 'Admin'}`
+                          : 'Checked'}
+                      </p>
                       <p className="text-xs text-slate-400">
-                        {submission.checker_action_at 
+                        {submission.checker_action_at
                           ? new Date(submission.checker_action_at).toLocaleDateString()
-                          : 'Pending'
+                          : submission.admin_action_at
+                            ? new Date(submission.admin_action_at).toLocaleDateString()
+                            : 'Pending'
                         }
                       </p>
                     </div>
@@ -320,7 +326,9 @@ const MySubmissions = () => {
                         )}
                       </div>
                       <p className="text-xs font-medium text-slate-700 mt-2">
-                        {submission.status === 'rejected' ? 'Rejected' : 'Approved'}
+                        {submission.status === 'rejected' ? 'Rejected'
+                          : submission.admin_approved_by ? `Approved`
+                          : 'Approved'}
                       </p>
                       <p className="text-xs text-slate-400">
                         {submission.admin_action_at
