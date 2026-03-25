@@ -68,7 +68,7 @@ async def get_approval_queue(current_user: dict = Depends(get_current_user)):
         all_entity_ids = list(vehicle_ids | driver_ids | profile_edit_ids)
         docs_map = {}
         if all_entity_ids:
-            all_docs = await db.documents.find({"entity_id": {"$in": all_entity_ids}}, {"_id": 0}).to_list(5000)
+            all_docs = await db.documents.find({"entity_id": {"$in": all_entity_ids}}, {"_id": 0, "file_content_b64": 0}).to_list(5000)
             for doc in all_docs:
                 key = (doc.get("entity_type"), doc.get("entity_id"))
                 docs_map.setdefault(key, []).append(doc)
@@ -117,7 +117,7 @@ async def get_my_submissions(current_user: dict = Depends(get_current_user)):
 
         documents = await get_db().documents.find(
             {"entity_type": submission.get("entity_type"), "entity_id": submission["entity_id"]},
-            {"_id": 0}
+            {"_id": 0, "file_content_b64": 0}
         ).to_list(50)
 
         result.append({
