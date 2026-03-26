@@ -63,7 +63,7 @@ async def signup_request(data: SignupRequest, request: Request):
         "password_hash": get_password_hash(data.password),
         "status": "pending",  # pending, approved, rejected
         "assigned_role": None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": now_ist(),
         "reviewed_by": None,
         "reviewed_at": None
     }
@@ -120,7 +120,7 @@ async def approve_signup_request(request_id: str, role: str, plant: str = None, 
         "role": role,
         "status": "active",
         "password_hash": signup_req["password_hash"],
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": now_ist()
     }
     if role == "plant_incharge" and plant:
         user_doc["plant"] = plant
@@ -134,7 +134,7 @@ async def approve_signup_request(request_id: str, role: str, plant: str = None, 
             "status": "approved",
             "assigned_role": role,
             "reviewed_by": current_user["sub"],
-            "reviewed_at": datetime.now(timezone.utc).isoformat()
+            "reviewed_at": now_ist()
         }}
     )
     
@@ -162,7 +162,7 @@ async def reject_signup_request(request_id: str, current_user: dict = Depends(ge
         {"$set": {
             "status": "rejected",
             "reviewed_by": current_user["sub"],
-            "reviewed_at": datetime.now(timezone.utc).isoformat()
+            "reviewed_at": now_ist()
         }}
     )
     

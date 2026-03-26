@@ -119,7 +119,7 @@ function App() {
             <Route
               path="personal-vehicles"
               element={
-                <ProtectedRoute allowedRoles={['superuser']}>
+                <ProtectedRoute allowedRoles={['superuser', 'admin', 'maker', 'office_incharge']}>
                   <PersonalVehicleList />
                 </ProtectedRoute>
               }

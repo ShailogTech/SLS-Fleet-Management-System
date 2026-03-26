@@ -63,7 +63,7 @@ async def create_stoppage(stoppage_data: StoppageCreate, current_user: dict = De
     
     await db.vehicles.update_one(
         {"id": stoppage_data.vehicle_id},
-        {"$set": {"vehicle_status": "stopped", "updated_at": now_ist()}}
+        {"$set": {"status": "stopped", "updated_at": now_ist()}}
     )
     
     return stoppage
@@ -92,7 +92,7 @@ async def update_stoppage(stoppage_id: str, update_data: StoppageUpdate, current
     if update_data.status == "resumed":
         await db.vehicles.update_one(
             {"id": existing["vehicle_id"]},
-            {"$set": {"vehicle_status": "active", "updated_at": now_ist()}}
+            {"$set": {"status": "active", "updated_at": now_ist()}}
         )
     
     await db.stoppages.update_one({"id": stoppage_id}, {"$set": update_dict})

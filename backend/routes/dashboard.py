@@ -5,6 +5,7 @@ def get_db():
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from utils.permissions import get_current_user
+from utils.time_helpers import IST
 import os
 from datetime import datetime, timedelta
 
@@ -25,8 +26,8 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     
     pending_approvals = await get_db().approvals.count_documents({"status": {"$in": ["pending", "checked"]}})
     
-    today = datetime.now().date().isoformat()
-    thirty_days = (datetime.now() + timedelta(days=30)).date().isoformat()
+    today = datetime.now(IST).date().isoformat()
+    thirty_days = (datetime.now(IST) + timedelta(days=30)).date().isoformat()
     
     expiring_docs = 0
     vehicles = await get_db().vehicles.find({}, {"_id": 0, "documents": 1}).to_list(1000)
@@ -51,8 +52,8 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
 
 @router.get("/alerts")
 async def get_document_alerts(current_user: dict = Depends(get_current_user)):
-    today = datetime.now().date().isoformat()
-    thirty_days = (datetime.now() + timedelta(days=30)).date().isoformat()
+    today = datetime.now(IST).date().isoformat()
+    thirty_days = (datetime.now(IST) + timedelta(days=30)).date().isoformat()
     
     alerts = []
     
@@ -139,8 +140,8 @@ async def get_document_alerts(current_user: dict = Depends(get_current_user)):
 
 @router.get("/expiry-calendar")
 async def get_expiry_calendar(current_user: dict = Depends(get_current_user)):
-    today = datetime.now().date().isoformat()
-    thirty_days = (datetime.now() + timedelta(days=30)).date().isoformat()
+    today = datetime.now(IST).date().isoformat()
+    thirty_days = (datetime.now(IST) + timedelta(days=30)).date().isoformat()
 
     calendar = {}
     total_expired = 0

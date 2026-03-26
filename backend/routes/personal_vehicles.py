@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from models.personal_vehicle import PersonalVehicle, PersonalVehicleCreate
 from utils.permissions import get_current_user
+from utils.time_helpers import now_ist
 from datetime import datetime
 
 def get_db():

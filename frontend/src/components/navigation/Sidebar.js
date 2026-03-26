@@ -62,7 +62,7 @@ const Sidebar = () => {
       name: 'Personal Vehicles',
       href: '/personal-vehicles',
       icon: Car,
-      roles: ['superuser']
+      roles: ['superuser', 'admin', 'maker', 'office_incharge']
     },
     {
       name: 'Users',
