@@ -12,6 +12,7 @@ import {
   ArrowLeft, ArrowRight, CheckCircle, Upload, FileText, X, Truck,
   ClipboardCheck, Eye
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const REQUIRED_DOCUMENTS = [
   { key: 'rc', label: 'Registration Certificate (RC)', required: true, dateLabel: 'Registration Date' },
@@ -40,6 +41,8 @@ const STEPS = [
 
 const VehicleForm = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = ['admin', 'superuser'].includes(user?.role);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -278,6 +281,9 @@ const VehicleForm = () => {
     if (isPersonalType) {
       toast.success('Personal vehicle saved successfully!');
       navigate('/personal-vehicles');
+    } else if (isAdmin) {
+      toast.success('Vehicle added successfully!');
+      navigate('/vehicles');
     } else {
       toast.success('Vehicle submitted for approval! Track status in My Submissions.');
       navigate('/my-submissions');
@@ -528,8 +534,9 @@ const VehicleForm = () => {
           <Card className="border-emerald-200 bg-emerald-50">
             <CardContent className="p-4">
               <p className="text-sm text-emerald-800">
-                Your vehicle has been saved and documents uploaded. The application is now in the approval queue.
-                A Checker will review it first, then an Approver will give final approval.
+                {isAdmin
+                  ? 'Your vehicle has been saved and documents uploaded. The vehicle is now active.'
+                  : 'Your vehicle has been saved and documents uploaded. The application is now in the approval queue. A Checker will review it first, then an Approver will give final approval.'}
               </p>
             </CardContent>
           </Card>

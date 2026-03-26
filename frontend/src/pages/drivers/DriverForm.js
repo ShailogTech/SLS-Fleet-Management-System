@@ -11,6 +11,7 @@ import {
   ArrowLeft, ArrowRight, CheckCircle, Upload, FileText, X,
   User, ClipboardCheck, Eye
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const REQUIRED_DOCUMENTS = [
   { key: 'dl', label: 'Driving License (DL)', required: true },
@@ -26,6 +27,8 @@ const STEPS = [
 
 const DriverForm = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = ['admin', 'superuser'].includes(user?.role);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -182,8 +185,13 @@ const DriverForm = () => {
   const handleFinalSubmit = () => {
     if (submitting) return;
     setSubmitting(true);
-    toast.success('Driver submitted for approval! Track status in My Submissions.');
-    navigate('/my-submissions');
+    if (isAdmin) {
+      toast.success('Driver added successfully!');
+      navigate('/drivers');
+    } else {
+      toast.success('Driver submitted for approval! Track status in My Submissions.');
+      navigate('/my-submissions');
+    }
   };
 
   return (
@@ -358,8 +366,9 @@ const DriverForm = () => {
           <Card className="border-emerald-200 bg-emerald-50">
             <CardContent className="p-4">
               <p className="text-sm text-emerald-800">
-                Driver has been saved and documents uploaded. The application is now in the approval queue.
-                A Checker will review it first, then an Approver will give final approval.
+                {isAdmin
+                  ? 'Driver has been saved and documents uploaded. The driver is now active.'
+                  : 'Driver has been saved and documents uploaded. The application is now in the approval queue. A Checker will review it first, then an Approver will give final approval.'}
               </p>
             </CardContent>
           </Card>
