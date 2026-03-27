@@ -247,46 +247,49 @@ const VehicleForm = () => {
     } catch (e) { /* ignore */ }
   };
 
-  const handleGoToStep2 = async () => {
+  const handleGoToStep2 = () => {
     if (!isStep1Valid) {
       toast.error('Please fill in required vehicle details');
       return;
     }
+    setCurrentStep(2);
+  };
+
+  const handleGoToStep3 = () => {
+    if (!allRequiredDocsUploaded) {
+      toast.error('Please upload all required documents with expiry dates');
+      return;
+    }
+    setCurrentStep(3);
+  };
+
+  const handleFinalSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
     try {
+      // Step 1: Create vehicle in DB
       const vehicleId = await handleSaveVehicle();
-      if (vehicleId) {
-        setCurrentStep(2);
+      if (!vehicleId) {
+        setSubmitting(false);
+        return;
       }
+      // Step 2: Upload all documents
+      await handleUploadDocuments(vehicleId);
+      // Step 3: Navigate
+      if (isPersonalType) {
+        toast.success('Personal vehicle saved successfully!');
+        navigate('/personal-vehicles');
+      } else if (isAdmin) {
+        toast.success('Vehicle added successfully!');
+        navigate('/vehicles');
+      } else {
+        toast.success('Vehicle submitted for approval! Track status in My Submissions.');
+        navigate('/my-submissions');
+      }
+    } catch (error) {
+      toast.error('Failed to save. Please try again.');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleGoToStep3 = async () => {
-    if (submitting) return;
-    setSubmitting(true);
-    try {
-      await handleUploadDocuments();
-      setCurrentStep(3);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleFinalSubmit = () => {
-    if (submitting) return;
-    setSubmitting(true);
-    if (isPersonalType) {
-      toast.success('Personal vehicle saved successfully!');
-      navigate('/personal-vehicles');
-    } else if (isAdmin) {
-      toast.success('Vehicle added successfully!');
-      navigate('/vehicles');
-    } else {
-      toast.success('Vehicle submitted for approval! Track status in My Submissions.');
-      navigate('/my-submissions');
     }
   };
 
@@ -418,8 +421,8 @@ const VehicleForm = () => {
             </div>
 
             <div className="flex justify-end mt-6 pt-4 border-t border-slate-200">
-              <Button onClick={handleGoToStep2} disabled={loading || submitting || !isStep1Valid} className="bg-slate-900 hover:bg-slate-800" data-testid="next-step-btn">
-                {loading || submitting ? 'Saving...' : 'Save & Upload Documents'}
+              <Button onClick={handleGoToStep2} disabled={!isStep1Valid} className="bg-slate-900 hover:bg-slate-800" data-testid="next-step-btn">
+                Next: Upload Documents
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
