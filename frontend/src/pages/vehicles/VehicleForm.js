@@ -20,8 +20,8 @@ const REQUIRED_DOCUMENTS = [
   { key: 'fitness', label: 'Fitness Certificate (FC)', required: true },
   { key: 'tax', label: 'Tax Receipt', required: true },
   { key: 'puc', label: 'PUC Certificate', required: true },
-  { key: 'permit', label: 'Permit', required: false },
-  { key: 'national_permit', label: 'National Permit', required: false },
+  { key: 'permit', label: 'Permit', required: true },
+  { key: 'national_permit', label: 'National Permit', required: true },
   { key: 'cll_addition', label: 'CLL Addition', required: false },
   { key: 'temp_permit', label: 'Temp Permit', required: false },
 ];
@@ -125,9 +125,9 @@ const VehicleForm = () => {
   const isPersonalType = formData.vehicle_type === 'Personal';
   const isStep1Valid = formData.vehicle_no && formData.owner_name && formData.make && (isPersonalType || formData.engine_no);
 
-  // Step 2: Check if required docs have at least expiry set
-  const requiredDocsWithExpiry = REQUIRED_DOCUMENTS.filter(d => d.required).every(
-    d => docFiles[d.key]?.expiry
+  // Step 2: Required docs must have both file and expiry
+  const allRequiredDocsUploaded = REQUIRED_DOCUMENTS.filter(d => d.required).every(
+    d => docFiles[d.key]?.file && docFiles[d.key]?.expiry
   );
 
   const handleSaveVehicle = async () => {
@@ -462,7 +462,7 @@ const VehicleForm = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <Button onClick={handleGoToStep3} disabled={submitting} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
+            <Button onClick={handleGoToStep3} disabled={submitting || !allRequiredDocsUploaded} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
               {submitting ? 'Uploading...' : 'Upload & Review'}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>

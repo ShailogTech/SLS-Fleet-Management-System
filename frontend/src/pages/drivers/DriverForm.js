@@ -16,7 +16,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const REQUIRED_DOCUMENTS = [
   { key: 'dl', label: 'Driving License (DL)', required: true },
   { key: 'hazardous', label: 'Hazardous Certificate', required: true },
-  { key: 'medical', label: 'Medical Fitness Certificate', required: false },
+  { key: 'medical', label: 'Medical Fitness Certificate', required: true },
 ];
 
 const STEPS = [
@@ -57,7 +57,18 @@ const DriverForm = () => {
   const [uploadedDocs, setUploadedDocs] = useState({});
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      // Auto-generate emp_id from first 2 letters of name + last 4 digits of DL
+      if (field === 'name' || field === 'dl_no') {
+        const name = field === 'name' ? value : prev.name;
+        const dl = field === 'dl_no' ? value : prev.dl_no;
+        const namePrefix = name.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
+        const dlSuffix = dl.replace(/[^0-9]/g, '').slice(-4);
+        updated.emp_id = namePrefix && dlSuffix.length === 4 ? `${namePrefix}${dlSuffix}` : '';
+      }
+      return updated;
+    });
   };
 
   const handleDocFileSelect = (docKey, file) => {
@@ -78,7 +89,12 @@ const DriverForm = () => {
     });
   };
 
-  const isStep1Valid = formData.name && formData.emp_id && formData.phone && formData.dl_no;
+  const isStep1Valid = formData.name && formData.phone && formData.dl_no;
+
+  // Step 2: All driver docs are mandatory — require both file and expiry
+  const allRequiredDocsUploaded = REQUIRED_DOCUMENTS.filter(d => d.required).every(
+    d => docFiles[d.key]?.file && docFiles[d.key]?.expiry
+  );
 
   const handleSaveDriver = async () => {
     setLoading(true);
@@ -241,8 +257,8 @@ const DriverForm = () => {
                 <Input value={formData.name} onChange={e => handleChange('name', e.target.value)} data-testid="driver-name-input" />
               </div>
               <div>
-                <Label>Employee ID *</Label>
-                <Input value={formData.emp_id} onChange={e => handleChange('emp_id', e.target.value)} data-testid="driver-empid-input" />
+                <Label>Employee ID (auto-generated)</Label>
+                <Input value={formData.emp_id} readOnly className="bg-slate-50" placeholder="Auto: first 2 letters of name + last 4 digits of DL" data-testid="driver-empid-input" />
               </div>
               <div>
                 <Label>Phone *</Label>
@@ -307,7 +323,7 @@ const DriverForm = () => {
             <Button variant="outline" onClick={() => setCurrentStep(1)} data-testid="prev-step-btn">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back
             </Button>
-            <Button onClick={handleGoToStep3} disabled={submitting} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
+            <Button onClick={handleGoToStep3} disabled={submitting || !allRequiredDocsUploaded} className="bg-slate-900 hover:bg-slate-800" data-testid="upload-and-review-btn">
               {submitting ? 'Uploading...' : 'Upload & Review'} <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
