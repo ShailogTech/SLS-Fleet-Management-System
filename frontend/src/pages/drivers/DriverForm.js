@@ -212,11 +212,12 @@ const DriverForm = () => {
         try {
           await api.post(`/auth/signup-requests/${signupRequestId}/approve?role=driver`);
           toast.success('Driver created and signup request approved!');
+          navigate('/drivers');
         } catch (err) {
           console.error('Failed to approve signup request:', err);
-          toast.success('Driver created! Signup request approval may need manual action.');
+          toast.error('Driver created but signup approval failed. Please approve manually in Signup Requests.');
+          navigate('/signup-requests');
         }
-        navigate('/drivers');
         return;
       }
 

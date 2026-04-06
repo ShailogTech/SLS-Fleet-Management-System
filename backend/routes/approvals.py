@@ -48,6 +48,9 @@ async def get_approval_queue(current_user: dict = Depends(get_current_user)):
             elif etype == "profile_edit" and eid: profile_edit_ids.add(eid)
             if eid and etype: entity_keys.append((etype, eid))
             if a.get("submitted_by"): submitter_ids.add(a["submitted_by"])
+            if a.get("admin_approved_by"): submitter_ids.add(a["admin_approved_by"])
+            if a.get("checker_id"): submitter_ids.add(a["checker_id"])
+            if a.get("approver_id"): submitter_ids.add(a["approver_id"])
 
         # Batch fetch entities
         vehicles_map, drivers_map, edits_map, users_map = {}, {}, {}, {}
@@ -87,7 +90,10 @@ async def get_approval_queue(current_user: dict = Depends(get_current_user)):
                 **approval,
                 "entity_data": entity_data,
                 "submitter": users_map.get(approval.get("submitted_by")),
-                "documents": docs_map.get((etype, eid), [])
+                "documents": docs_map.get((etype, eid), []),
+                "checker_name": (users_map.get(approval.get("checker_id")) or {}).get("name"),
+                "approver_name": (users_map.get(approval.get("approver_id")) or {}).get("name"),
+                "admin_approved_by_name": (users_map.get(approval.get("admin_approved_by")) or {}).get("name"),
             })
 
         return result
@@ -108,12 +114,13 @@ async def get_my_submissions(current_user: dict = Depends(get_current_user)):
 
     db = get_db()
 
-    # Batch fetch checker/approver/submitter names
+    # Batch fetch checker/approver/submitter/admin names
     user_ids = set()
     for s in submissions:
         if s.get("checker_id"): user_ids.add(s["checker_id"])
         if s.get("approver_id"): user_ids.add(s["approver_id"])
         if s.get("submitted_by"): user_ids.add(s["submitted_by"])
+        if s.get("admin_approved_by"): user_ids.add(s["admin_approved_by"])
     users_map = {}
     if user_ids:
         users = await db.users.find({"id": {"$in": list(user_ids)}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
@@ -141,6 +148,7 @@ async def get_my_submissions(current_user: dict = Depends(get_current_user)):
             "checker_name": users_map.get(submission.get("checker_id")),
             "approver_name": users_map.get(submission.get("approver_id")),
             "submitter_name": users_map.get(submission.get("submitted_by")),
+            "admin_approved_by_name": users_map.get(submission.get("admin_approved_by")),
         })
 
     return result
