@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRefresh } from '../../contexts/RefreshContext';
+import { useAuth } from '../../contexts/AuthContext';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -13,9 +14,8 @@ import StatusBadge from '../../components/common/StatusBadge';
 import { toast } from 'sonner';
 import TruckLoader from '../../components/common/TruckLoader';
 
-const ROLES = [
-  { value: 'superuser', label: 'Super User' },
-  { value: 'admin', label: 'Admin' },
+const ALL_ROLES = [
+  { value: 'admin', label: 'Admin', requiresSuperuser: true },
   { value: 'approver', label: 'Approver' },
   { value: 'checker', label: 'Checker' },
   { value: 'operational_manager', label: 'Operational Manager' },
@@ -30,6 +30,9 @@ const ROLES = [
 
 const UserManagement = () => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  const isSuperuser = currentUser?.role === 'superuser';
+  const ROLES = ALL_ROLES.filter(r => !r.requiresSuperuser || isSuperuser);
   const { registerRefresh } = useRefresh();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);

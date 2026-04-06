@@ -13,15 +13,16 @@ import {
   RefreshCw, Shield, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../contexts/AuthContext';
 
-const ROLES = [
+const ALL_ROLES = [
   { value: 'driver', label: 'Driver' },
   { value: 'maker', label: 'Maker' },
   { value: 'operational_manager', label: 'Operational Manager' },
   { value: 'accounts_manager', label: 'Accounts Manager' },
   { value: 'checker', label: 'Checker' },
   { value: 'approver', label: 'Approver' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Admin', requiresSuperuser: true },
   { value: 'office_incharge', label: 'Office Incharge' },
   { value: 'plant_incharge', label: 'Plant Incharge' },
   { value: 'records_incharge', label: 'Records Incharge' },
@@ -30,6 +31,9 @@ const ROLES = [
 
 const SignupRequests = () => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  const isSuperuser = currentUser?.role === 'superuser';
+  const ROLES = ALL_ROLES.filter(r => !r.requiresSuperuser || isSuperuser);
   const { registerRefresh } = useRefresh();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);

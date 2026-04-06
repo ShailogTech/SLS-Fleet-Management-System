@@ -103,6 +103,9 @@ async def approve_signup_request(request_id: str, role: str, plant: str = None, 
     if signup_req["status"] != "pending":
         raise HTTPException(status_code=400, detail="Request has already been processed")
     
+    # Admin role can only be assigned by superuser
+    if role in ["admin", "superuser"] and current_user["role"] != "superuser":
+        raise HTTPException(status_code=403, detail="Only Super Admin can assign admin roles")
     valid_roles = ["driver", "maker", "checker", "operational_manager", "accounts_manager", "approver", "admin", "office_incharge", "plant_incharge", "records_incharge", "viewer"]
     if role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}")

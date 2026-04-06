@@ -250,7 +250,9 @@ async def get_users(current_user: dict = Depends(get_current_user)):
     if user_role not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
-    users = await get_db().users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    # Hide superuser from non-superuser views
+    query = {} if user_role == "superuser" else {"role": {"$ne": "superuser"}}
+    users = await get_db().users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
     return users
 
 @router.post("", response_model=dict)
@@ -263,6 +265,10 @@ async def create_user(user_data: UserCreate, current_user: dict = Depends(get_cu
     if existing:
         raise HTTPException(status_code=400, detail="Email already exists")
     
+    # Only superuser can create admin/superuser roles
+    if user_data.role in ["admin", "superuser"] and user_role != "superuser":
+        raise HTTPException(status_code=403, detail="Only Super Admin can assign admin roles")
+
     user_dict = user_data.model_dump()
     password = user_dict.pop("password")
     plant = user_dict.pop("plant", None)
@@ -289,12 +295,19 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
     if not existing:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Prevent non-superuser from editing superuser accounts
+    if existing.get("role") == "superuser" and user_role != "superuser":
+        raise HTTPException(status_code=403, detail="Cannot edit Super Admin account")
+
     update_data = {}
     if "name" in user_data:
         update_data["name"] = user_data["name"]
     if "phone" in user_data:
         update_data["phone"] = user_data["phone"]
     if "role" in user_data:
+        # Only superuser can assign admin/superuser roles
+        if user_data["role"] in ["admin", "superuser"] and user_role != "superuser":
+            raise HTTPException(status_code=403, detail="Only Super Admin can assign admin roles")
         update_data["role"] = user_data["role"]
     if "status" in user_data:
         update_data["status"] = user_data["status"]
@@ -318,6 +331,11 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
     # Prevent deleting yourself
     if user_id == current_user["sub"]:
         raise HTTPException(status_code=400, detail="Cannot delete your own account")
+
+    # Prevent non-superuser from deleting superuser
+    target = await get_db().users.find_one({"id": user_id}, {"_id": 0, "role": 1})
+    if target and target.get("role") == "superuser" and user_role != "superuser":
+        raise HTTPException(status_code=403, detail="Cannot delete Super Admin account")
 
     result = await get_db().users.delete_one({"id": user_id})
     if result.deleted_count == 0:
