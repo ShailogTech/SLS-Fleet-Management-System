@@ -191,7 +191,7 @@ const PlantList = () => {
     }
   };
 
-  const canCreate = ['admin', 'superuser'].includes(user?.role);
+  const canCreate = ['admin', 'superadmin'].includes(user?.role);
 
   // Group plants by type
   const groupedByType = plants.reduce((acc, plant) => {

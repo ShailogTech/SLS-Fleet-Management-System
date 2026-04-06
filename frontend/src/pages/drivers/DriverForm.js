@@ -29,7 +29,7 @@ const DriverForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const isAdmin = ['admin', 'superuser'].includes(user?.role);
+  const isAdmin = ['admin', 'superadmin'].includes(user?.role);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);

@@ -81,7 +81,7 @@ async def create_document_metadata(
     current_user: dict = Depends(get_current_user)
 ):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     db = get_db()
@@ -144,7 +144,7 @@ async def save_document_metadata_json(
 ):
     try:
         user_role = current_user.get("role")
-        if user_role not in ["maker", "admin", "superuser", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
+        if user_role not in ["maker", "admin", "superadmin", "office_incharge", "records_incharge", "checker", "operational_manager", "approver"]:
             raise HTTPException(status_code=403, detail="Insufficient permissions")
 
         db = get_db()

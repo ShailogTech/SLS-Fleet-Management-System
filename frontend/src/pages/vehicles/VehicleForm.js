@@ -42,7 +42,7 @@ const STEPS = [
 const VehicleForm = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isAdmin = ['admin', 'superuser'].includes(user?.role);
+  const isAdmin = ['admin', 'superadmin'].includes(user?.role);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);

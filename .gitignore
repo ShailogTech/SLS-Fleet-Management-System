@@ -88,6 +88,7 @@ frontend/node_modules/.cache/default-development/0.pack
 # Claude Code session logs
 2026-*.txt
 **/2026-*.txt
+claude-conversations/
 
 # Plan files
 plan.md

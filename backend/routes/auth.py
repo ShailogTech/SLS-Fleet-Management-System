@@ -77,7 +77,7 @@ async def get_signup_requests(current_user: dict = Depends(get_current_user)):
     """Get all pending signup requests (admin/approver only)"""
     db = get_db()
     
-    if current_user["role"] not in ["admin", "superuser"]:
+    if current_user["role"] not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     requests = await db.signup_requests.find(
@@ -92,7 +92,7 @@ async def approve_signup_request(request_id: str, role: str, plant: str = None, 
     """Approve a signup request and assign a role"""
     db = get_db()
     
-    if current_user["role"] not in ["admin", "superuser"]:
+    if current_user["role"] not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get the signup request
@@ -104,7 +104,7 @@ async def approve_signup_request(request_id: str, role: str, plant: str = None, 
         raise HTTPException(status_code=400, detail="Request has already been processed")
     
     # Admin role can only be assigned by superuser
-    if role in ["admin", "superuser"] and current_user["role"] != "superuser":
+    if role in ["admin", "superadmin"] and current_user["role"] != "superadmin":
         raise HTTPException(status_code=403, detail="Only Super Admin can assign admin roles")
     valid_roles = ["driver", "maker", "checker", "operational_manager", "accounts_manager", "approver", "admin", "office_incharge", "plant_incharge", "records_incharge", "viewer"]
     if role not in valid_roles:
@@ -148,7 +148,7 @@ async def reject_signup_request(request_id: str, current_user: dict = Depends(ge
     """Reject a signup request"""
     db = get_db()
     
-    if current_user["role"] not in ["admin", "superuser"]:
+    if current_user["role"] not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get the signup request

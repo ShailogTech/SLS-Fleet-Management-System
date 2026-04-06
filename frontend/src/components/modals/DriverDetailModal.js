@@ -55,7 +55,7 @@ const DriverDetailModal = ({ isOpen, onClose, driverId, onUpdate }) => {
     }
   };
 
-  const canEdit = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
+  const canEdit = ['maker', 'admin', 'superadmin', 'office_incharge'].includes(user?.role);
 
   const fetchDriverDetails = useCallback(async () => {
     setLoading(true);

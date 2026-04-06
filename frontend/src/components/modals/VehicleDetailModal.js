@@ -63,7 +63,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicleId, onUpdate }) => {
     }
   };
 
-  const canEdit = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
+  const canEdit = ['maker', 'admin', 'superadmin', 'office_incharge'].includes(user?.role);
 
   const fetchUploadedDocs = useCallback(async (vehUuid) => {
     try {

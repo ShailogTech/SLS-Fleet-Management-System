@@ -30,45 +30,45 @@ const Sidebar = () => {
   useEffect(() => { setImgLoaded(false); }, [user?.photo_url]);
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
-    { name: 'My Profile', href: '/profile', icon: UserCircle, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer', 'driver'] },
-    { name: 'Vehicles', href: '/vehicles', icon: Truck, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
-    { name: 'Drivers', href: '/drivers', icon: Users, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
-    { name: 'Plants', href: '/plants', icon: MapPin, roles: ['superuser', 'admin', 'office_incharge', 'viewer'] },
-    { name: 'Stoppages', href: '/stoppages', icon: AlertTriangle, roles: ['superuser', 'admin', 'office_incharge', 'plant_incharge'] },
-    { name: 'Tenders', href: '/tenders', icon: FileText, roles: ['superuser', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'viewer'] },
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['superadmin', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
+    { name: 'My Profile', href: '/profile', icon: UserCircle, roles: ['superadmin', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer', 'driver'] },
+    { name: 'Vehicles', href: '/vehicles', icon: Truck, roles: ['superadmin', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
+    { name: 'Drivers', href: '/drivers', icon: Users, roles: ['superadmin', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'records_incharge', 'plant_incharge', 'viewer'] },
+    { name: 'Plants', href: '/plants', icon: MapPin, roles: ['superadmin', 'admin', 'office_incharge', 'viewer'] },
+    { name: 'Stoppages', href: '/stoppages', icon: AlertTriangle, roles: ['superadmin', 'admin', 'office_incharge', 'plant_incharge'] },
+    { name: 'Tenders', href: '/tenders', icon: FileText, roles: ['superadmin', 'admin', 'maker', 'checker', 'operational_manager', 'accounts_manager', 'approver', 'office_incharge', 'viewer'] },
     {
       name: 'Approvals',
       href: '/approvals',
       icon: CheckSquare,
-      roles: ['checker', 'operational_manager', 'approver', 'admin', 'superuser']
+      roles: ['checker', 'operational_manager', 'approver', 'admin', 'superadmin']
     },
     {
       name: 'My Submissions',
       href: '/my-submissions',
       icon: ClipboardList,
-      roles: ['maker', 'admin', 'superuser', 'office_incharge', 'records_incharge']
+      roles: ['maker', 'admin', 'superadmin', 'office_incharge', 'records_incharge']
     },
-    { name: 'Alerts', href: '/alerts', icon: AlertTriangle, roles: ['superuser', 'admin', 'records_incharge', 'office_incharge'] },
-    { name: 'Expiry Calendar', href: '/expiry-calendar', icon: CalendarDays, roles: ['superuser', 'admin', 'approver'] },
-    { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['superuser', 'admin', 'office_incharge'] },
+    { name: 'Alerts', href: '/alerts', icon: AlertTriangle, roles: ['superadmin', 'admin', 'records_incharge', 'office_incharge'] },
+    { name: 'Expiry Calendar', href: '/expiry-calendar', icon: CalendarDays, roles: ['superadmin', 'admin', 'approver'] },
+    { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['superadmin', 'admin', 'office_incharge'] },
     {
       name: 'Signup Requests',
       href: '/signup-requests',
       icon: UserPlus,
-      roles: ['admin', 'superuser']
+      roles: ['admin', 'superadmin']
     },
     {
       name: 'Personal Vehicles',
       href: '/personal-vehicles',
       icon: Car,
-      roles: ['superuser', 'admin', 'maker', 'office_incharge']
+      roles: ['superadmin', 'admin', 'maker', 'office_incharge']
     },
     {
       name: 'Users',
       href: '/users',
       icon: Settings,
-      roles: ['admin', 'superuser']
+      roles: ['admin', 'superadmin']
     },
   ];
 
@@ -150,7 +150,7 @@ const Sidebar = () => {
               <div className="text-xs text-slate-500 min-w-0">
                 <div className="font-semibold text-slate-900 truncate">{user?.name}</div>
                 <div className="truncate">{user?.email}</div>
-                <div className="mt-0.5 capitalize">{user?.role?.replace('_', ' ')}</div>
+                <div className="mt-0.5 capitalize">{user?.role === 'superadmin' ? 'Admin' : user?.role?.replace(/_/g, ' ')}</div>
               </div>
             </Link>
           </div>

@@ -128,7 +128,7 @@ const DriverList = () => {
     });
   };
 
-  const canCreate = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
+  const canCreate = ['maker', 'admin', 'superadmin', 'office_incharge'].includes(user?.role);
 
   // Stats
   const totalDrivers = drivers.length;

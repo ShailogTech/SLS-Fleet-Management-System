@@ -12,7 +12,7 @@ router = APIRouter(prefix="/personal-vehicles", tags=["Personal Vehicles"])
 
 
 def require_authorized(current_user: dict):
-    if current_user.get("role") not in ["superuser", "admin", "maker", "office_incharge"]:
+    if current_user.get("role") not in ["superadmin", "admin", "maker", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
 

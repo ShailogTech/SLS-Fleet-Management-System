@@ -99,7 +99,7 @@ async def get_driver(driver_id: str, current_user: dict = Depends(get_current_us
 @router.post("")
 async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().drivers.find_one({"emp_id": driver_data.emp_id}, {"_id": 0})
@@ -110,7 +110,7 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
     driver.submitted_by = current_user["sub"]
 
     # Admin/superuser bypass approval — directly active
-    is_admin = user_role in ["admin", "superuser"]
+    is_admin = user_role in ["admin", "superadmin"]
     driver.status = "active" if is_admin else "pending"
 
     driver_doc = driver.model_dump()
@@ -163,7 +163,7 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
 @router.put("/{driver_id}")
 async def update_driver(driver_id: str, driver_data: dict, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().drivers.find_one({"id": driver_id}, {"_id": 0})
@@ -191,7 +191,7 @@ async def update_driver(driver_id: str, driver_data: dict, current_user: dict = 
 async def assign_vehicle_to_driver(driver_id: str, body: dict, current_user: dict = Depends(get_current_user)):
     """Assign a vehicle to a driver. Updates both driver and vehicle records."""
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     db = get_db()
@@ -260,7 +260,7 @@ async def assign_vehicle_to_driver(driver_id: str, body: dict, current_user: dic
 @router.delete("/{driver_id}")
 async def delete_driver(driver_id: str, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     result = await get_db().drivers.delete_one({"id": driver_id})

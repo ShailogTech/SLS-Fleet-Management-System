@@ -31,7 +31,7 @@ db = client[os.environ.get('DB_NAME', 'sls_fleet_db')]
 async def seed_admin():
     """Seed default admin user if none exists. Runs in background."""
     try:
-        admin_exists = await db.users.find_one({"role": "superuser"}, {"_id": 0})
+        admin_exists = await db.users.find_one({"role": "superadmin"}, {"_id": 0})
         if not admin_exists:
             from utils.jwt import get_password_hash
             from models.user import User
@@ -40,7 +40,7 @@ async def seed_admin():
                 email="admin@sls.com",
                 name="Super Admin",
                 phone="9999999999",
-                role="superuser",
+                role="superadmin",
                 status="active"
             )
             admin_doc = admin_user.model_dump()

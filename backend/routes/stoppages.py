@@ -42,7 +42,7 @@ async def get_stoppages(
 async def create_stoppage(stoppage_data: StoppageCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     user_role = current_user.get("role")
-    if user_role not in ["plant_incharge", "office_incharge", "admin", "superuser"]:
+    if user_role not in ["plant_incharge", "office_incharge", "admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     vehicle = await db.vehicles.find_one({"id": stoppage_data.vehicle_id}, {"_id": 0})
@@ -72,7 +72,7 @@ async def create_stoppage(stoppage_data: StoppageCreate, current_user: dict = De
 async def update_stoppage(stoppage_id: str, update_data: StoppageUpdate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     user_role = current_user.get("role")
-    if user_role not in ["plant_incharge", "office_incharge", "admin", "superuser"]:
+    if user_role not in ["plant_incharge", "office_incharge", "admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await db.stoppages.find_one({"id": stoppage_id}, {"_id": 0})

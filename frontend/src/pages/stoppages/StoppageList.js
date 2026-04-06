@@ -47,7 +47,7 @@ const StoppageList = () => {
     }
   };
 
-  const canCreate = ['plant_incharge', 'office_incharge', 'admin', 'superuser'].includes(user?.role);
+  const canCreate = ['plant_incharge', 'office_incharge', 'admin', 'superadmin'].includes(user?.role);
 
   if (loading) {
     return <TruckLoader />;

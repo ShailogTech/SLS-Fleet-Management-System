@@ -59,7 +59,7 @@ async def get_vehicle(identifier: str, current_user: dict = Depends(get_current_
 @router.post("")
 async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().vehicles.find_one({"vehicle_no": vehicle_data.vehicle_no}, {"_id": 0})
@@ -73,7 +73,7 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depen
     vehicle = Vehicle(**vehicle_data.model_dump())
     vehicle.submitted_by = current_user["sub"]
     # Admin/superuser bypass approval - directly active
-    is_admin = user_role in ["admin", "superuser"]
+    is_admin = user_role in ["admin", "superadmin"]
     vehicle.status = "active" if is_admin else "pending"
     
     vehicle_doc = vehicle.model_dump()
@@ -102,7 +102,7 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: dict = Depen
 @router.put("/{identifier}")
 async def update_vehicle(identifier: str, vehicle_data: VehicleCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     existing = await _find_vehicle(identifier)
@@ -144,7 +144,7 @@ async def update_vehicle(identifier: str, vehicle_data: VehicleCreate, current_u
 async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: dict = Depends(get_current_user)):
     """Assign a driver to a vehicle. Updates both vehicle and driver records."""
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     db = get_db()
@@ -215,7 +215,7 @@ async def assign_driver_to_vehicle(identifier: str, body: dict, current_user: di
 async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depends(get_current_user)):
     """Shift (renumber) a vehicle: save NOC/LOE flags and update vehicle_no. engine_no stays unchanged."""
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     vehicle = await _find_vehicle(identifier)
@@ -316,7 +316,7 @@ async def shift_vehicle(identifier: str, body: dict, current_user: dict = Depend
 @router.delete("/{identifier}")
 async def delete_vehicle(identifier: str, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     existing = await _find_vehicle(identifier)

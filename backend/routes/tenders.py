@@ -29,7 +29,7 @@ async def get_tender(tender_id: str, current_user: dict = Depends(get_current_us
 @router.post("", response_model=Tender)
 async def create_tender(tender_data: TenderCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().tenders.find_one({"tender_no": tender_data.tender_no}, {"_id": 0})
@@ -66,7 +66,7 @@ async def create_tender(tender_data: TenderCreate, current_user: dict = Depends(
 @router.put("/{tender_id}", response_model=Tender)
 async def update_tender(tender_id: str, tender_data: TenderCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["maker", "admin", "superuser", "office_incharge"]:
+    if user_role not in ["maker", "admin", "superadmin", "office_incharge"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().tenders.find_one({"id": tender_id}, {"_id": 0})
@@ -115,7 +115,7 @@ async def update_tender(tender_id: str, tender_data: TenderCreate, current_user:
 @router.delete("/{tender_id}")
 async def delete_tender(tender_id: str, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().tenders.find_one({"id": tender_id}, {"_id": 0})

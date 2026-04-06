@@ -94,7 +94,7 @@ function App() {
             <Route
               path="expiry-calendar"
               element={
-                <ProtectedRoute allowedRoles={['superuser', 'admin', 'approver']}>
+                <ProtectedRoute allowedRoles={['superadmin', 'admin', 'approver']}>
                   <ExpiryCalendar />
                 </ProtectedRoute>
               }
@@ -103,7 +103,7 @@ function App() {
             <Route
               path="approvals"
               element={
-                <ProtectedRoute allowedRoles={['checker', 'operational_manager', 'approver', 'admin', 'superuser']}>
+                <ProtectedRoute allowedRoles={['checker', 'operational_manager', 'approver', 'admin', 'superadmin']}>
                   <ApprovalQueue />
                 </ProtectedRoute>
               }
@@ -111,7 +111,7 @@ function App() {
             <Route
               path="my-submissions"
               element={
-                <ProtectedRoute allowedRoles={['maker', 'admin', 'superuser', 'office_incharge', 'records_incharge']}>
+                <ProtectedRoute allowedRoles={['maker', 'admin', 'superadmin', 'office_incharge', 'records_incharge']}>
                   <MySubmissions />
                 </ProtectedRoute>
               }
@@ -119,7 +119,7 @@ function App() {
             <Route
               path="personal-vehicles"
               element={
-                <ProtectedRoute allowedRoles={['superuser', 'admin', 'maker', 'office_incharge']}>
+                <ProtectedRoute allowedRoles={['superadmin', 'admin', 'maker', 'office_incharge']}>
                   <PersonalVehicleList />
                 </ProtectedRoute>
               }
@@ -127,7 +127,7 @@ function App() {
             <Route
               path="users"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'superuser']}>
+                <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
                   <UserManagement />
                 </ProtectedRoute>
               }
@@ -135,7 +135,7 @@ function App() {
             <Route
               path="signup-requests"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'superuser']}>
+                <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
                   <SignupRequests />
                 </ProtectedRoute>
               }

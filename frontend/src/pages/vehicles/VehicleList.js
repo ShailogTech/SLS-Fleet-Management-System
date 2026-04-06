@@ -136,8 +136,8 @@ const VehicleList = () => {
     fetchVehicles();
   };
 
-  const canCreate = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
-  const canShift = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
+  const canCreate = ['maker', 'admin', 'superadmin', 'office_incharge'].includes(user?.role);
+  const canShift = ['maker', 'admin', 'superadmin', 'office_incharge'].includes(user?.role);
 
   const handleOpenShift = (vehicle) => {
     setShiftVehicle(vehicle);

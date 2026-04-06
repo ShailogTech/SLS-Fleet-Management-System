@@ -32,7 +32,7 @@ const ALL_ROLES = [
 const SignupRequests = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const isSuperuser = currentUser?.role === 'superuser';
+  const isSuperuser = currentUser?.role === 'superadmin';
   const ROLES = ALL_ROLES.filter(r => !r.requiresSuperuser || isSuperuser);
   const { registerRefresh } = useRefresh();
   const [requests, setRequests] = useState([]);

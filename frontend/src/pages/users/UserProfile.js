@@ -196,7 +196,7 @@ const UserProfile = () => {
               <h2 className="text-xl font-bold text-slate-900">{profile.name}</h2>
               <p className="text-sm text-slate-500 flex items-center mt-0.5">
                 <Shield className="h-3 w-3 mr-1" />
-                <span className="capitalize">{profile.role?.replace('_', ' ')}</span>
+                <span className="capitalize">{profile.role === 'superadmin' ? 'Admin' : profile.role?.replace(/_/g, ' ')}</span>
                 <span className="mx-2">|</span>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${profile.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                   {profile.status}
@@ -345,7 +345,7 @@ const UserProfile = () => {
               <ProfileField icon={User} label="Employee ID" value={profile.emp_id || 'Not set'} />
               <ProfileField icon={Building} label="Address" value={profile.address || 'Not set'} />
               <ProfileField icon={Phone} label="Emergency Contact" value={profile.emergency_contact || 'Not set'} />
-              <ProfileField icon={Shield} label="Role" value={profile.role?.replace('_', ' ')} />
+              <ProfileField icon={Shield} label="Role" value={profile.role === 'superadmin' ? 'Admin' : profile.role?.replace(/_/g, ' ')} />
             </div>
           )}
         </CardContent>

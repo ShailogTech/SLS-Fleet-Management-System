@@ -31,7 +31,7 @@ async def get_approval_queue(current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
 
     try:
-        if user_role in ["checker", "operational_manager", "approver", "admin", "superuser"]:
+        if user_role in ["checker", "operational_manager", "approver", "admin", "superadmin"]:
             approvals = await get_db().approvals.find({}, {"_id": 0}).to_list(1000)
         else:
             raise HTTPException(status_code=403, detail="Insufficient permissions")
@@ -289,7 +289,7 @@ async def approve_approval(approval_id: str, action: ApprovalAction, current_use
 async def admin_direct_action(approval_id: str, action: ApprovalAction, current_user: dict = Depends(get_current_user)):
     """Admin/superuser can directly approve or reject, bypassing checker→approver flow."""
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Only admin/superuser can perform direct actions")
 
     approval = await get_db().approvals.find_one({"id": approval_id}, {"_id": 0})
@@ -381,7 +381,7 @@ async def admin_direct_action(approval_id: str, action: ApprovalAction, current_
 async def add_admin_comment(approval_id: str, data: AdminComment, current_user: dict = Depends(get_current_user)):
     """Admin/superuser can add a comment/query to an approval without taking action."""
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Only admin can add comments")
 
     db = get_db()

@@ -382,8 +382,8 @@ const TenderManagement = () => {
     setIsFormModalOpen(true);
   };
 
-  const canCreate = ['maker', 'admin', 'superuser', 'office_incharge'].includes(user?.role);
-  const canDelete = ['admin', 'superuser'].includes(user?.role);
+  const canCreate = ['maker', 'admin', 'superadmin', 'office_incharge'].includes(user?.role);
+  const canDelete = ['admin', 'superadmin'].includes(user?.role);
 
   // Calculate stats
   const activeTenders = tenders.filter(t => t.status === 'active').length;

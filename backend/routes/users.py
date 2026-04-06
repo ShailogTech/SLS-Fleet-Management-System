@@ -156,7 +156,7 @@ async def serve_photo(filename: str):
 
 @router.get("/profile-edits")
 async def get_profile_edits(current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ["admin", "superuser", "checker", "operational_manager", "approver"]:
+    if current_user["role"] not in ["admin", "superadmin", "checker", "operational_manager", "approver"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     edits = await get_db().profile_edits.find(
@@ -220,7 +220,7 @@ async def reject_profile_edit(edit_id: str, current_user: dict = Depends(get_cur
 async def get_available_plants(current_user: dict = Depends(get_current_user)):
     """Get plants and their assignment status. One incharge can manage multiple plants."""
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     db = get_db()
@@ -247,18 +247,18 @@ async def get_available_plants(current_user: dict = Depends(get_current_user)):
 @router.get("", response_model=List[dict])
 async def get_users(current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Hide superuser from non-superuser views
-    query = {} if user_role == "superuser" else {"role": {"$ne": "superuser"}}
+    query = {} if user_role == "superadmin" else {"role": {"$ne": "superadmin"}}
     users = await get_db().users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
     return users
 
 @router.post("", response_model=dict)
 async def create_user(user_data: UserCreate, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().users.find_one({"email": user_data.email}, {"_id": 0})
@@ -266,7 +266,7 @@ async def create_user(user_data: UserCreate, current_user: dict = Depends(get_cu
         raise HTTPException(status_code=400, detail="Email already exists")
     
     # Only superuser can create admin/superuser roles
-    if user_data.role in ["admin", "superuser"] and user_role != "superuser":
+    if user_data.role in ["admin", "superadmin"] and user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Only Super Admin can assign admin roles")
 
     user_dict = user_data.model_dump()
@@ -288,7 +288,7 @@ async def create_user(user_data: UserCreate, current_user: dict = Depends(get_cu
 @router.put("/{user_id}", response_model=dict)
 async def update_user(user_id: str, user_data: dict, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await get_db().users.find_one({"id": user_id}, {"_id": 0})
@@ -296,7 +296,7 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
         raise HTTPException(status_code=404, detail="User not found")
     
     # Prevent non-superuser from editing superuser accounts
-    if existing.get("role") == "superuser" and user_role != "superuser":
+    if existing.get("role") == "superadmin" and user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Cannot edit Super Admin account")
 
     update_data = {}
@@ -306,7 +306,7 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
         update_data["phone"] = user_data["phone"]
     if "role" in user_data:
         # Only superuser can assign admin/superuser roles
-        if user_data["role"] in ["admin", "superuser"] and user_role != "superuser":
+        if user_data["role"] in ["admin", "superadmin"] and user_role != "superadmin":
             raise HTTPException(status_code=403, detail="Only Super Admin can assign admin roles")
         update_data["role"] = user_data["role"]
     if "status" in user_data:
@@ -325,7 +325,7 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
 @router.delete("/{user_id}")
 async def delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     # Prevent deleting yourself
@@ -334,7 +334,7 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
 
     # Prevent non-superuser from deleting superuser
     target = await get_db().users.find_one({"id": user_id}, {"_id": 0, "role": 1})
-    if target and target.get("role") == "superuser" and user_role != "superuser":
+    if target and target.get("role") == "superadmin" and user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Cannot delete Super Admin account")
 
     result = await get_db().users.delete_one({"id": user_id})

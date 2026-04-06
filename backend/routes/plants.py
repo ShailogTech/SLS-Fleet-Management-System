@@ -31,7 +31,7 @@ async def get_plant(plant_id: str, current_user: dict = Depends(get_current_user
 async def create_plant(plant_data: PlantCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await db.plants.find_one({"plant_name": plant_data.plant_name}, {"_id": 0})
@@ -60,7 +60,7 @@ async def create_plant(plant_data: PlantCreate, current_user: dict = Depends(get
 async def update_plant(plant_id: str, plant_data: PlantCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     existing = await db.plants.find_one({"id": plant_id}, {"_id": 0})
@@ -93,7 +93,7 @@ async def update_plant(plant_id: str, plant_data: PlantCreate, current_user: dic
 async def delete_plant(plant_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     existing = await db.plants.find_one({"id": plant_id}, {"_id": 0})
@@ -108,7 +108,7 @@ async def assign_vehicles_to_plant(plant_id: str, body: dict, current_user: dict
     """Assign one or more vehicles to a plant by setting their plant field."""
     db = get_db()
     user_role = current_user.get("role")
-    if user_role not in ["admin", "superuser"]:
+    if user_role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     plant = await db.plants.find_one({"id": plant_id}, {"_id": 0})

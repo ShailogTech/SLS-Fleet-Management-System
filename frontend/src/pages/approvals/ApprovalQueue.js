@@ -101,7 +101,7 @@ const ApprovalQueue = () => {
     }
   };
 
-  const isAdmin = ['admin', 'superuser'].includes(user?.role);
+  const isAdmin = ['admin', 'superadmin'].includes(user?.role);
   const isChecker = user?.role === 'checker';
   const isOperationalManager = user?.role === 'operational_manager';
   const isReviewer = isChecker || isOperationalManager;

@@ -14,7 +14,7 @@ def is_token_blacklisted(token: str) -> bool:
     return token in _blacklisted_tokens
 
 ROLE_HIERARCHY = {
-    "superuser": 10,
+    "superadmin": 10,
     "admin": 9,
     "approver": 8,
     "checker": 7,

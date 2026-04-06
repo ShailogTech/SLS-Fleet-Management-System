@@ -31,7 +31,7 @@ const ALL_ROLES = [
 const UserManagement = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const isSuperuser = currentUser?.role === 'superuser';
+  const isSuperuser = currentUser?.role === 'superadmin';
   const ROLES = ALL_ROLES.filter(r => !r.requiresSuperuser || isSuperuser);
   const { registerRefresh } = useRefresh();
   const [users, setUsers] = useState([]);
@@ -334,7 +334,7 @@ const UserManagement = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                    {ROLES.find(r => r.value === user.role)?.label || user.role}
+                    {user.role === 'superadmin' ? 'Admin' : (ROLES.find(r => r.value === user.role)?.label || user.role)}
                   </span>
                   {user.plant && <span className="text-xs text-slate-500">{user.plant}</span>}
                   <span className="text-xs text-slate-500">{user.phone}</span>
@@ -376,7 +376,7 @@ const UserManagement = () => {
                     <td className="px-6 py-4 text-sm text-slate-700">{user.phone}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                        {ROLES.find(r => r.value === user.role)?.label || user.role}
+                        {user.role === 'superadmin' ? 'Admin' : (ROLES.find(r => r.value === user.role)?.label || user.role)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-700">{user.plant || '—'}</td>
