@@ -135,7 +135,7 @@ function App() {
             <Route
               path="signup-requests"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'superuser', 'approver']}>
+                <ProtectedRoute allowedRoles={['admin', 'superuser']}>
                   <SignupRequests />
                 </ProtectedRoute>
               }

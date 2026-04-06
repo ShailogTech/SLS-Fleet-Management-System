@@ -56,7 +56,7 @@ const Sidebar = () => {
       name: 'Signup Requests',
       href: '/signup-requests',
       icon: UserPlus,
-      roles: ['admin', 'superuser', 'approver']
+      roles: ['admin', 'superuser']
     },
     {
       name: 'Personal Vehicles',

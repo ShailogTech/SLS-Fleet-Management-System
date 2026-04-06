@@ -77,7 +77,7 @@ async def get_signup_requests(current_user: dict = Depends(get_current_user)):
     """Get all pending signup requests (admin/approver only)"""
     db = get_db()
     
-    if current_user["role"] not in ["admin", "superuser", "approver"]:
+    if current_user["role"] not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     requests = await db.signup_requests.find(
@@ -92,7 +92,7 @@ async def approve_signup_request(request_id: str, role: str, plant: str = None, 
     """Approve a signup request and assign a role"""
     db = get_db()
     
-    if current_user["role"] not in ["admin", "superuser", "approver"]:
+    if current_user["role"] not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get the signup request
@@ -145,7 +145,7 @@ async def reject_signup_request(request_id: str, current_user: dict = Depends(ge
     """Reject a signup request"""
     db = get_db()
     
-    if current_user["role"] not in ["admin", "superuser", "approver"]:
+    if current_user["role"] not in ["admin", "superuser"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get the signup request
