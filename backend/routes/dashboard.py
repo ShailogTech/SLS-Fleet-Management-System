@@ -11,6 +11,9 @@ from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
+# rc_expiry is a registration date, not an expiry — exclude from expiry checks
+NON_EXPIRY_FIELDS = {"rc_expiry"}
+
 
 @router.get("/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
@@ -34,6 +37,8 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     for vehicle in vehicles:
         if vehicle.get("documents"):
             for key, value in vehicle["documents"].items():
+                if key in NON_EXPIRY_FIELDS:
+                    continue
                 if value and isinstance(value, str):
                     if today <= value <= thirty_days:
                         expiring_docs += 1
@@ -61,6 +66,8 @@ async def get_document_alerts(current_user: dict = Depends(get_current_user)):
     for vehicle in vehicles:
         if vehicle.get("documents"):
             for doc_type, expiry_date in vehicle["documents"].items():
+                if doc_type in NON_EXPIRY_FIELDS:
+                    continue
                 if expiry_date and isinstance(expiry_date, str):
                     if expiry_date < today:
                         alerts.append({
@@ -152,6 +159,8 @@ async def get_expiry_calendar(current_user: dict = Depends(get_current_user)):
     for vehicle in vehicles:
         if vehicle.get("documents"):
             for doc_type, expiry_date in vehicle["documents"].items():
+                if doc_type in NON_EXPIRY_FIELDS:
+                    continue
                 if expiry_date and isinstance(expiry_date, str):
                     if expiry_date < today:
                         status = "expired"

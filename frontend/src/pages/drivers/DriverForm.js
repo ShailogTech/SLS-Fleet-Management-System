@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
@@ -27,6 +27,7 @@ const STEPS = [
 
 const DriverForm = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const isAdmin = ['admin', 'superuser'].includes(user?.role);
   const [currentStep, setCurrentStep] = useState(1);
@@ -34,8 +35,12 @@ const DriverForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [createdDriverId, setCreatedDriverId] = useState(null);
 
+  // Pre-fill from query params (e.g., from signup request approval)
   const [formData, setFormData] = useState({
-    name: '', emp_id: '', phone: '', dl_no: '',
+    name: searchParams.get('name') || '',
+    emp_id: '',
+    phone: searchParams.get('phone') || '',
+    dl_no: '',
     dl_expiry: '', hazardous_cert_expiry: '', plant: '',
   });
 
@@ -200,7 +205,22 @@ const DriverForm = () => {
       }
       // Step 2: Upload all documents
       await handleUploadDocuments(driverId);
-      // Step 3: Navigate
+
+      // Step 3: If from signup request, approve it now
+      const signupRequestId = searchParams.get('signup_request_id');
+      if (signupRequestId) {
+        try {
+          await api.post(`/auth/signup-requests/${signupRequestId}/approve?role=driver`);
+          toast.success('Driver created and signup request approved!');
+        } catch (err) {
+          console.error('Failed to approve signup request:', err);
+          toast.success('Driver created! Signup request approval may need manual action.');
+        }
+        navigate('/drivers');
+        return;
+      }
+
+      // Step 4: Navigate
       if (isAdmin) {
         toast.success('Driver added successfully!');
         navigate('/drivers');
@@ -254,7 +274,12 @@ const DriverForm = () => {
       {/* Step 1 */}
       {currentStep === 1 && (
         <Card className="border-slate-200">
-          <CardHeader><CardTitle>Driver Information</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Driver Information</CardTitle>
+            {searchParams.get('name') && (
+              <p className="text-sm text-blue-600 mt-1">Pre-filled from signup request. Complete the remaining details.</p>
+            )}
+          </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>

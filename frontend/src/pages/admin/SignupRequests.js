@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -28,6 +29,7 @@ const ROLES = [
 ];
 
 const SignupRequests = () => {
+  const navigate = useNavigate();
   const { registerRefresh } = useRefresh();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +90,19 @@ const SignupRequests = () => {
       if (selectedRole === 'plant_incharge' && selectedPlant) {
         url += `&plant=${encodeURIComponent(selectedPlant)}`;
       }
+      // If driver role, redirect to Add Driver page FIRST (don't approve yet)
+      if (selectedRole === 'driver') {
+        setIsApproveModalOpen(false);
+        const params = new URLSearchParams({
+          name: selectedRequest.name,
+          phone: selectedRequest.phone,
+          signup_request_id: selectedRequest.id,
+        });
+        toast.info('Complete driver details and upload documents to finish approval.');
+        navigate(`/drivers/new?${params.toString()}`);
+        return;
+      }
+
       await api.post(url);
       toast.success('User approved and activated successfully');
       setIsApproveModalOpen(false);

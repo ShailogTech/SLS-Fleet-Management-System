@@ -28,7 +28,7 @@ const DOC_TYPE_LABELS = {
   puc_expiry: 'PUC Certificate',
   permit_expiry: 'Permit',
   tax_expiry: 'Tax',
-  rc_expiry: 'RC',
+  rc_expiry: 'RC Registration Date',
   dl_expiry: 'Driving License',
   hazardous_cert_expiry: 'Hazardous Certificate',
 };

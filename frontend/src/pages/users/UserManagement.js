@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRefresh } from '../../contexts/RefreshContext';
 import api from '../../utils/api';
 import { Button } from '../../components/ui/button';
@@ -28,6 +29,7 @@ const ROLES = [
 ];
 
 const UserManagement = () => {
+  const navigate = useNavigate();
   const { registerRefresh } = useRefresh();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -88,7 +90,14 @@ const UserManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // If creating a new user with driver role, redirect to Add Driver page
+    if (!editingUser && formData.role === 'driver') {
+      setIsModalOpen(false);
+      navigate('/drivers/new');
+      return;
+    }
+
     try {
       if (editingUser) {
         await api.put(`/users/${editingUser.id}`, formData);
@@ -97,7 +106,7 @@ const UserManagement = () => {
         await api.post('/users', formData);
         toast.success('User created successfully');
       }
-      
+
       setIsModalOpen(false);
       resetForm();
       fetchUsers();
