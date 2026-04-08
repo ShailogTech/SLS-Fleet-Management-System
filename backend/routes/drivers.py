@@ -149,14 +149,21 @@ async def create_driver(driver_data: DriverCreate, current_user: dict = Depends(
     except Exception as e:
         logger.error(f"Failed to auto-create user for driver {driver_data.name}: {e}")
 
-    # Only create approval record for non-admin users
-    if not is_admin:
-        from models.approval import Approval
-        approval = Approval(entity_type="driver", entity_id=driver.id, submitted_by=current_user["sub"])
-        approval_doc = approval.model_dump()
-        approval_doc["created_at"] = approval_doc["created_at"].isoformat()
-        approval_doc["updated_at"] = approval_doc["updated_at"].isoformat()
-        await get_db().approvals.insert_one(approval_doc)
+    # Create approval record for all users
+    from models.approval import Approval
+    approval = Approval(entity_type="driver", entity_id=driver.id, submitted_by=current_user["sub"])
+    approval_doc = approval.model_dump()
+    approval_doc["created_at"] = approval_doc["created_at"].isoformat()
+    approval_doc["updated_at"] = approval_doc["updated_at"].isoformat()
+    # Admin: auto-approve immediately
+    if is_admin:
+        admin_user = await get_db().users.find_one({"id": current_user["sub"]}, {"_id": 0, "name": 1})
+        admin_name = admin_user.get("name", "Admin") if admin_user else "Admin"
+        approval_doc["status"] = "approved"
+        approval_doc["admin_approved_by"] = current_user["sub"]
+        approval_doc["admin_approved_by_name"] = admin_name
+        approval_doc["admin_action_at"] = now_ist()
+    await get_db().approvals.insert_one(approval_doc)
 
     return driver
 
