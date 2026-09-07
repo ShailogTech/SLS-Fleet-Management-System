@@ -9,11 +9,8 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f8fafc;
-    background-image:
-        linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
-    background-size: 60px 60px;
+    background-color: #181818;
+    color: #ffffff;
 }
 
 code {
@@ -21,62 +18,63 @@ code {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Chivo', sans-serif;
+    font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
 }
 
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
-        --radius: 0.5rem;
+                --background: 0 0% 9.4%;
+        --foreground: 0 0% 100%;
+        --card: 0 0% 19%;
+        --card-foreground: 0 0% 100%;
+        --popover: 0 0% 19%;
+        --popover-foreground: 0 0% 100%;
+        --primary: 4 77% 48%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 0 0% 19%;
+        --secondary-foreground: 0 0% 100%;
+        --muted: 0 0% 19%;
+        --muted-foreground: 0 0% 40%;
+        --accent: 0 0% 22%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 5 88% 56%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 0 0% 19%;
+        --input: 0 0% 19%;
+        --ring: 4 77% 48%;
+        --chart-1: 4 77% 48%;
+        --chart-2: 0 0% 100%;
+        --chart-3: 0 0% 59%;
+        --chart-4: 200 43% 51%;
+        --chart-5: 150 96% 29%;
+        --radius: 0.125rem;
     }
     .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
+                --background: 0 0% 9.4%;
+                --foreground: 0 0% 100%;
+                --card: 0 0% 19%;
+                --card-foreground: 0 0% 100%;
+                --popover: 0 0% 19%;
+                --popover-foreground: 0 0% 100%;
+                --primary: 4 77% 48%;
+                --primary-foreground: 0 0% 100%;
+                --secondary: 0 0% 19%;
+                --secondary-foreground: 0 0% 100%;
+                --muted: 0 0% 19%;
+                --muted-foreground: 0 0% 40%;
+                --accent: 0 0% 22%;
+                --accent-foreground: 0 0% 100%;
+                --destructive: 5 88% 56%;
+                --destructive-foreground: 0 0% 100%;
+                --border: 0 0% 19%;
+                --input: 0 0% 19%;
+                --ring: 4 77% 48%;
+                --chart-1: 4 77% 48%;
+                --chart-2: 0 0% 100%;
+                --chart-3: 0 0% 59%;
+                --chart-4: 200 43% 51%;
+                --chart-5: 150 96% 29%;
+                --radius: 0.125rem;
     }
 }
 
@@ -149,7 +147,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Title with letter stagger */
 .splash-title {
-  font-family: 'Chivo', sans-serif;
+  font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-size: 3.2rem;
   font-weight: 900;
   color: white;
@@ -213,7 +211,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #303030 100%);
 }
 
 /* === Animated Background === */
@@ -244,7 +242,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(220,38,38,0.07) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(218,41,28,0.07) 0%, transparent 70%);
   transform: translate(-50%, -50%);
   pointer-events: none;
   transition: left 0.3s ease-out, top 0.3s ease-out;
@@ -267,15 +265,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-route-1 {
-  stroke: rgba(220,38,38,0.2);
+  stroke: rgba(218,41,28,0.2);
   animation: loginRouteDash 15s linear infinite;
 }
 .login-route-2 {
-  stroke: rgba(220,38,38,0.12);
+  stroke: rgba(218,41,28,0.12);
   animation: loginRouteDash 20s linear infinite reverse;
 }
 .login-route-3 {
-  stroke: rgba(220,38,38,0.08);
+  stroke: rgba(218,41,28,0.08);
   animation: loginRouteDash 18s linear infinite;
 }
 
@@ -347,7 +345,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(220,38,38,0.3);
+  box-shadow: 0 0 20px rgba(218,41,28,0.3);
 }
 
 .login-logo-icon {
@@ -357,19 +355,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-logo-text {
-  font-family: 'Chivo', sans-serif;
+  font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-weight: 900;
   font-size: 1.25rem;
-  color: #ef4444;
+  color: #da291c;
   letter-spacing: -0.02em;
 }
 
 .login-headline {
-  font-family: 'Chivo', sans-serif;
+  font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-weight: 900;
   font-size: 3.5rem;
   line-height: 1.05;
-  color: #ef4444;
+  color: #da291c;
   margin: 0 0 20px 0;
   letter-spacing: -0.03em;
 }
@@ -403,8 +401,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: rgba(220,38,38,0.04);
-  border: 1px solid rgba(220,38,38,0.1);
+  background: rgba(218,41,28,0.04);
+  border: 1px solid rgba(218,41,28,0.1);
   border-radius: 100px;
   color: rgba(0,0,0,0.55);
   font-family: 'Inter', sans-serif;
@@ -414,9 +412,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-feature-pill:hover {
-  background: rgba(220,38,38,0.08);
-  border-color: rgba(220,38,38,0.25);
-  color: #ef4444;
+  background: rgba(218,41,28,0.08);
+  border-color: rgba(218,41,28,0.25);
+  color: #da291c;
   transform: translateY(-1px);
 }
 
@@ -433,10 +431,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-stat-num {
-  font-family: 'Chivo', sans-serif;
+  font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-weight: 900;
   font-size: 1.6rem;
-  color: #ef4444;
+  color: #da291c;
 }
 
 .login-stat-label {
@@ -451,7 +449,7 @@ h1, h2, h3, h4, h5, h6 {
 .login-stat-divider {
   width: 1px;
   height: 36px;
-  background: rgba(220,38,38,0.15);
+  background: rgba(218,41,28,0.15);
 }
 
 /* === Form Panel (right) === */
@@ -467,7 +465,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   max-width: 420px;
   background: #ffffff;
-  border: 1px solid rgba(220,38,38,0.1);
+  border: 1px solid rgba(218,41,28,0.1);
   border-radius: 24px;
   padding: 40px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1), 0 20px 50px rgba(0,0,0,0.15), 0 40px 80px rgba(0,0,0,0.12);
@@ -500,10 +498,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-form-title {
-  font-family: 'Chivo', sans-serif;
+  font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-weight: 900;
   font-size: 1.75rem;
-  color: #ef4444;
+  color: #da291c;
   margin: 0 0 8px 0;
 }
 
@@ -536,7 +534,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-field-focused .login-label {
-  color: #ef4444;
+  color: #da291c;
 }
 
 .login-input-wrap {
@@ -554,7 +552,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-field-focused .login-input-icon {
-  color: #ef4444;
+  color: #da291c;
 }
 
 .login-input {
@@ -576,9 +574,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-input:focus {
-  border-color: #ef4444;
-  background: rgba(220,38,38,0.03);
-  box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+  border-color: #da291c;
+  background: rgba(218,41,28,0.03);
+  box-shadow: 0 0 0 3px rgba(218,41,28,0.08);
 }
 
 .login-field-filled .login-input {
@@ -602,7 +600,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-pw-toggle:hover {
-  color: #ef4444;
+  color: #da291c;
 }
 
 /* Submit button — UIverse neumorphic (FColombati/spotty-snake-82) */
@@ -789,14 +787,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-signup-link {
-  color: #ef4444;
+  color: #da291c;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .login-signup-link:hover {
-  color: #ef4444;
+  color: #da291c;
 }
 
 /* === Responsive === */
@@ -821,7 +819,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   border-radius: 24px;
   padding: 28px 24px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #303030;
 }
 
 .dash-metric-content {
@@ -855,7 +853,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   color: #1e293b;
   line-height: 1.1;
-  font-family: 'Chivo', sans-serif;
+  font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
 }
 
 .dash-metric-title {
@@ -1032,3 +1030,68 @@ html, body {
     margin: 16px;
   }
 }
+
+/* ===================== Ferrari design layer =====================
+   Canvas #181818 (never pure black) - cards/elevation #303030 - hairlines
+   #303030/#3a3a3a - body text #969696 - Rosso Corsa #da291c scarce:
+   primary CTAs, active states, the Cavallino blade. Sharp corners; the
+   only pill is a badge. Single family (Inter); display weight 500;
+   CTAs uppercase with wide tracking. */
+
+:root { --rosso: #da291c; --rosso-active: #b01e0a; }
+
+/* shared tokens that were near-black TEXT in the old light theme now
+   become Ferrari ink; the same numbers as dark SURFACES become elevated */
+.bg-slate-900, .bg-slate-800, .bg-slate-700 { background-color: #303030; }
+.bg-slate-900\/90 { background-color: rgb(48 48 48 / .9); }
+.hover\:bg-slate-800:hover, .hover\:bg-slate-700:hover { background-color: #3a3a3a; }
+.text-slate-900, .text-slate-950 { color: #ffffff; }
+.text-slate-800 { color: #e6e6e6; }
+.text-slate-700 { color: #b0b0b0; }
+.hover\:text-slate-900:hover { color: #ffffff; }
+.hover\:text-slate-700:hover { color: #d2d2d2; }
+.from-slate-800 { --tw-gradient-from: #303030; --tw-gradient-to: transparent; }
+.from-slate-900 { --tw-gradient-from: #303030; --tw-gradient-to: transparent; }
+.to-slate-600 { --tw-gradient-to: #3a3a3a; }
+.bg-white { background-color: #303030; }
+.hover\:bg-white:hover { background-color: #3a3a3a; }
+.bg-gray-300 { background-color: #1d1d1d; }
+.bg-black\/50 { background-color: rgba(0, 0, 0, .6); }
+
+/* Ferrari CTA voice - uppercase, wide tracking, sharp */
+button, [role="button"], a[class*="bg-blue-600"], a[class*="bg-primary"] {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+}
+button[class*="bg-blue-600"], button[class*="bg-primary"],
+a[class*="bg-blue-600"], a[class*="bg-primary"],
+[class*="bg-blue-600"][class*="text-white"] {
+    background-color: var(--rosso) !important;
+    border-radius: 0 !important;
+    transition: background-color .15s ease;
+}
+button[class*="bg-blue-600"]:active, [class*="bg-blue-600"]:active { background-color: var(--rosso-active) !important; }
+input[class*="border"], textarea[class*="border"], select[class*="border"] { border-radius: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--rosso);
+    outline-offset: 1px;
+}
+
+/* sharp everywhere Tailwind rounded-* meets Ferrari */
+.rounded-lg, .rounded-md, .rounded-xl, .rounded-2xl { border-radius: 2px !important; }
+.rounded-full:not(.avatar-keep) { border-radius: 9999px; } /* avatars/badges stay pills */
+
+/* tables: caption-uppercase headers, hairline rows */
+table thead th { text-transform: uppercase; letter-spacing: .09em; font-size: 11px; font-weight: 600; color: #8f8f8f; }
+table tbody tr { border-color: #303030; }
+table tbody tr:hover { background-color: #1d1d1d; }
+
+/* captions & section labels */
+.text-xs.font-semibold.uppercase, .text-\[11px\] { letter-spacing: .1em; }
+
+::selection { background: var(--rosso); color: #fff; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #181818; }
+::-webkit-scrollbar-thumb { background: #303030; border: 2px solid #181818; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
