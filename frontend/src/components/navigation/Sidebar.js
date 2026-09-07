@@ -86,8 +86,8 @@ const Sidebar = () => {
         className={cn(
           'flex items-center px-4 py-3 text-sm font-medium transition-colors',
           isActive
-            ? 'bg-[#303030] text-white shadow-[inset_3px_0_0_#da291c]'
-            : 'text-[#969696] hover:bg-[#303030] hover:text-white'
+            ? 'bg-[#1a1a1a] text-white shadow-[inset_3px_0_0_#76b900]'
+            : 'text-[#b3b3b3] hover:bg-[#1a1a1a] hover:text-white'
         )}
         onClick={() => setIsMobileMenuOpen(false)}
       >
@@ -101,7 +101,7 @@ const Sidebar = () => {
     <>
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#da291c] text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#76b900] text-white"
         data-testid="mobile-menu-toggle"
       >
         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -109,14 +109,14 @@ const Sidebar = () => {
 
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 bg-[#181818] border-r border-[#303030] transform transition-transform duration-200 ease-in-out lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-40 w-64 bg-[#000000] border-r border-[#1a1a1a] transform transition-transform duration-200 ease-in-out lg:translate-x-0',
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
         data-testid="sidebar"
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-center h-16 px-4 border-b border-[#303030] gap-2">
-            <span className="h-6 w-[3px] bg-[#da291c]" aria-hidden />
+          <div className="flex items-center justify-center h-16 px-4 border-b border-[#1a1a1a] gap-2">
+            <span className="h-6 w-[3px] bg-[#76b900]" aria-hidden />
             <h1 className="text-lg font-semibold tracking-[0.14em] text-white uppercase" style={{ fontFamily: 'Inter, sans-serif' }}>
               SLTS Fleet
             </h1>
@@ -130,12 +130,12 @@ const Sidebar = () => {
             </nav>
           </div>
 
-          <div className="p-4 border-t border-[#303030]">
-            <Link to="/profile" className="flex items-center space-x-3 hover:bg-[#303030] p-2 -m-2 transition-colors" data-testid="sidebar-profile-link">
-              <div className="w-9 h-9 rounded-full bg-[#303030] border border-[#3a3a3a] overflow-hidden flex-shrink-0">
+          <div className="p-4 border-t border-[#1a1a1a]">
+            <Link to="/profile" className="flex items-center space-x-3 hover:bg-[#1a1a1a] p-2 -m-2 transition-colors" data-testid="sidebar-profile-link">
+              <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#333333] overflow-hidden flex-shrink-0">
                 {user?.photo_url ? (
                   <>
-                    {!imgLoaded && <div className="w-full h-full animate-pulse bg-[#3a3a3a]" />}
+                    {!imgLoaded && <div className="w-full h-full animate-pulse bg-[#333333]" />}
                     <img
                       src={`${process.env.REACT_APP_BACKEND_URL}${user.photo_url}`}
                       alt=""
@@ -148,7 +148,7 @@ const Sidebar = () => {
                   <div className="w-full h-full flex items-center justify-center"><UserCircle className="h-5 w-5 text-[#8f8f8f]" /></div>
                 )}
               </div>
-              <div className="text-xs text-[#969696] min-w-0">
+              <div className="text-xs text-[#b3b3b3] min-w-0">
                 <div className="font-semibold text-white truncate">{user?.name}</div>
                 <div className="truncate">{user?.email}</div>
                 <div className="mt-0.5 capitalize">{user?.role === 'superadmin' ? 'Admin' : user?.role?.replace(/_/g, ' ')}</div>

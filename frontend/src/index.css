@@ -9,7 +9,7 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #181818;
+    background-color: #000000;
     color: #ffffff;
 }
 
@@ -23,57 +23,57 @@ h1, h2, h3, h4, h5, h6 {
 
 @layer base {
     :root {
-                --background: 0 0% 9.4%;
+                --background: 0 0% 0%;
         --foreground: 0 0% 100%;
-        --card: 0 0% 19%;
+        --card: 0 0% 10.2%;
         --card-foreground: 0 0% 100%;
-        --popover: 0 0% 19%;
+        --popover: 0 0% 10.2%;
         --popover-foreground: 0 0% 100%;
-        --primary: 4 77% 48%;
-        --primary-foreground: 0 0% 100%;
-        --secondary: 0 0% 19%;
+        --primary: 82 100% 36%;
+        --primary-foreground: 0 0% 0%;
+        --secondary: 0 0% 10.2%;
         --secondary-foreground: 0 0% 100%;
-        --muted: 0 0% 19%;
-        --muted-foreground: 0 0% 40%;
-        --accent: 0 0% 22%;
+        --muted: 0 0% 10.2%;
+        --muted-foreground: 0 0% 42%;
+        --accent: 0 0% 15%;
         --accent-foreground: 0 0% 100%;
-        --destructive: 5 88% 56%;
+        --destructive: 0 77% 51%;
         --destructive-foreground: 0 0% 100%;
-        --border: 0 0% 19%;
-        --input: 0 0% 19%;
-        --ring: 4 77% 48%;
-        --chart-1: 4 77% 48%;
+        --border: 0 0% 15%;
+        --input: 0 0% 15%;
+        --ring: 82 100% 36%;
+        --chart-1: 82 100% 36%;
         --chart-2: 0 0% 100%;
-        --chart-3: 0 0% 59%;
-        --chart-4: 200 43% 51%;
-        --chart-5: 150 96% 29%;
+        --chart-3: 0 0% 70%;
+        --chart-4: 210 100% 33%;
+        --chart-5: 280 63% 48%;
         --radius: 0.125rem;
     }
     .dark {
-                --background: 0 0% 9.4%;
+        --background: 0 0% 0%;
                 --foreground: 0 0% 100%;
-                --card: 0 0% 19%;
+                --card: 0 0% 10.2%;
                 --card-foreground: 0 0% 100%;
-                --popover: 0 0% 19%;
+                --popover: 0 0% 10.2%;
                 --popover-foreground: 0 0% 100%;
-                --primary: 4 77% 48%;
-                --primary-foreground: 0 0% 100%;
-                --secondary: 0 0% 19%;
+                --primary: 82 100% 36%;
+                --primary-foreground: 0 0% 0%;
+                --secondary: 0 0% 10.2%;
                 --secondary-foreground: 0 0% 100%;
-                --muted: 0 0% 19%;
-                --muted-foreground: 0 0% 40%;
-                --accent: 0 0% 22%;
+                --muted: 0 0% 10.2%;
+                --muted-foreground: 0 0% 42%;
+                --accent: 0 0% 15%;
                 --accent-foreground: 0 0% 100%;
-                --destructive: 5 88% 56%;
+                --destructive: 0 77% 51%;
                 --destructive-foreground: 0 0% 100%;
-                --border: 0 0% 19%;
-                --input: 0 0% 19%;
-                --ring: 4 77% 48%;
-                --chart-1: 4 77% 48%;
+                --border: 0 0% 15%;
+                --input: 0 0% 15%;
+                --ring: 82 100% 36%;
+                --chart-1: 82 100% 36%;
                 --chart-2: 0 0% 100%;
-                --chart-3: 0 0% 59%;
-                --chart-4: 200 43% 51%;
-                --chart-5: 150 96% 29%;
+                --chart-3: 0 0% 70%;
+                --chart-4: 210 100% 33%;
+                --chart-5: 280 63% 48%;
                 --radius: 0.125rem;
     }
 }
@@ -211,7 +211,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #303030 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #1a1a1a 100%);
 }
 
 /* === Animated Background === */
@@ -242,7 +242,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(218,41,28,0.07) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(118,185,0,0.07) 0%, transparent 70%);
   transform: translate(-50%, -50%);
   pointer-events: none;
   transition: left 0.3s ease-out, top 0.3s ease-out;
@@ -265,15 +265,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-route-1 {
-  stroke: rgba(218,41,28,0.2);
+  stroke: rgba(118,185,0,0.2);
   animation: loginRouteDash 15s linear infinite;
 }
 .login-route-2 {
-  stroke: rgba(218,41,28,0.12);
+  stroke: rgba(118,185,0,0.12);
   animation: loginRouteDash 20s linear infinite reverse;
 }
 .login-route-3 {
-  stroke: rgba(218,41,28,0.08);
+  stroke: rgba(118,185,0,0.08);
   animation: loginRouteDash 18s linear infinite;
 }
 
@@ -345,7 +345,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(218,41,28,0.3);
+  box-shadow: 0 0 20px rgba(118,185,0,0.3);
 }
 
 .login-logo-icon {
@@ -358,7 +358,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-weight: 900;
   font-size: 1.25rem;
-  color: #da291c;
+  color: #76b900;
   letter-spacing: -0.02em;
 }
 
@@ -367,7 +367,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 900;
   font-size: 3.5rem;
   line-height: 1.05;
-  color: #da291c;
+  color: #76b900;
   margin: 0 0 20px 0;
   letter-spacing: -0.03em;
 }
@@ -401,8 +401,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: rgba(218,41,28,0.04);
-  border: 1px solid rgba(218,41,28,0.1);
+  background: rgba(118,185,0,0.04);
+  border: 1px solid rgba(118,185,0,0.1);
   border-radius: 100px;
   color: rgba(0,0,0,0.55);
   font-family: 'Inter', sans-serif;
@@ -412,9 +412,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-feature-pill:hover {
-  background: rgba(218,41,28,0.08);
-  border-color: rgba(218,41,28,0.25);
-  color: #da291c;
+  background: rgba(118,185,0,0.08);
+  border-color: rgba(118,185,0,0.25);
+  color: #76b900;
   transform: translateY(-1px);
 }
 
@@ -434,7 +434,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-weight: 900;
   font-size: 1.6rem;
-  color: #da291c;
+  color: #76b900;
 }
 
 .login-stat-label {
@@ -449,7 +449,7 @@ h1, h2, h3, h4, h5, h6 {
 .login-stat-divider {
   width: 1px;
   height: 36px;
-  background: rgba(218,41,28,0.15);
+  background: rgba(118,185,0,0.15);
 }
 
 /* === Form Panel (right) === */
@@ -465,7 +465,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   max-width: 420px;
   background: #ffffff;
-  border: 1px solid rgba(218,41,28,0.1);
+  border: 1px solid rgba(118,185,0,0.1);
   border-radius: 24px;
   padding: 40px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1), 0 20px 50px rgba(0,0,0,0.15), 0 40px 80px rgba(0,0,0,0.12);
@@ -501,7 +501,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif; letter-spacing: -0.01em; font-weight: 500;
   font-weight: 900;
   font-size: 1.75rem;
-  color: #da291c;
+  color: #76b900;
   margin: 0 0 8px 0;
 }
 
@@ -534,7 +534,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-field-focused .login-label {
-  color: #da291c;
+  color: #76b900;
 }
 
 .login-input-wrap {
@@ -552,7 +552,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-field-focused .login-input-icon {
-  color: #da291c;
+  color: #76b900;
 }
 
 .login-input {
@@ -574,9 +574,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-input:focus {
-  border-color: #da291c;
-  background: rgba(218,41,28,0.03);
-  box-shadow: 0 0 0 3px rgba(218,41,28,0.08);
+  border-color: #76b900;
+  background: rgba(118,185,0,0.03);
+  box-shadow: 0 0 0 3px rgba(118,185,0,0.08);
 }
 
 .login-field-filled .login-input {
@@ -600,7 +600,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-pw-toggle:hover {
-  color: #da291c;
+  color: #76b900;
 }
 
 /* Submit button — UIverse neumorphic (FColombati/spotty-snake-82) */
@@ -787,14 +787,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .login-signup-link {
-  color: #da291c;
+  color: #76b900;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .login-signup-link:hover {
-  color: #da291c;
+  color: #76b900;
 }
 
 /* === Responsive === */
@@ -819,7 +819,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   border-radius: 24px;
   padding: 28px 24px;
-  border: 1px solid #303030;
+  border: 1px solid #1a1a1a;
 }
 
 .dash-metric-content {
@@ -1031,67 +1031,58 @@ html, body {
   }
 }
 
-/* ===================== Ferrari design layer =====================
-   Canvas #181818 (never pure black) - cards/elevation #303030 - hairlines
-   #303030/#3a3a3a - body text #969696 - Rosso Corsa #da291c scarce:
-   primary CTAs, active states, the Cavallino blade. Sharp corners; the
-   only pill is a badge. Single family (Inter); display weight 500;
-   CTAs uppercase with wide tracking. */
+/* ===================== NVIDIA design layer =====================
+   Engineering console: true black #000 canvas, #1a1a1a elevated surfaces,
+   hairlines #262626/#333333, body text #b3b3b3, neon green #76b900 as the
+   single accent — CTAs are GREEN with BLACK text. 2px angular corners,
+   tight bold sans, uppercase captions, no gradients, no shadows. */
 
-:root { --rosso: #da291c; --rosso-active: #b01e0a; }
+:root { --nvgreen: #76b900; --nvgreen-dark: #5a8d00; }
 
-/* shared tokens that were near-black TEXT in the old light theme now
-   become Ferrari ink; the same numbers as dark SURFACES become elevated */
-.bg-slate-900, .bg-slate-800, .bg-slate-700 { background-color: #303030; }
-.bg-slate-900\/90 { background-color: rgb(48 48 48 / .9); }
-.hover\:bg-slate-800:hover, .hover\:bg-slate-700:hover { background-color: #3a3a3a; }
+.bg-slate-900, .bg-slate-800, .bg-slate-700 { background-color: #1a1a1a; }
+.bg-slate-900\/90 { background-color: rgb(26 26 26 / .9); }
+.hover\:bg-slate-800:hover, .hover\:bg-slate-700:hover { background-color: #333333; }
 .text-slate-900, .text-slate-950 { color: #ffffff; }
 .text-slate-800 { color: #e6e6e6; }
-.text-slate-700 { color: #b0b0b0; }
+.text-slate-700 { color: #cccccc; }
 .hover\:text-slate-900:hover { color: #ffffff; }
-.hover\:text-slate-700:hover { color: #d2d2d2; }
-.from-slate-800 { --tw-gradient-from: #303030; --tw-gradient-to: transparent; }
-.from-slate-900 { --tw-gradient-from: #303030; --tw-gradient-to: transparent; }
-.to-slate-600 { --tw-gradient-to: #3a3a3a; }
-.bg-white { background-color: #303030; }
-.hover\:bg-white:hover { background-color: #3a3a3a; }
-.bg-gray-300 { background-color: #1d1d1d; }
+.hover\:text-slate-700:hover { color: #ffffff; }
+.from-slate-800 { --tw-gradient-from: #1a1a1a; --tw-gradient-to: transparent; }
+.from-slate-900 { --tw-gradient-from: #1a1a1a; --tw-gradient-to: transparent; }
+.to-slate-600 { --tw-gradient-to: #333333; }
+.bg-white { background-color: #1a1a1a; }
+.hover\:bg-white:hover { background-color: #333333; }
+.bg-gray-300 { background-color: #0d0d0d; }
 .bg-black\/50 { background-color: rgba(0, 0, 0, .6); }
 
-/* Ferrari CTA voice - uppercase, wide tracking, sharp */
-button, [role="button"], a[class*="bg-blue-600"], a[class*="bg-primary"] {
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 600;
-}
-button[class*="bg-blue-600"], button[class*="bg-primary"],
-a[class*="bg-blue-600"], a[class*="bg-primary"],
-[class*="bg-blue-600"][class*="text-white"] {
-    background-color: var(--rosso) !important;
-    border-radius: 0 !important;
+/* NVIDIA CTA: green fill, BLACK label, 2px angular */
+button, [role="button"] { font-weight: 700; }
+button[class*="bg-blue-600"], [class*="bg-blue-600"][class*="text-white"],
+[class*="bg-blue-600"] {
+    background-color: var(--nvgreen) !important;
+    color: #000000 !important;
+    border-radius: 2px !important;
     transition: background-color .15s ease;
 }
-button[class*="bg-blue-600"]:active, [class*="bg-blue-600"]:active { background-color: var(--rosso-active) !important; }
+[class*="bg-blue-600"]:active { background-color: var(--nvgreen-dark) !important; }
+a[class*="text-blue-600"], [class*="text-blue-600"]:not([class*="bg-blue-600"]) { color: var(--nvgreen); }
 input[class*="border"], textarea[class*="border"], select[class*="border"] { border-radius: 2px; }
 input:focus-visible, textarea:focus-visible, select:focus-visible {
-    outline: 2px solid var(--rosso);
+    outline: 2px solid var(--nvgreen);
     outline-offset: 1px;
 }
 
-/* sharp everywhere Tailwind rounded-* meets Ferrari */
 .rounded-lg, .rounded-md, .rounded-xl, .rounded-2xl { border-radius: 2px !important; }
-.rounded-full:not(.avatar-keep) { border-radius: 9999px; } /* avatars/badges stay pills */
+.rounded-full:not(.avatar-keep) { border-radius: 9999px; }
 
-/* tables: caption-uppercase headers, hairline rows */
-table thead th { text-transform: uppercase; letter-spacing: .09em; font-size: 11px; font-weight: 600; color: #8f8f8f; }
-table tbody tr { border-color: #303030; }
-table tbody tr:hover { background-color: #1d1d1d; }
+table thead th { text-transform: uppercase; letter-spacing: .04em; font-size: 12px; font-weight: 700; color: #8f8f8f; }
+table tbody tr { border-color: #262626; }
+table tbody tr:hover { background-color: #0d0d0d; }
 
-/* captions & section labels */
-.text-xs.font-semibold.uppercase, .text-\[11px\] { letter-spacing: .1em; }
+.text-xs.font-semibold.uppercase, .text-\[11px\] { letter-spacing: .04em; }
 
-::selection { background: var(--rosso); color: #fff; }
+::selection { background: var(--nvgreen); color: #000; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #181818; }
-::-webkit-scrollbar-thumb { background: #303030; border: 2px solid #181818; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+::-webkit-scrollbar-track { background: #000000; }
+::-webkit-scrollbar-thumb { background: #1a1a1a; border: 2px solid #000000; }
+::-webkit-scrollbar-thumb:hover { background: #333333; }

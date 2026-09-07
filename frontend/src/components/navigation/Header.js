@@ -13,7 +13,7 @@ const Header = () => {
   useEffect(() => { setImgLoaded(false); }, [user?.photo_url]);
 
   return (
-    <header className="bg-[#181818] border-b border-[#303030] sticky top-0 z-10" data-testid="header">
+    <header className="bg-[#000000] border-b border-[#1a1a1a] sticky top-0 z-10" data-testid="header">
       <div className="flex items-center justify-between h-14 sm:h-16 pl-14 pr-2 sm:pr-6 lg:pl-8 lg:pr-8">
         <div className="flex-1 min-w-0">
           <h2 className="text-base sm:text-xl font-medium tracking-[-0.01em] text-white truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -30,14 +30,14 @@ const Header = () => {
             data-testid="notifications-btn"
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 bg-[#da291c] rounded-full"></span>
+            <span className="absolute top-0 right-0 h-2 w-2 bg-[#76b900] rounded-full"></span>
           </Button>
 
-          <Link to="/profile" className="flex items-center space-x-2 hover:bg-[#303030] px-2 py-1 transition-colors" data-testid="header-profile-link">
-            <div className="w-8 h-8 rounded-full bg-[#303030] border border-[#3a3a3a] overflow-hidden flex-shrink-0">
+          <Link to="/profile" className="flex items-center space-x-2 hover:bg-[#1a1a1a] px-2 py-1 transition-colors" data-testid="header-profile-link">
+            <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#333333] overflow-hidden flex-shrink-0">
               {user?.photo_url ? (
                 <>
-                  {!imgLoaded && <div className="w-full h-full animate-pulse bg-[#3a3a3a]" />}
+                  {!imgLoaded && <div className="w-full h-full animate-pulse bg-[#333333]" />}
                   <img
                     src={`${backendUrl}${user.photo_url}`}
                     alt=""
